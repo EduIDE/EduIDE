@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && \
     apt-get upgrade -y --autoremove && \
     apt-get install -y --no-install-recommends \
-    adduser findutils bzip2 e2fsprogs sudo bash gcc clang clangd git gdb make ca-certificates
+    adduser findutils bzip2 e2fsprogs sudo bash zsh gcc clang clangd git gdb make ca-certificates
 
 # Create theia user and directories (after adduser is installed)
 RUN useradd --system --create-home --user-group --uid 101 theia && \
@@ -75,13 +75,24 @@ COPY --from=base-ide --chown=theia:theia /home/theia /home/theia
 # Copy additional plugins (language-specific extensions)
 COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
 
+# Install Oh My Zsh and plugins with pinned versions
+RUN git init ${HOME}/.oh-my-zsh && \
+    git -C ${HOME}/.oh-my-zsh remote add origin https://github.com/ohmyzsh/ohmyzsh.git && \
+    git -C ${HOME}/.oh-my-zsh fetch --depth 1 origin 5c4f27b7166360bd23709f24642b247eac30a147 && \
+    git -C ${HOME}/.oh-my-zsh checkout FETCH_HEAD && \
+    git clone --depth 1 --branch v0.7.1 https://github.com/zsh-users/zsh-autosuggestions ${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions && \
+    git clone --depth 1 --branch 0.8.0 https://github.com/zsh-users/zsh-syntax-highlighting.git ${HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+
+# Copy centralized zsh configuration
+COPY --chown=theia:theia configs/zshrc ${HOME}/.zshrc
+
 # Copy project settings (includes .vscode/settings.json with file exclusions)
 COPY --chown=theia:theia images/c/project /home/project
 
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
-ENV SHELL=/bin/bash \
+ENV SHELL=/bin/zsh \
     THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
 
 # Use installed git instead of dugite

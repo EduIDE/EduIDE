@@ -69,6 +69,23 @@ jobs:
       build-arm64: ${{ github.event_name != 'pull_request' }}
     secrets: inherit
 
+  build-and-push-ai-base:
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feature/split-build-workflow-modes
+    with:
+      docker-file: images/ai-ide/BaseDockerfile
+      image-name: eduide/eduide/ai-base
+      docker-context: .
+      image-tag: ${{ inputs.image_tag || '' }}
+      execution-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
+      arc-registry-cache: ${{ github.event_name == 'workflow_dispatch' && inputs.arc_registry_cache || false }}
+      cache-from: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }}
+      cache-to: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }},mode=max,image-manifest=true,oci-mediatypes=true
+      no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
+      network: host
+      build-amd64: true
+      build-arm64: ${{ github.event_name != 'pull_request' }}
+    secrets: inherit
+    
   build-and-push:
     needs:
       - build-and-push-base
@@ -123,6 +140,50 @@ jobs:
       docker-context: ${{ matrix.docker-context }}
       build-args: |
         BASE_IDE_TAG=${{ needs.build-and-push-base.outputs.sha_tag }}
+      image-tag: ${{ inputs.image_tag || '' }}
+      execution-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
+      arc-registry-cache: ${{ github.event_name == 'workflow_dispatch' && inputs.arc_registry_cache || false }}
+      cache-from: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }}
+      cache-to: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }},mode=max,image-manifest=true,oci-mediatypes=true
+      no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
+      network: host
+      build-amd64: true
+      build-arm64: ${{ github.event_name != 'pull_request' }}
+    secrets: inherit
+
+  build-and-push-ai:
+    needs:
+      - build-and-push-ai-base
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - docker-file: images/c/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/c-ai
+          - docker-file: images/java-17/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/java-17-ai
+          - docker-file: images/javascript/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/javascript-ai
+          - docker-file: images/ocaml/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/ocaml-ai
+          - docker-file: images/python/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/python-ai
+          - docker-file: images/rust/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/rust-ai
+
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feature/split-build-workflow-modes
+    with:
+      docker-file: ${{ matrix.docker-file }}
+      image-name: ${{ matrix.image-name }}
+      docker-context: ${{ matrix.docker-context }}
+      build-args: |
+        BASE_IDE_TAG=${{ needs.build-and-push-ai-base.outputs.sha_tag }}
       image-tag: ${{ inputs.image_tag || '' }}
       execution-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
       arc-registry-cache: ${{ github.event_name == 'workflow_dispatch' && inputs.arc_registry_cache || false }}

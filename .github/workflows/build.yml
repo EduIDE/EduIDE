@@ -85,6 +85,9 @@ jobs:
           - docker-file: images/java-17/ToolDockerfile
             docker-context: "."
             image-name: eduide/eduide/java-17
+          - docker-file: images/java-17-templates/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/java-17-templates
           - docker-file: images/javascript/ToolDockerfile
             docker-context: "."
             image-name: eduide/eduide/javascript

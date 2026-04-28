@@ -33,12 +33,24 @@ export function renderWhatIs(windowService: WindowService): React.ReactNode {
             What is this?
         </h3>
         <div>
-            This is the Artemis Online IDE based on <BrowserLink text="Eclipse Theia"
+            This is the EduIDE based on <BrowserLink text="Eclipse Theia"
             url="https://theia-ide.org" windowService={windowService} ></BrowserLink>.
         </div>
     </div>;
 }
 
+
+export function renderDocumentation(windowService: WindowService): React.ReactNode {
+    return <div className='gs-section'>
+        <h3 className='gs-section-header'>
+            Documentation
+        </h3>
+        <div>
+            Learn how to get started and make the most of EduIDE by reading the <BrowserLink text="Documentation"
+                url="https://eduide.github.io/Docs/student/intro" windowService={windowService} />.
+        </div>
+    </div>;
+}
 
 export function renderTickets(windowService: WindowService): React.ReactNode {
     return <div className='gs-section'>
@@ -46,7 +58,7 @@ export function renderTickets(windowService: WindowService): React.ReactNode {
             Reporting feature requests and bugs
         </h3>
         <div>
-            The Artemis Online IDE is an open source project and we welcome your feedback.
+            The EduIDE is an open source project and we welcome your feedback.
             For feature requests and bug reports, <BrowserLink text="open an issue on Github" url="https://github.com/eduide/eduide/issues/new/choose"
                 windowService={windowService} ></BrowserLink> to let us know.
         </div>

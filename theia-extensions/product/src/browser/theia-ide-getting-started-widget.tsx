@@ -12,6 +12,7 @@ import * as React from "react";
 import { codicon, Message } from "@theia/core/lib/browser";
 import { inject, injectable } from "@theia/core/shared/inversify";
 import {
+  renderDocumentation,
   renderTickets,
   renderWhatIs,
 } from "./branding-util";
@@ -65,6 +66,7 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
             </div>
             <div className="col col-flex">
               {renderWhatIs(this.windowService)}
+              {renderDocumentation(this.windowService)}
               {renderTickets(this.windowService)}
             </div>
           </div>
@@ -90,7 +92,7 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
     return (
       <div className="header-container">
           <h1 className="onboarding-header">
-            Artemis <span className="gs-blue-header">Online IDE</span>
+            Edu<span className="gs-blue-header">IDE</span>
           </h1>
           <h2 className="onboarding-subheader">
             Based on Eclipse Theia

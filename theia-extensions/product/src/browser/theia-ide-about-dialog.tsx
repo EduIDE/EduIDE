@@ -16,6 +16,7 @@ import {
 import { injectable, inject } from "@theia/core/shared/inversify";
 import {
   renderWhatIs,
+  renderDocumentation,
 } from "./branding-util";
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
 
@@ -50,6 +51,9 @@ export class TheiaIDEAboutDialog extends AboutDialog {
         <div className="flex-grid">
           <div className="col">{renderWhatIs(this.windowService)}</div>
         </div>
+        <div className="flex-grid">
+          <div className="col">{renderDocumentation(this.windowService)}</div>
+        </div>
       </div>
     );
   }
@@ -58,7 +62,7 @@ export class TheiaIDEAboutDialog extends AboutDialog {
     return (
       <div className="header-container">
           <h1 className="onboarding-header">
-            Artemis <span className="gs-blue-header">Online IDE</span>
+            Edu<span className="gs-blue-header">IDE</span>
           </h1>
           <h2 className="onboarding-subheader">
             Based on Eclipse Theia

@@ -12,6 +12,7 @@
     "@theia/task": "1.70.0",
     "@theia/debug": "1.70.0",
     "@theia/editor": "1.70.0",
+    "@theia/monaco": "1.70.0",
     "@theia/plugin-ext": "1.70.0",
     "inversify": "^6.0.1"
   },

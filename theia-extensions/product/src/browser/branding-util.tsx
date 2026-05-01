@@ -22,7 +22,7 @@ function BrowserLink(props: ExternalBrowserLinkProps): JSX.Element {
         tabIndex={0}
         href={props.url}
         target='_blank'
-        >
+    >
         {props.text}
     </a>;
 }
@@ -33,12 +33,23 @@ export function renderWhatIs(windowService: WindowService): React.ReactNode {
             What is this?
         </h3>
         <div>
-            This is the Artemis Online IDE based on <BrowserLink text="Eclipse Theia"
-            url="https://theia-ide.org" windowService={windowService} ></BrowserLink>.
+            This is the EduIDE based on <BrowserLink text="Eclipse Theia"
+                url="https://theia-ide.org" windowService={windowService} ></BrowserLink>.
         </div>
     </div>;
 }
 
+export function renderDocumentation(windowService: WindowService): React.ReactNode {
+    return <div className='gs-section'>
+        <h3 className='gs-section-header'>
+            Documentation
+        </h3>
+        <div>
+            Learn how to get started and make the most of EduIDE by reading the <BrowserLink text="Documentation"
+                url="https://eduide.github.io/Docs/student/intro" windowService={windowService} />.
+        </div>
+    </div>;
+}
 
 export function renderTickets(windowService: WindowService): React.ReactNode {
     return <div className='gs-section'>
@@ -46,9 +57,29 @@ export function renderTickets(windowService: WindowService): React.ReactNode {
             Reporting feature requests and bugs
         </h3>
         <div>
-            The Artemis Online IDE is an open source project and we welcome your feedback.
+            The EduIDE is an open source project and we welcome your feedback.
             For feature requests and bug reports, <BrowserLink text="open an issue on Github" url="https://github.com/eduide/eduide/issues/new/choose"
                 windowService={windowService} ></BrowserLink> to let us know.
         </div>
     </div>;
 }
+
+export function animatedLogo(): React.ReactNode {
+    const logoNormal = require('../../../../EduIDE logo/eduide-logo.png');
+    const logoEyesClosed = require('../../../../EduIDE logo/eduidelogo-closed.png');
+    return (
+        <div className='logo-container'>
+            <img
+                className='logo-eyes-closed'
+                src={logoEyesClosed}
+                alt='EduIDE logo with closed eyes'
+            />
+            <img
+                className='logo-eyes-normal'
+                src={logoNormal}
+                alt='EduIDE logo'
+            />
+        </div>
+    );
+
+};

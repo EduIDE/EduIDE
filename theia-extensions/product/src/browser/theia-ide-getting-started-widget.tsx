@@ -12,6 +12,7 @@ import * as React from "react";
 import { codicon, Message } from "@theia/core/lib/browser";
 import { inject, injectable } from "@theia/core/shared/inversify";
 import {
+  animatedLogo,
   renderDocumentation,
   renderTickets,
   renderWhatIs,
@@ -57,9 +58,12 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
       <div className="gs-container">
         <div className="gs-content-container gs-content-centered">
           <hr className="gs-hr" />
+          <div className="gs-hero">
+            {animatedLogo()}
+            {this.renderHeader()}
+          </div>
           <div className="flex-grid">
             <div className="col">
-              {this.renderHeader()}
               <div>
                 {this.renderActions()}
               </div>

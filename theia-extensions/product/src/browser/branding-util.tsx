@@ -22,7 +22,7 @@ function BrowserLink(props: ExternalBrowserLinkProps): JSX.Element {
         tabIndex={0}
         href={props.url}
         target='_blank'
-        >
+    >
         {props.text}
     </a>;
 }
@@ -34,11 +34,10 @@ export function renderWhatIs(windowService: WindowService): React.ReactNode {
         </h3>
         <div>
             This is the EduIDE based on <BrowserLink text="Eclipse Theia"
-            url="https://theia-ide.org" windowService={windowService} ></BrowserLink>.
+                url="https://theia-ide.org" windowService={windowService} ></BrowserLink>.
         </div>
     </div>;
 }
-
 
 export function renderDocumentation(windowService: WindowService): React.ReactNode {
     return <div className='gs-section'>
@@ -64,3 +63,23 @@ export function renderTickets(windowService: WindowService): React.ReactNode {
         </div>
     </div>;
 }
+
+export function animatedLogo(): React.ReactNode {
+    const logoNormal = require('../../../../EduIDE logo/eduide-logo.png');
+    const logoEyesClosed = require('../../../../EduIDE logo/eduidelogo-closed.png');
+    return (
+        <div className='logo-container'>
+            <img
+                className='logo-eyes-closed'
+                src={logoEyesClosed}
+                alt='EduIDE logo with closed eyes'
+            />
+            <img
+                className='logo-eyes-normal'
+                src={logoNormal}
+                alt='EduIDE logo'
+            />
+        </div>
+    );
+
+};

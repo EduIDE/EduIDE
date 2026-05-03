@@ -2,9 +2,10 @@
 FROM node:22-bullseye AS install-deps
 
 # Install build prerequisites only once and clean up afterwards
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libxkbfile-dev libsecret-1-dev jq ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libxkbfile-dev libsecret-1-dev ca-certificates
 
 WORKDIR /home/theia
 
@@ -21,17 +22,22 @@ COPY theia-extensions/product/package.json theia-extensions/product/
 # Copy scripts needed for plugin download hooks
 COPY scripts/ ./scripts/
 
-# Merge the base package.json with the patch using jq
-RUN jq -s '.[0] + .[1]' package.json.base package.json.patch > package.json.merged
+# Merge the base package.json with the patch, but replace `theiaPlugins`
+# so the patch fully controls the runtime plugin set.
+RUN node scripts/merge-package-json.js --replace-keys theiaPlugins package.json.base package.json.patch package.json.merged
 RUN cp package.json.merged package.json
 
 # Install all workspace dependencies needed for the build (using lockfile for speed + reproducibility)
-RUN yarn config set network-timeout 600000 -g \
-    && yarn install
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    yarn config set network-timeout 600000 -g \
+    && yarn install --frozen-lockfile
 
 # Download plugins early to leverage caching
 # This step relies on package.json and scripts/, so it can be cached before source code changes
-RUN yarn download:plugins
+# Plugin download uses centralized retry script + persisted plugin cache
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    --mount=type=cache,id=theia-plugin-cache-base,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
 
 # Build the browser application (plugins already downloaded in install-deps)
 FROM install-deps AS build-stage
@@ -47,20 +53,16 @@ RUN rm package.json.merged package.json.base package.json.patch
 # Increase Node.js heap size for build process
 ENV NODE_OPTIONS=--max-old-space-size=8192
 
-# Build extensions, download plugins, and produce the browser bundle (browser-only target)
+# Build extensions and produce the browser bundle (browser-only target).
+# No autoclean/cache-clean needed — the final base-ide stage cherry-picks
+# specific directories via COPY --from=build-stage, so nothing else leaks out.
 RUN rm -rf applications/electron \
         theia-extensions/launcher \
         theia-extensions/updater \
         theia-extensions/product/src/electron-main \
     && yarn build:extensions \
     && yarn browser build \
-    && yarn autoclean --init \
-    && echo *.ts >> .yarnclean \
-    && echo *.ts.map >> .yarnclean \
-    && echo *.spec.* >> .yarnclean \
-    && yarn autoclean --force \
-    && yarn cache clean \
-    && rm -rf .git applications/electron theia-extensions/launcher theia-extensions/updater
+    && find applications/browser/lib -type f \( -name '*.map' -o -name '*.map.gz' \) -delete
 
 # Production dependencies stage - install only runtime dependencies
 FROM node:22-bullseye-slim AS prod-deps
@@ -68,9 +70,10 @@ FROM node:22-bullseye-slim AS prod-deps
 WORKDIR /home/theia
 
 # Yarn needs git for dependencies that reference git URLs.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends git ca-certificates
 
 # Copy package manifests (including yarn.lock for frozen-lockfile)
 COPY --from=build-stage /home/theia/package.json /home/theia/lerna.json /home/theia/yarn.lock ./
@@ -78,7 +81,8 @@ COPY --from=build-stage /home/theia/applications/browser/package.json applicatio
 COPY --from=build-stage /home/theia/theia-extensions/product/package.json theia-extensions/product/
 
 # Install ONLY production dependencies
-RUN yarn install --production --ignore-scripts --network-timeout 600000
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    yarn install --frozen-lockfile --production --ignore-scripts --network-timeout 600000
 
 # Stage: Clone Oh My Zsh and plugins (cached independently)
 FROM alpine/git AS zsh-setup
@@ -93,9 +97,10 @@ RUN git init /oh-my-zsh && \
 FROM node:22-bullseye-slim AS base-ide
 
 # Install only the libraries required at runtime
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libsecret-1-0 libxkbfile1 \
-    && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libsecret-1-0 libxkbfile1
 
 WORKDIR /home/theia
 

@@ -1,6 +1,6 @@
 {
   "theiaPlugins": {
-    "theia-lsp": "https://open-vsx.org/api/nikolashack/theia-lsp/0.0.6/file/nikolashack.theia-lsp-0.0.6.vsix",
+    "theia-lsp": "https://open-vsx.org/api/nikolashack/theia-lsp/0.1.0/file/nikolashack.theia-lsp-0.1.0.vsix",
     "redhat.java": "https://open-vsx.org/api/redhat/java/1.52.2026010808/file/redhat.java-1.52.2026010808.vsix",
     "vscjava.vscode-java-debug": "https://open-vsx.org/api/vscjava/vscode-java-debug/0.58.5/file/vscjava.vscode-java-debug-0.58.5.vsix",
     "vscjava.vscode-java-test": "https://open-vsx.org/api/vscjava/vscode-java-test/0.44.0/file/vscjava.vscode-java-test-0.44.0.vsix",

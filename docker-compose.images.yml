@@ -49,6 +49,20 @@ services:
     ports:
       - "3003:3000"
 
+  java-17-templates:
+    image: theia-java-17-templates:local
+    build:
+      context: .
+      dockerfile: images/java-17-templates/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base:local
+      additional_contexts:
+        base-ide: "service:base-ide"
+    depends_on:
+      - base-ide
+    ports:
+      - "3009:3000"
+
   javascript:
     image: theia-javascript:local
     build:

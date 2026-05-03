@@ -14,3 +14,18 @@ license-check-summary.txt*
 BaseDockerfile
 Dockerfile
 ToolDockerfile
+
+# Documentation and metadata — not needed for builds, avoids COPY . . invalidation
+.github/
+.vscode/
+.eslintrc.js
+docs/
+TheiaIDE logo/
+AGENTS.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+NOTICE.md
+PUBLISHING.md
+README.md
+LICENSE
+docker-compose.images.yml

@@ -37,11 +37,11 @@ def dependencyCacheUrl = System.getenv('DEPENDENCY_CACHE_URL')
 if (dependencyCacheEnabled && dependencyCacheUrl?.trim()) {
     allprojects {
         repositories {
-            addFirst(maven {
+            maven {
                 name = 'Dependency Cache'
                 url = dependencyCacheUrl
                 allowInsecureProtocol = true
-            })
+            }
         }
     }
 

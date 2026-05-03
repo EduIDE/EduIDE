@@ -3,6 +3,12 @@
     "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
     "js-essentials": "https://open-vsx.org/api/Gydunhn/javascript-essentials/0.1.1/file/Gydunhn.javascript-essentials-0.1.1.vsix"
   },
+  "theiaPluginsExcludeIdsRemove": [
+    "ms-vscode.js-debug",
+    "vscode.javascript",
+    "vscode.typescript",
+    "vscode.typescript-language-features"
+  ],
   "theiaPluginsExcludeIds": [
     "xabikos.JavaScriptSnippets",
     "ms-vscode.js-debug-companion",

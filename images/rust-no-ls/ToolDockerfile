@@ -28,9 +28,9 @@ RUN if [ -n "$APT_HTTP_PROXY" ]; then \
 
 # Install required tools for Rust development (no embedded language server)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
     bash zsh curl git openssh-client openssh-server libsecret-1-0 \
     build-essential ca-certificates && \
     apt-get autoremove -y
@@ -65,10 +65,16 @@ COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
 # This is much faster than full yarn install since we already have prod node_modules
 ARG NPM_REGISTRY
 RUN if [ -n "$NPM_REGISTRY" ]; then yarn config set registry "$NPM_REGISTRY"; fi \
-    && yarn add -W @theia/cli@1.68.2 --network-timeout 1000000
+    && n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
+        echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
+        sleep $((n*3)); \
+    done
 
 # Download Rust plugins and external LS connector
-RUN yarn download:plugins
+RUN --mount=type=cache,id=theia-plugin-cache-rust-no-ls,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
 
 # Final stage: Assemble the application
 FROM apt-deps AS final-ide
@@ -83,7 +89,10 @@ ENV HOME=/home/theia
 WORKDIR /home/theia
 
 # Install Rust toolchain as theia user
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+RUN curl --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 300 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh && \
+    [ -s /tmp/rustup-init.sh ] && \
+    sh /tmp/rustup-init.sh -y --default-toolchain stable && \
+    rm -f /tmp/rustup-init.sh
 ENV PATH="/home/theia/.cargo/bin:${PATH}"
 
 # Copy application from the base image (includes prod node_modules)

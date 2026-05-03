@@ -11,12 +11,12 @@ WORKDIR /home/theia
 
 # Install all system dependencies with BuildKit cache mounts (including adduser)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && \
-    apt-get upgrade -y --autoremove && \
-    apt-get install -y --no-install-recommends \
-    adduser python3 python3-pip bash zsh git python-is-python3 ca-certificates && \
-    pip3 install -U pytest
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
+    adduser python3 python3-pip bash zsh git python-is-python3 ca-certificates
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    pip3 install -U pytest --retries 5 --timeout 30
 
 # Create theia user and directories (after adduser is installed)
 RUN useradd --system --create-home --user-group --uid 101 theia && \
@@ -36,9 +36,10 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 # Copy required configuration files
 COPY --from=base-ide /home/theia/package.json ./package.json.base
 COPY images/python/package.json.patch ./package.json.patch
+COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 
-# Merge the base package.json with the python-specific patch using Node.js
-RUN node -e "const fs=require('fs'); const deepMerge=(t,s)=>{const o={...t}; for(const k in s){o[k]=s[k]!==null&&typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]?deepMerge(t[k],s[k]):s[k]} return o}; const base=JSON.parse(fs.readFileSync('package.json.base')); const patch=JSON.parse(fs.readFileSync('package.json.patch')); fs.writeFileSync('package.json', JSON.stringify(deepMerge(base,patch), null, 2));" && \
+# Merge the base package.json with the python-specific patch without dropping base exclusions.
+RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
 
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
@@ -49,10 +50,16 @@ COPY --from=base-ide /home/theia/plugins /home/theia/plugins
 COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
 
 # Install ONLY @theia/cli (needed for download:plugins command)
-RUN yarn add -W @theia/cli@1.68.2 --network-timeout 1000000
+RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
+        echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
+        sleep $((n*3)); \
+    done
 
 # Download language-specific plugins
-RUN yarn download:plugins
+RUN --mount=type=cache,id=theia-plugin-cache-python,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
 
 # Final stage: Assemble the application
 FROM apt-deps AS final-ide

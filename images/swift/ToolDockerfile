@@ -32,29 +32,45 @@ COPY --from=base-ide /home/theia/plugins /home/theia/plugins
 COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
 
 # Install ONLY @theia/cli (needed for download:plugins command)
-RUN yarn add -W @theia/cli@1.68.2 --network-timeout 1000000
+RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
+        echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
+        sleep $((n*3)); \
+    done
 
 # Download language-specific plugins
-RUN yarn download:plugins
+RUN --mount=type=cache,id=theia-plugin-cache-swift,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
 
 # Parallel stage: Prepare Swift Application (runs concurrently with plugin-image)
 # Adapted from https://github.com/ls1intum/artemis-swift-swiftlint-docker/blob/main/Dockerfile
 FROM ${BUILDER_IMAGE} AS builder
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y \
     libcurl4-openssl-dev \
     libxml2-dev
 
-RUN git clone https://github.com/realm/SwiftLint.git
+RUN n=0; until rm -rf /SwiftLint && git clone https://github.com/realm/SwiftLint.git; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "git clone SwiftLint failed after $n attempts" >&2; exit 1; fi; \
+        echo "git clone SwiftLint failed (attempt $n), retrying..."; \
+        sleep $((n*2)); \
+    done
 WORKDIR /SwiftLint
 
 # Default SwiftLint version - will be overwritten by the GH action
 ARG SWIFTLINT_VERSION=0.53.0
 RUN git checkout ${SWIFTLINT_VERSION}
 
-RUN swift package update
+RUN n=0; until swift package resolve; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "swift package resolve failed after $n attempts" >&2; exit 1; fi; \
+        echo "swift package resolve failed (attempt $n), retrying..."; \
+        sleep $((n*2)); \
+    done
 ARG SWIFT_FLAGS="-c release -Xswiftc -static-stdlib -Xlinker -lcurl -Xlinker -lxml2 -Xswiftc -I. -Xlinker -fuse-ld=lld -Xlinker -L/usr/lib/swift/linux"
 RUN swift build ${SWIFT_FLAGS} --product swiftlint
 RUN mkdir -p /executables
@@ -70,8 +86,8 @@ COPY --from=plugin-image /usr/local/bin/node /usr/local/bin/
 
 # Required by Swift with BuildKit cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y \
     adduser \
     libcurl4 \
     libxml2 \

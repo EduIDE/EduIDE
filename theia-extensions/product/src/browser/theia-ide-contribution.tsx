@@ -21,6 +21,8 @@ import { OutlineViewService } from '@theia/outline-view/lib/browser/outline-view
 import { OutlineBreadcrumbsContribution } from '@theia/outline-view/lib/browser/outline-breadcrumbs-contribution';
 import { VSXExtensionsContribution } from '@theia/vsx-registry/lib/browser/vsx-extensions-contribution';
 import { HostedPluginSupport } from '@theia/plugin-ext/lib/hosted/browser/hosted-plugin';
+import { MonacoThemingService } from '@theia/monaco/lib/browser/monaco-theming-service';
+import { eduIdeTheme } from './themes/eduide-theme';
 
 export namespace TheiaIDEMenus {
     export const THEIA_IDE_HELP: MenuPath = [...CommonMenus.HELP, 'theia-ide'];
@@ -122,13 +124,28 @@ export class TheiaIDEContribution implements CommandContribution, MenuContributi
     @inject(TabBarToolbarRegistry)
     protected readonly tabBarToolbarRegistry: TabBarToolbarRegistry;
 
+    @inject(MonacoThemingService)
+    protected readonly themingService: MonacoThemingService;
 
     static REPORT_ISSUE_URL = 'https://github.com/eduide/eduide/issues';
 
     @postConstruct()
     protected init(): void {
         this.hostedPluginSupport.didStart.then(() => {
-          this.tabBarToolbarRegistry.unregisterItem('plugin_editor/title/run');
+            this.tabBarToolbarRegistry.unregisterItem('plugin_editor/title/run');
+        });
+        this.themingService.registerParsedTheme({
+            id: 'edu-ide-theme-dark',
+            label: 'EduIDE Dark',
+            uiTheme: 'vs-dark',
+            json: eduIdeTheme
+        });
+
+        this.themingService.registerParsedTheme({
+            id: 'edu-ide-theme-light',
+            label: 'EduIDE Light',
+            uiTheme: 'vs',
+            json: eduIdeTheme
         });
     }
 

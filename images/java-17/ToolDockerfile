@@ -16,10 +16,10 @@ RUN useradd --system --create-home --user-group --uid 101 theia && \
 
 # Install required tools with BuildKit cache mounts
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-    git openssh-client openssh-server bash zsh libsecret-1-0 openjdk-17-jdk maven ca-certificates && \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
+    git openssh-client bash zsh libsecret-1-0 openjdk-17-jdk-headless maven ca-certificates && \
     apt-get autoremove -y
 
 # Parallel stage: Plugin download (runs concurrently with apt-deps)
@@ -33,9 +33,10 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 # Copy required configuration files
 COPY --from=base-ide /home/theia/package.json ./package.json.base
 COPY images/java-17/package.json.patch ./package.json.patch
+COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 
-# Merge the base package.json with the java-17-specific patch using Node.js
-RUN node -e "const fs=require('fs'); const deepMerge=(t,s)=>{const o={...t}; for(const k in s){o[k]=s[k]!==null&&typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]?deepMerge(t[k],s[k]):s[k]} return o}; const base=JSON.parse(fs.readFileSync('package.json.base')); const patch=JSON.parse(fs.readFileSync('package.json.patch')); fs.writeFileSync('package.json', JSON.stringify(deepMerge(base,patch), null, 2));" && \
+# Merge the base package.json with the java-17-specific patch without dropping base exclusions.
+RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
 
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
@@ -47,13 +48,21 @@ COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
 
 # Install ONLY @theia/cli (needed for download:plugins command)
 # This is much faster than full yarn install since we already have prod node_modules
-RUN yarn add -W @theia/cli@1.68.2 --network-timeout 1000000
+RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
+        echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
+        sleep $((n*3)); \
+    done
 
 # Download language-specific plugins
-RUN yarn download:plugins
+RUN --mount=type=cache,id=theia-plugin-cache-java-17,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
 
 # Final stage: Assemble the application
 FROM apt-deps AS final-ide
+
+ARG TARGETARCH
 
 # Copy Node.js from plugin-image (required for Theia runtime)
 COPY --from=plugin-image /usr/local/bin/node /usr/local/bin/
@@ -62,6 +71,7 @@ COPY --from=plugin-image /usr/local/lib/node_modules/ /usr/local/lib/node_module
 # Switch to Theia user
 USER theia
 ENV HOME=/home/theia
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
 WORKDIR /home/theia
 
 # Copy application from the base image (includes prod node_modules)

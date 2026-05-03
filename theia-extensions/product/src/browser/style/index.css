@@ -9,7 +9,7 @@
 
 
 .gs-blue-header {
-    color: #5088e7;
+    color: var(--theia-focusBorder);
     text-transform: capitalize;
     font-weight: 600;
 }
@@ -28,7 +28,10 @@
 }
 
 .gs-content-centered {
-    padding: 12rem;
+    padding: 3rem 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .ad-logo {
@@ -60,10 +63,19 @@ ul.theia-aboutExtensions {
     margin-left: 10px;
  }
 
+.gs-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
 .header-container {
     display: flex;
     flex-direction: column;
-    align-items: start;
+    align-items: center;
+    text-align: center;
+    margin-top: 1rem;
 }
 
 .onboarding-header {
@@ -78,4 +90,35 @@ ul.theia-aboutExtensions {
     display: flex;
     align-items: start;
     flex-direction: column;
+}
+
+@keyframes blink {
+    0%, 90%  { opacity: 1; }   /* visible most of the time */
+    95%      { opacity: 0; }   /* quick blink off */
+    100%     { opacity: 1; }   /* back on */
+}
+
+.logo-eyes-normal {
+    animation: blink 8s steps(1) infinite;
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.logo-eyes-closed {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.logo-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
 }

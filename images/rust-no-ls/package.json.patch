@@ -1,6 +1,6 @@
 {
   "theiaPlugins": {
-    "theia-lsp": "https://open-vsx.org/api/nikolashack/theia-lsp/0.0.6/file/nikolashack.theia-lsp-0.0.6.vsix"
+    "theia-lsp": "https://open-vsx.org/api/nikolashack/theia-lsp/0.1.0/file/nikolashack.theia-lsp-0.1.0.vsix"
   },
   "theiaPluginsExcludeIds": [
     "ms-vscode.js-debug-companion",

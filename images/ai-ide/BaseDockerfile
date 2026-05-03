@@ -1,0 +1,117 @@
+# Dependency installation stage to maximise caching
+FROM node:22-bullseye AS install-deps
+
+# Install build prerequisites only once and clean up afterwards
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libxkbfile-dev libsecret-1-dev ca-certificates
+
+WORKDIR /home/theia
+
+# Configure to skip download of puppeteer
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+# Copy only dependency manifests (including yarn.lock for deterministic installs)
+COPY lerna.json ./
+COPY yarn.lock ./
+COPY package.json ./package.json.base
+COPY images/ai-ide/package.json.patch ./package.json.patch
+COPY applications/browser/package.json applications/browser/package.json.base
+COPY theia-extensions/product/package.json theia-extensions/product/
+# Copy scripts needed for plugin download hooks
+COPY scripts/ ./scripts/
+
+# Merge the root package.json with the patch, but replace `theiaPlugins`
+# so the patch fully controls the runtime plugin set.
+RUN node scripts/merge-package-json.js --replace-keys theiaPlugins package.json.base package.json.patch package.json.merged
+RUN cp package.json.merged package.json
+
+# Merge the browser app package.json with the AI-specific dependency patch
+COPY images/ai-ide/browser-package.json.patch ./browser-package.json.patch
+RUN node scripts/merge-package-json.js applications/browser/package.json.base browser-package.json.patch applications/browser/package.json.merged
+RUN cp applications/browser/package.json.merged applications/browser/package.json
+
+# Install all workspace dependencies needed for the build (using lockfile for speed + reproducibility)
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    yarn config set network-timeout 600000 -g \
+    && yarn install --frozen-lockfile
+
+# Download plugins early to leverage caching
+# This step relies on package.json and scripts/, so it can be cached before source code changes
+# Plugin download uses centralized retry script + persisted plugin cache
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    --mount=type=cache,id=theia-plugin-cache-ai,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
+
+# Build the browser application (plugins already downloaded in install-deps)
+FROM install-deps AS build-stage
+
+# Include the full repository for building
+COPY . .
+COPY images/ai-ide/ .
+
+# Restore the merged package.json files (COPY . . overwrote them with originals)
+RUN cp package.json.merged package.json
+RUN cp applications/browser/package.json.merged applications/browser/package.json
+RUN rm package.json.merged package.json.base package.json.patch \
+       applications/browser/package.json.base applications/browser/package.json.merged \
+       browser-package.json.patch
+
+# Increase Node.js heap size for build process
+ENV NODE_OPTIONS=--max-old-space-size=8192
+
+# Build extensions and produce the browser bundle (browser-only target).
+# No autoclean/cache-clean needed — the final ai-ide stage cherry-picks
+# specific directories via COPY --from=build-stage, so nothing else leaks out.
+RUN rm -rf applications/electron \
+        theia-extensions/launcher \
+        theia-extensions/updater \
+        theia-extensions/product/src/electron-main \
+    && yarn build:extensions \
+    && yarn browser build \
+    && find applications/browser/lib -type f \( -name '*.map' -o -name '*.map.gz' \) -delete
+
+# Production dependencies stage - install only runtime dependencies
+FROM node:22-bullseye-slim AS prod-deps
+
+WORKDIR /home/theia
+
+# Yarn needs git for dependencies that reference git URLs.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends git ca-certificates
+
+# Copy package manifests (including yarn.lock for frozen-lockfile)
+COPY --from=build-stage /home/theia/package.json /home/theia/lerna.json /home/theia/yarn.lock ./
+COPY --from=build-stage /home/theia/applications/browser/package.json applications/browser/
+COPY --from=build-stage /home/theia/theia-extensions/product/package.json theia-extensions/product/
+
+# Install ONLY production dependencies
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    yarn install --frozen-lockfile --production --ignore-scripts --network-timeout 600000
+
+# Final runtime stage
+FROM node:22-bullseye-slim AS ai-ide
+
+# Install only the libraries required at runtime
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update \
+    && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libsecret-1-0 libxkbfile1
+
+WORKDIR /home/theia
+
+# Copy the built artefacts and configuration from the build stage
+COPY --from=build-stage /home/theia/applications /home/theia/applications
+COPY --from=build-stage /home/theia/plugins /home/theia/plugins
+COPY --from=build-stage /home/theia/theia-extensions /home/theia/theia-extensions
+COPY --from=build-stage /home/theia/package.json /home/theia/package.json
+COPY --from=build-stage /home/theia/scripts /home/theia/scripts
+COPY --from=build-stage /home/theia/configs /home/theia/configs
+COPY --from=build-stage /home/theia/tsconfig.json /home/theia/tsconfig.json
+COPY --from=build-stage /home/theia/project /home/theia/project
+
+# Copy production-only node_modules
+COPY --from=prod-deps /home/theia/node_modules /home/theia/node_modules

@@ -5,5 +5,7 @@
         "persisted": true,
         "lost+found": true
     },
-    "telemetry.telemetryLevel": "off"
+    "telemetry.telemetryLevel": "off",
+    "workbench.preferredDarkColorTheme": "edu-ide-theme-dark",
+    "workbench.preferredLightColorTheme": "edu-ide-theme-light"
 }

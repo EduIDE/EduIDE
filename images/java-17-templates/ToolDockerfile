@@ -87,9 +87,6 @@ COPY --chown=theia:theia images/java-17/gradle/remote-cache.gradle /home/theia/.
 # Copy additional plugins
 COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
 
-# Copy the project configuration files
-COPY --chown=theia:theia images/java-17/project /home/project
-
 # Copy entrypoint script for template loading
 COPY --chown=theia:theia images/java-17-templates/entrypoint.sh /home/theia/entrypoint.sh
 # Copy project templates for standalone mode

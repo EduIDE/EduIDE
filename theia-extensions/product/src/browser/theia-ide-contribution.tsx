@@ -23,6 +23,7 @@ import { VSXExtensionsContribution } from '@theia/vsx-registry/lib/browser/vsx-e
 import { HostedPluginSupport } from '@theia/plugin-ext/lib/hosted/browser/hosted-plugin';
 import { MonacoThemingService } from '@theia/monaco/lib/browser/monaco-theming-service';
 import { eduIdeTheme } from './themes/eduide-theme';
+import { eduIdeLightTheme, eduIdeLightThemeIncludes } from './themes/eduide-light-theme';
 
 export namespace TheiaIDEMenus {
     export const THEIA_IDE_HELP: MenuPath = [...CommonMenus.HELP, 'theia-ide'];
@@ -145,7 +146,8 @@ export class TheiaIDEContribution implements CommandContribution, MenuContributi
             id: 'edu-ide-theme-light',
             label: 'EduIDE Light',
             uiTheme: 'vs',
-            json: eduIdeTheme
+            json: eduIdeLightTheme,
+            includes: eduIdeLightThemeIncludes
         });
     }
 

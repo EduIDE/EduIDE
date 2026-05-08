@@ -1,7 +1,8 @@
 {
   "theiaPlugins": {
     "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
-    "rust-analyzer": "https://open-vsx.org/api/rust-lang/rust-analyzer/linux-x64/0.4.2768/file/rust-lang.rust-analyzer-0.4.2768@linux-x64.vsix"
+    "rust-analyzer": "https://open-vsx.org/api/rust-lang/rust-analyzer/linux-x64/0.4.2768/file/rust-lang.rust-analyzer-0.4.2768@linux-x64.vsix",
+    "vadimcn.vscode-lldb": "https://github.com/vadimcn/codelldb/releases/download/v1.12.2/codelldb-linux-x64.vsix"
   },
   "theiaPluginsExcludeIds": [
     "ms-vscode.js-debug-companion",

@@ -14,7 +14,7 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Copy only dependency manifests (including yarn.lock for deterministic installs)
 COPY lerna.json ./
-COPY yarn.lock ./
+COPY images/ai-ide/yarn.lock ./yarn.lock
 COPY package.json ./package.json.base
 COPY images/ai-ide/package.json.patch ./package.json.patch
 COPY applications/browser/package.json applications/browser/package.json.base

@@ -10,5 +10,6 @@
     "java.help.showReleaseNotes": false,
     "java.silentNotification": true,
     "redhat.telemetry.enabled": false,
+    "workbench.colorTheme": "edu-ide-theme-dark",
     "telemetry.telemetryLevel": "off"
 }

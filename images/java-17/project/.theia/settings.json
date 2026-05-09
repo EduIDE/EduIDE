@@ -5,8 +5,12 @@
         "persisted": true,
         "lost+found": true
     },
-    "workbench.colorTheme": "edu-ide-theme-dark",
     "telemetry.telemetryLevel": "off",
+    "java.help.collectErrorLog": false,
+    "java.help.firstView": "none",
+    "java.help.showReleaseNotes": false,
+    "java.silentNotification": true,
+    "redhat.telemetry.enabled": false,
     "ai-features.AiEnable.enableAI": true,
     "ai-features.openAiCustom.customOpenAiModels": [
         {

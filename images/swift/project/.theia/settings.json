@@ -5,8 +5,8 @@
         "persisted": true,
         "lost+found": true
     },
-    "workbench.colorTheme": "edu-ide-theme-dark",
-    "telemetry.telemetryLevel": "off",
+    "lldb.library": "/usr/lib/liblldb.so",
+    "lldb.launch.expressions": "native",
     "ai-features.AiEnable.enableAI": true,
     "ai-features.openAiCustom.customOpenAiModels": [
         {

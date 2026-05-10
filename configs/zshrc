@@ -7,6 +7,9 @@ export ZSH="$HOME/.oh-my-zsh"
 # Theme configuration
 ZSH_THEME="robbyrussell"
 
+# Disable auto-update (Docker images use pinned versions)
+zstyle ':omz:update' mode disabled
+
 # Plugins configuration
 # Note: plugins can be found in ~/.oh-my-zsh/plugins/
 plugins=(

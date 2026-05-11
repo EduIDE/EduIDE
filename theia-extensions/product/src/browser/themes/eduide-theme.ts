@@ -6,6 +6,15 @@
  *
  * SPDX-License-Identifier: MIT
  ********************************************************************************/
+
+// Resolved include chain: dark_theia → dark_plus → dark_vs
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+export const eduIdeDarkThemeIncludes: { [path: string]: unknown } = {
+    './dark_theia.json': require('@theia/monaco/data/monaco-themes/vscode/dark_theia.json'),
+    './dark_plus.json': require('@theia/monaco/data/monaco-themes/vscode/dark_plus.json'),
+    './dark_vs.json': require('@theia/monaco/data/monaco-themes/vscode/dark_vs.json'),
+};
+
 export const eduIdeTheme = {
     $schema: 'vscode://schemas/color-theme',
     name: 'EduIDE Theme',

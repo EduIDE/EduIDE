@@ -22,7 +22,7 @@ import { OutlineBreadcrumbsContribution } from '@theia/outline-view/lib/browser/
 import { VSXExtensionsContribution } from '@theia/vsx-registry/lib/browser/vsx-extensions-contribution';
 import { HostedPluginSupport } from '@theia/plugin-ext/lib/hosted/browser/hosted-plugin';
 import { MonacoThemingService } from '@theia/monaco/lib/browser/monaco-theming-service';
-import { eduIdeTheme } from './themes/eduide-theme';
+import { eduIdeDarkThemeIncludes, eduIdeTheme } from './themes/eduide-theme';
 import { eduIdeLightTheme, eduIdeLightThemeIncludes } from './themes/eduide-light-theme';
 
 export namespace TheiaIDEMenus {
@@ -139,7 +139,8 @@ export class TheiaIDEContribution implements CommandContribution, MenuContributi
             id: 'edu-ide-theme-dark',
             label: 'EduIDE Dark',
             uiTheme: 'vs-dark',
-            json: eduIdeTheme
+            json: eduIdeTheme,
+            includes: eduIdeDarkThemeIncludes
         });
 
         this.themingService.registerParsedTheme({

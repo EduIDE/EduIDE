@@ -18,6 +18,7 @@ export const eduIdeDarkThemeIncludes: { [path: string]: unknown } = {
 export const eduIdeTheme = {
     $schema: 'vscode://schemas/color-theme',
     name: 'EduIDE Theme',
+    include: './dark_theia.json',
     colors: {
         'focusBorder': '#249EA0',
         'button.background': '#249EA0',

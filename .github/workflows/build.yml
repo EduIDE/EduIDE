@@ -189,6 +189,9 @@ jobs:
           - docker-file: images/java-17/ToolDockerfile
             docker-context: "."
             image-name: eduide/eduide/java-17-ai
+          - docker-file: images/java-17-templates/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/java-17-templates-ai
 
     uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feature/split-build-workflow-modes
     with:

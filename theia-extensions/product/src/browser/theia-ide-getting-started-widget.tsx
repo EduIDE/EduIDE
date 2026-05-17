@@ -138,12 +138,22 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
               {nls.localizeByDefault('Open new Terminal')}
           </a>
       </div>;
+      const requestOpenWebUI = requireSingleOpen && <div className='gs-action-container'>
+          <a
+              role={'button'}
+              tabIndex={0}
+              onClick={this.doRequestOpenWebUI}
+              onKeyDown={this.doRequestOpenWebUI}>
+              {nls.localizeByDefault('Request Web UI')}
+          </a>
+      </div>;
 
       return <div className='gs-section'>
           <h3 className='gs-section-header'><i className={codicon('folder-opened')}></i>{nls.localizeByDefault('Start')}</h3>
           {this.isScorpioExtensionInstalled && openScorpio}
           {openSourceControl}
           {showAllTerminals}
+          {requestOpenWebUI}
       </div>
   }
 
@@ -168,12 +178,36 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
   }
 
   /**
-  * Trigger the open scorpio sidebar command. 
+  * Trigger the open scorpio sidebar command.
   */
   protected doOpenScorpio = () => this.commandRegistry.executeCommand(CommandIds.OpenScorpioSidebar);
   protected doOpenScorpioEnter = (e: React.KeyboardEvent) => {
       if (this.isEnterKey(e)) {
           this.doOpenScorpio();
+      }
+  }
+
+  /*
+   * Test if open web ui works
+   */
+  protected doRequestOpenWebUI = () => fetch('https://gpu.aet.cit.tum.de/api/models', {
+    method: 'GET',
+    mode: 'cors',
+    credentials: 'include' // This sends your Keycloak cookies
+  })
+  .then(response => {
+    if (response.ok) {
+      console.log('✅ Success! CORS is allowed and request succeeded.', response);
+    } else {
+      console.warn('⚠️ Request reached server, but returned HTTP error:', response.status);
+    }
+  })
+  .catch(error => {
+    console.error('❌ CORS failed or Network error:', error);
+  });
+  protected doRequestOpenWebUIEnter = (e: React.KeyboardEvent) => {
+      if (this.isEnterKey(e)) {
+          this.doRequestOpenWebUI();
       }
   }
 

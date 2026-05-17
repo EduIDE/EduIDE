@@ -190,22 +190,26 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
   /*
    * Test if open web ui works
    */
-  protected doRequestOpenWebUI = () => fetch('https://gpu.aet.cit.tum.de/api/models', {
-    method: 'GET',
-    mode: 'cors',
-    credentials: 'include' // This sends your Keycloak cookies
-  })
-  .then(response => {
-    if (response.ok) {
-      console.log('✅ Success! CORS is allowed and request succeeded.', response);
-    } else {
-      console.warn('⚠️ Request reached server, but returned HTTP error:', response.status);
+  protected doRequestOpenWebUI = async () => {
+    try {
+      const response = await fetch('https://gpu.aet.cit.tum.de/api/models', {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include' // Sends your Keycloak cookies
+      });
+      if (!response.ok) {
+        console.warn(`⚠️ Request reached server, but returned HTTP error: ${response.status}`);
+      } else {
+        // Parse the JSON body from the response
+        const data = await response.json();
+        console.log('✅ Success! CORS is allowed. Here is the data:', data);
+      }
+    } catch (error) {
+      // This triggers if the network is down OR if CORS fails
+      console.error('❌ CORS failed or Network error:', error);
     }
-  })
-  .catch(error => {
-    console.error('❌ CORS failed or Network error:', error);
-  });
-  protected doRequestOpenWebUIEnter = (e: React.KeyboardEvent) => {
+  }
+protected doRequestOpenWebUIEnter = (e: React.KeyboardEvent) => {
       if (this.isEnterKey(e)) {
           this.doRequestOpenWebUI();
       }

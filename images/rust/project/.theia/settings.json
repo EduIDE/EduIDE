@@ -12,14 +12,14 @@
             "model": "openai/gpt-oss-120b",
             "url": "https://gpu.ase.cit.tum.de/api",
             "id": "custom/gpt-oss-120b",
-            "apiKey": "sk-71a044f2e1394ca9bd38bf48aba6b4e1",
+            "apiKey": "",
             "developerMessageSettings": "user"
         },
         {
             "model": "google/gemma-4-26B-A4B-it",
             "url": "https://gpu.ase.cit.tum.de/api",
             "id": "custom/gemma-4",
-            "apiKey": "sk-71a044f2e1394ca9bd38bf48aba6b4e1",
+            "apiKey": "",
             "developerMessageSettings": "user"
         }
     ],

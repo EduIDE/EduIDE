@@ -12,12 +12,14 @@
             "model": "openai/gpt-oss-120b",
             "url": "https://gpu.ase.cit.tum.de/api",
             "id": "custom/gpt-oss-120b",
+            "apiKey": true,
             "developerMessageSettings": "user"
         },
         {
             "model": "google/gemma-4-26B-A4B-it",
             "url": "https://gpu.ase.cit.tum.de/api",
             "id": "custom/gemma-4",
+            "apiKey": true,
             "developerMessageSettings": "user"
         }
     ],
@@ -38,7 +40,6 @@
         "gpt-5-mini",
         "gpt-5-nano"
     ],
-    "ai-features.openAiOfficial.openAiApiKey": "sk-***",
     "ai-features.languageModelAliases": {},
     "toolbar.showToolbar": false,
     "terminal.integrated.enableCommandHistory": true,
@@ -63,10 +64,5 @@
             ]
         }
     },
-    "editor.fontSize": 12,
-    "terminal.integrated.fontSize": 12,
     "ai-features.ai-terminal-assistant.mode": "standalone",
-    "terminal.integrated.defaultProfile.osx": "SHELL",
-    "ai-features.agentMode.enabled": true,
-    "editor.fontLigatures": false
 }

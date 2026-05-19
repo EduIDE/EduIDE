@@ -56,7 +56,6 @@
     "@theia/vsx-registry": "1.70.0",
     "@theia/plugin-ext": "1.70.0",
     "@theia/plugin-ext-vscode": "1.70.0",
-    "@fangoling/ai-terminal-assistant": "file:../../../ai-terminal-assistant/ai-terminal-assistant",
     "@theia/console": "1.70.0",
     "@theia/core": "1.70.0",
     "@theia/debug": "1.70.0",

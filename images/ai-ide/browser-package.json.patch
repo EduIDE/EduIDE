@@ -2,6 +2,7 @@
   "dependencies": {
     "@fangoling/ai-terminal-assistant": "0.1.0",
     "@theia/ai-core": "1.70.0",
-    "@theia/ai-openai": "1.70.0"
+    "@theia/ai-openai": "1.70.0",
+    "open-webui-ext": "1.70.201"
   }
 }

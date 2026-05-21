@@ -1,0 +1,44 @@
+{
+  "name": "open-webui-ext",
+  "version": "1.70.201",
+  "keywords": [
+    "theia-extension"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eduide/eduide.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eduide/eduide/issues"
+  },
+  "homepage": "https://eduide.github.io/Docs/",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "dependencies": {
+    "@theia/core": "1.70.0",
+    "@theia/ai-core": "1.70.0",
+    "inversify": "^6.0.1",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "^2.7.1",
+    "typescript": "^4.5.5"
+  },
+  "scripts": {
+    "clean": "rimraf lib *.tsbuildinfo",
+    "build": "tsc -b",
+    "lint": "eslint --ext js,jsx,ts,tsx src",
+    "lint:fix": "eslint --ext js,jsx,ts,tsx src --fix",
+    "watch": "tsc -w",
+    "update:theia": "ts-node ../../scripts/update-theia-version.ts",
+    "update:next": "ts-node ../../scripts/update-theia-version.ts next"
+  },
+  "theiaExtensions": [
+    {
+      "frontend": "lib/browser/open-webui-frontend-module"
+    }
+  ]
+}

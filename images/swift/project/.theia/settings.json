@@ -52,7 +52,7 @@
             "languageModelRequirements": [
                 {
                     "purpose": "suggest-terminal-commands",
-                    "identifier": "custom/gpt-oss-120b"
+                    "identifier": "open-webui:openai/gpt-oss-120b"
                 }
             ]
         },
@@ -60,10 +60,16 @@
             "languageModelRequirements": [
                 {
                     "purpose": "summarize-terminal-output",
-                    "identifier": "custom/gpt-oss-120b"
+                    "identifier": "open-webui:openai/gpt-oss-120b"
                 }
             ]
         }
     },
     "ai-features.ai-terminal-assistant.mode": "standalone",
+    "ai-features.openWebUi.baseUrl": "https://gpu.ase.cit.tum.de",
+    "ai-features.openWebUi.autoDiscoverModels": true,
+    "ai-features.openWebUi.models": [
+        "openai/gpt-oss-120b",
+        "google/gemma-4-26B-A4B-it"
+    ]
 }

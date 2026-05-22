@@ -21,6 +21,20 @@ services:
     ports:
       - "3001:3000"
 
+  c-templates:
+    image: theia-c-templates:local
+    build:
+      context: .
+      dockerfile: images/c-templates/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base:local
+      additional_contexts:
+        base-ide: "service:base-ide"
+    depends_on:
+      - base-ide
+    ports:
+      - "3010:3000"
+
   haskell:
     image: theia-haskell:local
     build:

@@ -1,0 +1,2 @@
+# Make `bazel run`/`build` output a bit friendlier.
+common --color=yes

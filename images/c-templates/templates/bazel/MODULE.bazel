@@ -1,0 +1,7 @@
+module(
+    name = "my_project",
+    version = "0.0.1",
+)
+
+# Bazel's built-in C/C++ rules
+bazel_dep(name = "rules_cc", version = "0.0.17")

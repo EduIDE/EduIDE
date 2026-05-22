@@ -10,14 +10,14 @@
     "ai-features.openAiCustom.customOpenAiModels": [
         {
             "model": "openai/gpt-oss-120b",
-            "url": "https://gpu.ase.cit.tum.de/api",
+            "url": "https://gpu.aet.cit.tum.de/api",
             "id": "custom/gpt-oss-120b",
             "apiKey": true,
             "developerMessageSettings": "user"
         },
         {
             "model": "google/gemma-4-26B-A4B-it",
-            "url": "https://gpu.ase.cit.tum.de/api",
+            "url": "https://gpu.aet.cit.tum.de/api",
             "id": "custom/gemma-4",
             "apiKey": true,
             "developerMessageSettings": "user"
@@ -65,7 +65,7 @@
         }
     },
     "ai-features.ai-terminal-assistant.mode": "standalone",
-    "ai-features.openWebUi.baseUrl": "https://gpu.ase.cit.tum.de",
+    "ai-features.openWebUi.baseUrl": "https://gpu.aet.cit.tum.de",
     "ai-features.openWebUi.autoDiscoverModels": true,
     "ai-features.openWebUi.models": [
         "openai/gpt-oss-120b",

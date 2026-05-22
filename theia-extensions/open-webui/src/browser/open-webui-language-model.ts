@@ -94,13 +94,18 @@ export class OpenWebUiLanguageModel implements LanguageModel {
     }
 
     protected initializeOpenAi(): OpenAI {
-        const cookieFetch = (url: RequestInfo, init?: RequestInit) =>
-            fetch(url, { ...init, credentials: 'include' });
+        const cookieFetch = (url: RequestInfo, init?: RequestInit) => {
+            const headers = new Headers(init?.headers);
+            headers.delete('Authorization');
+            return fetch(url, { ...init, headers, credentials: 'include' });
+        };
+
+        const apiBaseUrl = `${this.baseUrl.replace(/\/$/, '')}/api`;
 
         return new OpenAI({
             dangerouslyAllowBrowser: true,
             apiKey: 'no-key',
-            baseURL: this.baseUrl,
+            baseURL: apiBaseUrl,
             fetch: cookieFetch
         });
     }

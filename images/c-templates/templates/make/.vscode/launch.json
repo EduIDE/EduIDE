@@ -5,7 +5,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug App",
-            "program": "${workspaceFolder}/build/app",
+            "program": "${workspaceFolder}/out/app",
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build"

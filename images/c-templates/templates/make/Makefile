@@ -1,6 +1,6 @@
 CC      ?= gcc
 CFLAGS  ?= -std=c17 -Wall -Wextra -g
-BIN_DIR := build
+BIN_DIR := out
 
 APP        := $(BIN_DIR)/app
 

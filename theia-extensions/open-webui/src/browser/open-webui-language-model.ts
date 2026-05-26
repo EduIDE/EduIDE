@@ -39,13 +39,22 @@ export class OpenWebUiLanguageModel implements LanguageModel {
         public model: string,
         public status: LanguageModelStatus,
         public enableStreaming: boolean,
-        public baseUrl: string
+        public baseUrl: string,
+        protected readonly refreshSession?: () => Promise<void>
     ) {
         this.name = model;
         this.vendor = 'Open WebUI';
     }
 
     async request(request: UserRequest, cancellationToken?: CancellationToken): Promise<LanguageModelResponse> {
+        return this.doRequest(request, cancellationToken, true);
+    }
+
+    protected async doRequest(
+        request: UserRequest,
+        cancellationToken?: CancellationToken,
+        allowRetry = true
+    ): Promise<LanguageModelResponse> {
         const openai = this.initializeOpenAi();
         const settings = request.settings ?? {};
 
@@ -59,38 +68,76 @@ export class OpenWebUiLanguageModel implements LanguageModel {
         const isNonStreaming = !this.enableStreaming || (typeof settings.stream === 'boolean' && !settings.stream);
 
         if (isNonStreaming) {
-            const response = await openai.chat.completions.create({
-                model: this.model,
-                messages,
-                ...settings
-            });
-            return {
-                text: response.choices[0]?.message?.content ?? ''
-            };
+            try {
+                const response = await openai.chat.completions.create({
+                    model: this.model,
+                    messages,
+                    ...settings
+                });
+                return {
+                    text: response.choices[0]?.message?.content ?? ''
+                };
+            } catch (error: any) {
+                if (allowRetry && this.isUnauthorizedError(error) && this.refreshSession) {
+                    console.warn('[OpenWebUI] 401 Unauthorized detected during non-streaming request. Refreshing session and retrying...');
+                    await this.refreshSession();
+                    return this.doRequest(request, cancellationToken, false);
+                }
+                throw error;
+            }
         }
 
         let runner: ChatCompletionStream;
-        if (tools && tools.length > 0) {
-            runner = openai.beta.chat.completions.runTools({
-                model: this.model,
-                messages,
-                stream: true,
-                tools,
-                tool_choice: 'auto',
-                ...settings
-            });
-        } else {
-            runner = openai.beta.chat.completions.stream({
-                model: this.model,
-                messages,
-                stream: true,
-                ...settings
-            });
+        try {
+            if (tools && tools.length > 0) {
+                runner = openai.beta.chat.completions.runTools({
+                    model: this.model,
+                    messages,
+                    stream: true,
+                    tools,
+                    tool_choice: 'auto',
+                    ...settings
+                });
+            } else {
+                runner = openai.beta.chat.completions.stream({
+                    model: this.model,
+                    messages,
+                    stream: true,
+                    ...settings
+                });
+            }
+        } catch (error: any) {
+            if (allowRetry && this.isUnauthorizedError(error) && this.refreshSession) {
+                console.warn('[OpenWebUI] 401 Unauthorized detected during streaming initialization. Refreshing session and retrying...');
+                await this.refreshSession();
+                return this.doRequest(request, cancellationToken, false);
+            }
+            throw error;
         }
 
         return {
-            stream: new BrowserStreamingAsyncIterator(runner, request.requestId, cancellationToken)
+            stream: new BrowserStreamingAsyncIterator(
+                runner,
+                request.requestId,
+                cancellationToken,
+                async (err) => {
+                    if (this.isUnauthorizedError(err)) {
+                        console.warn('[OpenWebUI] 401 Unauthorized detected during active stream. Triggering background session refresh...');
+                        if (this.refreshSession) {
+                            this.refreshSession();
+                        }
+                    }
+                }
+            )
         };
+    }
+
+    protected isUnauthorizedError(error: any): boolean {
+        return error?.status === 401 ||
+               error?.statusCode === 401 ||
+               String(error?.message || '').includes('401') ||
+               String(error || '').includes('401') ||
+               error?.name === 'AuthenticationError';
     }
 
     protected initializeOpenAi(): OpenAI {
@@ -188,10 +235,14 @@ class BrowserStreamingAsyncIterator implements AsyncIterableIterator<LanguageMod
     constructor(
         protected readonly stream: ChatCompletionStream,
         protected readonly requestId: string,
-        cancellationToken?: CancellationToken
+        cancellationToken?: CancellationToken,
+        protected readonly onErrorCallback?: (error: any) => void
     ) {
         this.registerStreamListener('error', (error: any) => {
             console.error('Error in Open WebUI chat completion stream:', error);
+            if (this.onErrorCallback) {
+                this.onErrorCallback(error);
+            }
             this.terminalError = error;
             this.dispose();
         });

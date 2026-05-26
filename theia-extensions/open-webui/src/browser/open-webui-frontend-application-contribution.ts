@@ -25,8 +25,111 @@ export class OpenWebUiFrontendApplicationContribution implements FrontendApplica
     // Track registered models to manage additions, updates, and removals
     protected readonly registeredModels = new Map<string, OpenWebUiLanguageModel>();
 
+    protected refreshIframe: HTMLIFrameElement | undefined;
+    protected refreshInterval: any | undefined;
+    protected refreshPromise: Promise<void> | undefined;
+
     onStart(): void {
-        // Implemented to satisfy FrontendApplicationContribution interface
+        this.setupSilentRefresh();
+    }
+
+    protected setupSilentRefresh(): void {
+        const baseUrl = this.preferenceService.get<string>('ai-features.openWebUi.baseUrl', 'https://gpu.aet.cit.tum.de');
+        if (!baseUrl) {
+            return;
+        }
+
+        // Create the hidden iframe
+        if (!this.refreshIframe) {
+            this.refreshIframe = document.createElement('iframe');
+            this.refreshIframe.id = 'open-webui-refresh-iframe';
+            this.refreshIframe.style.display = 'none';
+            this.refreshIframe.style.width = '0';
+            this.refreshIframe.style.height = '0';
+            this.refreshIframe.style.border = 'none';
+            document.body.appendChild(this.refreshIframe);
+        }
+
+        // Set initial src to trigger refresh
+        this.triggerIframeRefresh();
+
+        // Setup periodic refresh (every 15 minutes = 900000 ms)
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+        }
+        this.refreshInterval = setInterval(() => {
+            this.triggerIframeRefresh();
+        }, 15 * 60 * 1000);
+    }
+
+    public triggerIframeRefresh(): Promise<void> {
+        if (this.refreshPromise) {
+            return this.refreshPromise;
+        }
+
+        const baseUrl = this.preferenceService.get<string>('ai-features.openWebUi.baseUrl', 'https://gpu.aet.cit.tum.de');
+        if (!this.refreshIframe || !baseUrl) {
+            return Promise.resolve();
+        }
+
+        this.refreshPromise = new Promise<void>((resolve) => {
+            let loaded = false;
+            
+            const onLoad = () => {
+                if (!loaded) {
+                    loaded = true;
+                    if (this.refreshIframe) {
+                        this.refreshIframe.removeEventListener('load', onLoad);
+                        this.refreshIframe.removeEventListener('error', onError);
+                    }
+                    console.log('[OpenWebUI] Silent session refresh iframe loaded successfully.');
+                    this.refreshPromise = undefined;
+                    resolve();
+                }
+            };
+            
+            const onError = () => {
+                if (!loaded) {
+                    loaded = true;
+                    if (this.refreshIframe) {
+                        this.refreshIframe.removeEventListener('load', onLoad);
+                        this.refreshIframe.removeEventListener('error', onError);
+                    }
+                    console.warn('[OpenWebUI] Silent session refresh iframe encountered a load error.');
+                    this.refreshPromise = undefined;
+                    resolve();
+                }
+            };
+
+            this.refreshIframe!.addEventListener('load', onLoad);
+            this.refreshIframe!.addEventListener('error', onError);
+
+            // Timeout after 10 seconds to avoid blocking indefinitely
+            setTimeout(() => {
+                if (!loaded) {
+                    loaded = true;
+                    if (this.refreshIframe) {
+                        this.refreshIframe.removeEventListener('load', onLoad);
+                        this.refreshIframe.removeEventListener('error', onError);
+                    }
+                    console.warn('[OpenWebUI] Silent session refresh iframe timed out.');
+                    this.refreshPromise = undefined;
+                    resolve();
+                }
+            }, 10000);
+
+            try {
+                const url = new URL(baseUrl);
+                url.searchParams.set('_t', Date.now().toString());
+                this.refreshIframe!.src = url.toString();
+                console.log(`[OpenWebUI] Triggered silent session refresh via iframe pointing to: ${url.toString()}`);
+            } catch (e) {
+                console.error('[OpenWebUI] Invalid baseUrl for refresh:', e);
+                resolve();
+            }
+        });
+
+        return this.refreshPromise;
     }
 
     @postConstruct()
@@ -41,6 +144,9 @@ export class OpenWebUiFrontendApplicationContribution implements FrontendApplica
                 e.preferenceName === 'ai-features.openWebUi.models' ||
                 e.preferenceName === 'ai-features.openWebUi.autoDiscoverModels'
             ) {
+                if (e.preferenceName === 'ai-features.openWebUi.baseUrl') {
+                    this.setupSilentRefresh();
+                }
                 this.syncModels();
             }
         });
@@ -73,7 +179,8 @@ export class OpenWebUiFrontendApplicationContribution implements FrontendApplica
                 modelName,
                 status,
                 true, // enableStreaming
-                baseUrl
+                baseUrl,
+                () => this.triggerIframeRefresh()
             );
             newModelsMap.set(id, lm);
         }

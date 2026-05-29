@@ -79,6 +79,9 @@ jobs:
           - docker-file: images/c/ToolDockerfile
             docker-context: "."
             image-name: eduide/eduide/c
+          - docker-file: images/c-templates/ToolDockerfile
+            docker-context: "."
+            image-name: eduide/eduide/c-templates
           - docker-file: images/haskell/ToolDockerfile
             docker-context: "."
             image-name: eduide/eduide/haskell

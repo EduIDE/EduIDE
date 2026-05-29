@@ -1,0 +1,13 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "files.exclude": {
+        "**/.theia": true,
+        "bazel-bin": true,
+        "bazel-out": true,
+        "bazel-testlogs": true,
+        "persisted": true,
+        "lost+found": true
+    },
+    "workbench.colorTheme": "edu-ide-theme-dark",
+    "telemetry.telemetryLevel": "off"
+}

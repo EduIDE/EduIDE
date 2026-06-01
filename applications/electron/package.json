@@ -137,7 +137,7 @@
     "update:next": "ts-node ../../scripts/update-theia-version.ts next",
     "sign:directory": "ts-node scripts/sign-directory.ts",
     "test": "mocha --timeout 60000 \"./test/*.spec.js\"",
-    "lint": "eslint --ext js,jsx,ts,tsx scripts && eslint --ext js,jsx,ts,tsx test",
+    "lint": "eslint --cache --cache-location .eslintcache --ext js,jsx,ts,tsx scripts && eslint --cache --cache-location .eslintcache --ext js,jsx,ts,tsx test",
     "lint:fix": "eslint --ext js,jsx,ts,tsx scripts --fix && eslint --ext js,jsx,ts,tsx test -fix"
   }
 }

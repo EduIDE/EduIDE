@@ -30,7 +30,7 @@
   "scripts": {
     "clean": "rimraf lib *.tsbuildinfo",
     "build": "tsc -b",
-    "lint": "eslint --ext js,jsx,ts,tsx src",
+    "lint": "eslint --cache --cache-location .eslintcache --ext js,jsx,ts,tsx src",
     "lint:fix": "eslint --ext js,jsx,ts,tsx src --fix",
     "watch": "tsc -w",
     "update:theia": "ts-node ../../scripts/update-theia-version.ts",

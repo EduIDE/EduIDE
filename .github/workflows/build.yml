@@ -52,7 +52,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  lint:
+    name: ESLint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Restore ESLint cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .eslintcache
+            applications/**/.eslintcache
+            theia-extensions/**/.eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('yarn.lock', 'package.json', 'applications/*/package.json', 'theia-extensions/*/package.json', 'configs/*.eslintrc.json') }}-${{ github.sha }}
+          restore-keys: |
+            eslint-${{ runner.os }}-${{ hashFiles('yarn.lock', 'package.json', 'applications/*/package.json', 'theia-extensions/*/package.json', 'configs/*.eslintrc.json') }}-
+            eslint-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 600000
+
+      - name: Run ESLint
+        run: yarn lint
+
   build-and-push-base:
+    needs:
+      - lint
     uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feature/split-build-workflow-modes
     with:
       docker-file: images/base-ide/BaseDockerfile

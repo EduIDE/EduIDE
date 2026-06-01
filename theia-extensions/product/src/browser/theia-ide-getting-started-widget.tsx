@@ -7,20 +7,20 @@
  * SPDX-License-Identifier: MIT
  ********************************************************************************/
 
-import * as React from "react";
+import * as React from 'react';
 
-import { codicon, Message } from "@theia/core/lib/browser";
-import { inject, injectable } from "@theia/core/shared/inversify";
+import { codicon, Message } from '@theia/core/lib/browser';
+import { inject, injectable } from '@theia/core/shared/inversify';
 import {
   animatedLogo,
   renderDocumentation,
   renderTickets,
   renderWhatIs,
-} from "./branding-util";
+} from './branding-util';
 
-import { GettingStartedWidget } from "@theia/getting-started/lib/browser/getting-started-widget";
-import { WindowService } from "@theia/core/lib/browser/window/window-service";
-import { CommandRegistry, environment, isOSX, nls } from "@theia/core";
+import { GettingStartedWidget } from '@theia/getting-started/lib/browser/getting-started-widget';
+import { WindowService } from '@theia/core/lib/browser/window/window-service';
+import { CommandRegistry, environment, isOSX, nls } from '@theia/core';
 
 const CommandIds = {
   OpenExplorer: 'workbench.view.explorer',
@@ -39,7 +39,6 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
   @inject(CommandRegistry)
   protected readonly commandRegistry: CommandRegistry;
 
-
   protected async doInit(): Promise<void> {
     super.doInit();
     this.update();
@@ -47,7 +46,7 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
 
   protected onActivateRequest(msg: Message): void {
     super.onActivateRequest(msg);
-    const htmlElement = document.getElementById("alwaysShowWelcomePage");
+    const htmlElement = document.getElementById('alwaysShowWelcomePage');
     if (htmlElement) {
       htmlElement.focus();
     }
@@ -144,12 +143,12 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
           {this.isScorpioExtensionInstalled && openScorpio}
           {openSourceControl}
           {showAllTerminals}
-      </div>
+      </div>;
   }
 
   /**
-  * Trigger the view source control manager command.
-  */
+   * Trigger the view source control manager command.
+   */
   protected doOpenScm = () => this.commandRegistry.executeCommand(CommandIds.OpenScm);
   protected doOpenScmEnter = (e: React.KeyboardEvent) => {
     if (this.isEnterKey(e)) {
@@ -158,24 +157,24 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
   };
 
   /**
-  * Trigger the open terminal command.
-  */
+   * Trigger the open terminal command.
+   */
   protected doOpenTerminal = () => this.commandRegistry.executeCommand(CommandIds.ToggleTerminal);
   protected doOpenTerminalEnter = (e: React.KeyboardEvent) => {
       if (this.isEnterKey(e)) {
           this.doOpenTerminal();
       }
-  }
+  };
 
   /**
-  * Trigger the open scorpio sidebar command. 
-  */
+   * Trigger the open scorpio sidebar command.
+   */
   protected doOpenScorpio = () => this.commandRegistry.executeCommand(CommandIds.OpenScorpioSidebar);
   protected doOpenScorpioEnter = (e: React.KeyboardEvent) => {
       if (this.isEnterKey(e)) {
           this.doOpenScorpio();
       }
-  }
+  };
 
   /**
    * Check if scorpio extension is installed.

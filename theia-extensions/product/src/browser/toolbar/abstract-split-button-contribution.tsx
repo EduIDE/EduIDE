@@ -1,3 +1,12 @@
+/**
+ * Copyright (C) 2026 EduIDE and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 import { inject, injectable } from '@theia/core/shared/inversify';
 import {
     TabBarToolbarContribution,

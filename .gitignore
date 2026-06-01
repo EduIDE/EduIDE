@@ -8,6 +8,7 @@
 **/gen-webpack.node.config.js
 **/plugins
 **/tsconfig.tsbuildinfo
+**/.eslintcache
 *.log
 license-check-summary.txt*
 .context/

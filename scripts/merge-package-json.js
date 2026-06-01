@@ -29,7 +29,7 @@ const patch = JSON.parse(fs.readFileSync(patchPath, 'utf8'));
 
 const merged = merge(base, patch);
 applyExcludeRemovals(merged, patch);
-fs.writeFileSync(outputPath, `${JSON.stringify(merged, null, 2)}\n`);
+fs.writeFileSync(outputPath, `${JSON.stringify(merged, undefined, 2)}\n`);
 
 function merge(baseValue, patchValue, key = '') {
     if (replaceKeys.has(key)) {
@@ -46,7 +46,7 @@ function merge(baseValue, patchValue, key = '') {
     if (isObject(baseValue) && isObject(patchValue)) {
         const result = { ...baseValue };
         for (const [childKey, childValue] of Object.entries(patchValue)) {
-            if (childValue === null) {
+            if (isJsonNull(childValue)) {
                 delete result[childKey];
                 continue;
             }
@@ -61,7 +61,11 @@ function merge(baseValue, patchValue, key = '') {
 }
 
 function isObject(value) {
-    return value !== null && typeof value === 'object' && !Array.isArray(value);
+    return typeof value === 'object' && !isJsonNull(value) && !Array.isArray(value);
+}
+
+function isJsonNull(value) {
+    return typeof value === 'object' && !value;
 }
 
 function removeNullEntries(value) {
@@ -74,7 +78,7 @@ function removeNullEntries(value) {
 
     const result = {};
     for (const [childKey, childValue] of Object.entries(value)) {
-        if (childValue === null) {
+        if (isJsonNull(childValue)) {
             continue;
         }
         result[childKey] = removeNullEntries(childValue);

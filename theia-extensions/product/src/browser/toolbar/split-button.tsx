@@ -1,3 +1,12 @@
+/**
+ * Copyright (C) 2026 EduIDE and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 import { codicon } from '@theia/core/lib/browser';
 import * as React from '@theia/core/shared/react';
 import '../../../src/browser/toolbar/split-button.css';

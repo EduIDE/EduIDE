@@ -78,6 +78,9 @@ jobs:
             eslint-${{ runner.os }}-${{ hashFiles('yarn.lock', 'package.json', 'applications/*/package.json', 'theia-extensions/*/package.json', 'configs/*.eslintrc.json') }}-
             eslint-${{ runner.os }}-
 
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config libx11-dev libxkbfile-dev libsecret-1-dev
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
 

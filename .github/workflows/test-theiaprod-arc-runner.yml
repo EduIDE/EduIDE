@@ -1,0 +1,37 @@
+name: Test Theia Prod ARC Runner
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-base-on-theiaprod:
+    name: Build base image on theia-prod ARC
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image-self-hosted-buildkit.yml@feature/split-build-workflow-modes
+    with:
+      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      docker-file: images/base-ide/BaseDockerfile
+      docker-context: .
+      image-name: eduide/eduide/base
+      network: host
+      runner-amd64: arc-buildkit-eduide-theiaprod-amd64
+      runner-arm64: arc-buildkit-eduide-parma-arm64
+      runner-merge: arc-buildkit-eduide-theiaprod-amd64
+      build-amd64: true
+      build-arm64: false
+      arc-registry-cache: false
+      no-cache: false
+      tags: |
+        type=ref,event=pr
+    secrets: inherit

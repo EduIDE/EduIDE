@@ -4,5 +4,8 @@
     "@theia/ai-core": "1.70.0",
     "@theia/ai-openai": "1.70.0",
     "open-webui-ext": "1.70.201"
+  },
+  "scripts": {
+    "build": "yarn -s rebuild && theia build --app-target=\"browser\" --mode production"
   }
 }

@@ -70,6 +70,7 @@ RUN rm -rf applications/electron \
         theia-extensions/updater \
         theia-extensions/product/src/electron-main \
     && yarn build:extensions \
+    && yarn --cwd theia-extensions/open-webui build \
     && yarn browser build \
     && find applications/browser/lib -type f \( -name '*.map' -o -name '*.map.gz' \) -delete
 

@@ -13,7 +13,7 @@ settingsEvaluated { settings ->
 
         settings.buildCache {
             local {
-                enabled = true
+                enabled = false
             }
             remote(HttpBuildCache) {
                 url = cacheUrl

@@ -187,6 +187,33 @@ yarn update:theia <new-version>
 yarn update:theia 1.69.0
 ```
 
+### Dependency and lockfile changes
+
+When changing dependencies in the root `package.json` or
+`applications/browser/package.json`, update the regular root `yarn.lock`. Also regenerate
+the lockfile for every image that keeps its own `images/<image>/yarn.lock` because that
+image is built with a separate frozen lockfile.
+
+When changing dependencies in an image-specific
+`images/<image>/browser-package.json.patch`, regenerate that image's lockfile:
+
+```sh
+./scripts/generate-image-lockfile.sh <image>
+# example:
+./scripts/generate-image-lockfile.sh ai-ide
+```
+
+Images with browser package patches may resolve a different browser dependency graph
+because those patches are merged on top of `applications/browser/package.json` for that
+build. The generated `images/<image>/yarn.lock` must be committed with the dependency
+change so CI can run `yarn install --frozen-lockfile` without failing.
+
+The `base-ide` image itself uses the root `yarn.lock`; it does not use
+`generate-image-lockfile.sh` unless it also gets its own image-specific lockfile.
+
+Changes to `images/<image>/package.json.patch` only adjust the VS Code extensions added to
+the image and do not require lockfile regeneration.
+
 Then rebuild and test locally before pushing.
 
 ### CI / CD

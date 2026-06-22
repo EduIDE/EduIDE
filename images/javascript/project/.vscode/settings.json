@@ -5,6 +5,7 @@
         "persisted": true,
         "lost+found": true
     },
+    "workbench.colorTheme": "edu-ide-theme-dark",
     /**
      * JavaScript Essentials Config
      */

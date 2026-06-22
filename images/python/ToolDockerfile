@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
-    adduser python3 python3-pip bash git python-is-python3 ca-certificates
+    adduser python3 python3-pip bash zsh git python-is-python3 ca-certificates
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     pip3 install -U pytest --retries 5 --timeout 30
 
@@ -82,7 +82,7 @@ COPY --chown=theia:theia images/python/project /home/project
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
-ENV SHELL=/bin/bash \
+ENV SHELL=/bin/zsh \
     THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
 
 # Use installed git instead of dugite
@@ -90,6 +90,7 @@ ENV USE_LOCAL_GIT=true
 
 # Switch to Theia user
 USER theia
+
 WORKDIR /home/theia/applications/browser
 
 # Launch the backend application via node

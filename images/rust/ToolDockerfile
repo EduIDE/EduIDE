@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
-    curl adduser build-essential bash git ca-certificates
+    curl adduser build-essential bash zsh git ca-certificates
 
 # Create theia user and directories (after adduser is installed)
 RUN useradd --system --create-home --user-group --uid 101 theia && \
@@ -79,7 +79,7 @@ COPY --chown=theia:theia images/rust/project /home/project
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
-ENV SHELL=/bin/bash \
+ENV SHELL=/bin/zsh \
     THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
 
 # Use installed git instead of dugite
@@ -107,7 +107,7 @@ RUN curl --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max
 ENV PATH=/home/theia/.cargo/bin:$PATH
 
 # Ensure the environment is set correctly when switching to the user "theia"
-RUN echo 'source $HOME/.cargo/env' >> /home/theia/.bashrc
+RUN echo 'source $HOME/.cargo/env' >> /home/theia/.zshrc
 
 WORKDIR /home/theia/applications/browser
 

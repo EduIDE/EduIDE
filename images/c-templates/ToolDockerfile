@@ -1,0 +1,123 @@
+# syntax=docker/dockerfile:1
+# C image WITH project templates (bazel/make).
+# Identical tooling to the `c` image, but includes Bazel, project templates,
+# and an entrypoint for standalone (template-loading) mode.
+
+# Load the base-ide image, only copy from here
+ARG BASE_IDE_TAG=latest
+ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
+FROM ${BASE_IMAGE} AS base-ide
+
+# Parallel stage: Install system dependencies (runs concurrently with plugin-image)
+# Adapted from https://github.com/ls1intum/artemis-c-docker/blob/main/Dockerfile
+FROM ubuntu:24.04 AS apt-deps
+
+ARG TARGETARCH
+# Bazelisk version (the launcher). The actual Bazel version is pinned per-project
+# via templates/bazel/.bazelversion.
+ARG BAZELISK_VERSION=v1.25.0
+
+WORKDIR /home/theia
+
+# Install all system dependencies with BuildKit cache mounts (including adduser)
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
+    adduser findutils bzip2 e2fsprogs sudo bash zsh gcc clang clangd git gdb make ca-certificates \
+    curl unzip zip python3
+
+# Install Bazelisk as `bazel` (resolves/downloads the Bazel version in .bazelversion)
+RUN curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 120 -fsSL \
+    -o /usr/local/bin/bazel \
+    "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-${TARGETARCH}" && \
+    chmod +x /usr/local/bin/bazel
+
+# Create theia user and directories (after adduser is installed)
+RUN useradd --system --create-home --user-group --uid 101 theia && \
+    chmod g+rw /home && \
+    mkdir -p /home/project && \
+    chown -R theia:theia /home/theia && \
+    chown -R theia:theia /home/project
+
+# Parallel stage: Plugin download (runs concurrently with apt-deps)
+FROM node:22-bullseye AS plugin-image
+
+WORKDIR /home/theia
+
+# Configure to skip download of puppeteer
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+# Copy required configuration files (reuse the `c` image plugin set)
+COPY --from=base-ide /home/theia/package.json ./package.json.base
+COPY images/c/package.json.patch ./package.json.patch
+
+# Merge the base package.json with the c-specific patch using Node.js (deep merge)
+RUN node -e "const fs=require('fs'); \
+const deepMerge=(t,s)=>{const o={...t}; for(const k in s){o[k]=s[k]!==null&&typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]?deepMerge(t[k],s[k]):s[k]} return o}; \
+const base=JSON.parse(fs.readFileSync('package.json.base')); \
+const patch=JSON.parse(fs.readFileSync('package.json.patch')); \
+fs.writeFileSync('package.json', JSON.stringify(deepMerge(base,patch), null, 2));" && \
+    rm package.json.base package.json.patch
+
+# Copy from base-ide: scripts, configs, existing plugins, and production node_modules
+COPY --from=base-ide /home/theia/scripts /home/theia/scripts
+COPY --from=base-ide /home/theia/configs /home/theia/configs
+COPY --from=base-ide /home/theia/tsconfig.json /home/theia/tsconfig.json
+COPY --from=base-ide /home/theia/plugins /home/theia/plugins
+COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
+
+# Install ONLY @theia/cli (needed for download:plugins command)
+RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
+        echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
+        sleep $((n*3)); \
+    done
+
+# Download language-specific plugins
+RUN --mount=type=cache,id=theia-plugin-cache-c-templates,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
+
+# Final stage: Assemble the application
+FROM apt-deps AS final-ide
+
+# Copy node binary from plugin-image (required for Theia runtime)
+COPY --from=plugin-image /usr/local/bin/node /usr/local/bin/
+
+# Switch to Theia user
+USER theia
+ENV HOME=/home/theia
+WORKDIR /home/theia
+
+# Copy application from base-ide (includes prod node_modules)
+COPY --from=base-ide --chown=theia:theia /home/theia /home/theia
+
+# Copy additional plugins (language-specific extensions)
+COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
+
+# Copy entrypoint script for template loading
+COPY --chown=theia:theia images/c-templates/entrypoint.sh /home/theia/entrypoint.sh
+# Copy project templates for standalone mode
+COPY --chown=theia:theia images/c-templates/templates /home/theia/templates
+
+# Pre-download the pinned Bazel version into bazelisk's cache so the first
+# in-IDE build does not require a network round-trip.
+RUN cd /home/theia/templates/bazel && bazel version
+
+EXPOSE 3000
+
+# Specify default shell for Theia and the Built-In plugins directory
+ENV SHELL=/bin/zsh \
+    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
+
+# Use installed git instead of dugite
+ENV USE_LOCAL_GIT=true
+
+WORKDIR /home/theia/applications/browser
+
+# Launch via entrypoint script (handles template loading + bazel cache config)
+ENTRYPOINT [ "/bin/bash", "/home/theia/entrypoint.sh" ]
+
+# Arguments passed to the application
+CMD [ "/home/project", "--hostname=0.0.0.0" ]

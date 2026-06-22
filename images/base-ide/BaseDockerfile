@@ -84,6 +84,34 @@ COPY --from=build-stage /home/theia/theia-extensions/product/package.json theia-
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
     yarn install --frozen-lockfile --production --ignore-scripts --network-timeout 600000
 
+# Stage: Clone Oh My Zsh and plugins (cached independently)
+FROM alpine/git AS zsh-setup
+ARG OH_MY_ZSH_COMMIT=5c4f27b7166360bd23709f24642b247eac30a147
+RUN n=0; until rm -rf /oh-my-zsh \
+      && git init /oh-my-zsh \
+      && git -C /oh-my-zsh remote add origin https://github.com/ohmyzsh/ohmyzsh.git \
+      && git -C /oh-my-zsh fetch --depth 1 origin ${OH_MY_ZSH_COMMIT} \
+      && git -C /oh-my-zsh checkout FETCH_HEAD; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "oh-my-zsh clone failed after $n attempts" >&2; exit 1; fi; \
+        echo "oh-my-zsh clone failed (attempt $n), retrying..."; \
+        sleep $((n*2)); \
+    done && \
+    n=0; until rm -rf /oh-my-zsh/custom/plugins/zsh-autosuggestions \
+      && git clone --depth 1 --branch v0.7.1 https://github.com/zsh-users/zsh-autosuggestions /oh-my-zsh/custom/plugins/zsh-autosuggestions; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "zsh-autosuggestions clone failed after $n attempts" >&2; exit 1; fi; \
+        echo "zsh-autosuggestions clone failed (attempt $n), retrying..."; \
+        sleep $((n*2)); \
+    done && \
+    n=0; until rm -rf /oh-my-zsh/custom/plugins/zsh-syntax-highlighting \
+      && git clone --depth 1 --branch 0.8.0 https://github.com/zsh-users/zsh-syntax-highlighting.git /oh-my-zsh/custom/plugins/zsh-syntax-highlighting; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "zsh-syntax-highlighting clone failed after $n attempts" >&2; exit 1; fi; \
+        echo "zsh-syntax-highlighting clone failed (attempt $n), retrying..."; \
+        sleep $((n*2)); \
+    done
+
 # Final runtime stage
 FROM node:22-bullseye-slim AS base-ide
 
@@ -107,3 +135,7 @@ COPY --from=build-stage /home/theia/project /home/theia/project
 
 # Copy production-only node_modules
 COPY --from=prod-deps /home/theia/node_modules /home/theia/node_modules
+
+# Copy Oh My Zsh and zsh configuration (available to all variants via base-ide)
+COPY --from=zsh-setup /oh-my-zsh /home/theia/.oh-my-zsh
+COPY configs/zshrc /home/theia/.zshrc

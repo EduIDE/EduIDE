@@ -5,7 +5,7 @@
     "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
     "data-bridge": "https://github.com/eduide/eduide-data-bridge/releases/download/v0.0.14/data-bridge-0.0.14.vsix",
     "scorpio": "https://open-vsx.org/api/aet-tum/artemis-scorpio/2.0.1/file/aet-tum.artemis-scorpio-2.0.1.vsix",
-    "artemis-extension": "https://open-vsx.org/api/aet-tum/iris-thaumantias/0.4.6/file/aet-tum.iris-thaumantias-0.4.6.vsix"
+    "artemis-extension": "https://open-vsx.org/api/aet-tum/iris-thaumantias/0.4.7/file/aet-tum.iris-thaumantias-0.4.7.vsix"
   },
   "theiaPluginsExcludeIds": [
     "ms-vscode.js-debug-companion",

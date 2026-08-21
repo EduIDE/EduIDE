@@ -58,7 +58,7 @@ jobs:
       docker-file: images/base-ide/BaseDockerfile
       image-name: eduide/eduide/base
       docker-context: .
-      image-tag: ${{ inputs.image_tag || '' }}
+      image-tag: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.image_tag || '' }}
       execution-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
       arc-registry-cache: ${{ github.event_name == 'workflow_dispatch' && inputs.arc_registry_cache || false }}
       cache-from: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }}
@@ -126,7 +126,7 @@ jobs:
       docker-context: ${{ matrix.docker-context }}
       build-args: |
         BASE_IDE_TAG=${{ needs.build-and-push-base.outputs.sha_tag }}
-      image-tag: ${{ inputs.image_tag || '' }}
+      image-tag: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.image_tag || '' }}
       execution-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
       arc-registry-cache: ${{ github.event_name == 'workflow_dispatch' && inputs.arc_registry_cache || false }}
       cache-from: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }}

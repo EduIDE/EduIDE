@@ -54,6 +54,11 @@ RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network
         sleep $((n*3)); \
     done
 
+# Global TypeScript CLI tooling for the terminal: tsc (compile/type-check) and tsx
+# (run .ts files directly). tsx is self-contained and works with modern Node; ts-node
+# 10.x silently no-ops on Node 22.
+RUN npm install -g typescript@5.6.3 tsx@4.19.2
+
 # Download language-specific plugins
 RUN --mount=type=cache,id=theia-plugin-cache-javascript,target=/home/theia/.plugin-cache,sharing=locked \
     yarn download:plugins:smart
@@ -61,8 +66,10 @@ RUN --mount=type=cache,id=theia-plugin-cache-javascript,target=/home/theia/.plug
 # Final stage: Assemble the application
 FROM apt-deps AS final-ide
 
-# Copy Node.js from plugin-image (required for Theia runtime)
-COPY --from=plugin-image /usr/local/bin/node /usr/local/bin/
+# Copy Node.js from plugin-image (required for Theia runtime).
+# Copy the whole bin dir (not just the `node` binary): it carries the npm/npx/corepack
+# launcher symlinks plus the tsc/tsx launchers created by the global install above.
+COPY --from=plugin-image /usr/local/bin/ /usr/local/bin/
 COPY --from=plugin-image /usr/local/lib/node_modules/ /usr/local/lib/node_modules/
 
 # Switch to Theia user
@@ -88,6 +95,9 @@ ENV SHELL=/bin/zsh \
 
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
+
+# Let plain `node`/`tsc` resolve the globally-installed npm packages (typescript, tsx)
+ENV NODE_PATH=/usr/local/lib/node_modules
 
 WORKDIR /home/theia/applications/browser
 

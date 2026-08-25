@@ -33,7 +33,7 @@ This repository includes example implementations demonstrating the extension pat
 | Language   | Image Directory | Demonstrates |
 |------------|-----------------|--------------|
 | Java 17    | `java-17/`      | JDK installation, Maven, Java language server |
-| JavaScript | `javascript/`   | Node.js runtime, npm, TypeScript support |
+| JavaScript | `javascript/`   | Node.js runtime, npm/npx, corepack, TypeScript CLI (tsc, tsx) |
 | C          | `c/`            | GCC toolchain, C/C++ extensions |
 
 These examples serve as templates for creating additional language-specific variants of the web-based Theia IDE.

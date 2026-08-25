@@ -79,16 +79,6 @@ jobs:
             docker-file: images/python/ToolDockerfile
           - image-name: eduide/eduide/rust
             docker-file: images/rust/ToolDockerfile
-          - image-name: eduide/eduide/langserver-java
-            docker-file: images/languageserver/java/Dockerfile
-          - image-name: eduide/eduide/langserver-rust
-            docker-file: images/languageserver/rust/Dockerfile
-          - image-name: eduide/eduide/theia-no-ls
-            docker-file: images/theia-no-ls/ToolDockerfile
-          - image-name: eduide/eduide/java-17-no-ls
-            docker-file: images/java-17-no-ls/ToolDockerfile
-          - image-name: eduide/eduide/rust-no-ls
-            docker-file: images/rust-no-ls/ToolDockerfile
     uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
     with:
       docker-file: ${{ matrix.docker-file }}

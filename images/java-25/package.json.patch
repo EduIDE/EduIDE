@@ -1,7 +1,7 @@
 {
   "theiaPlugins": {
-    "vscjava.vscode-java-pack": "https://open-vsx.org/api/vscjava/vscode-java-pack/0.25.11/file/vscjava.vscode-java-pack-0.25.11.vsix",
-    "vscjava.vscode-java-dependency": "https://open-vsx.org/api/vscjava/vscode-java-dependency/0.21.2/file/vscjava.vscode-java-dependency-0.21.2.vsix",
+    "vscjava.vscode-java-pack": "https://open-vsx.org/api/vscjava/vscode-java-pack/0.31.1/file/vscjava.vscode-java-pack-0.31.1.vsix",
+    "vscjava.vscode-java-dependency": "https://open-vsx.org/api/vscjava/vscode-java-dependency/0.27.6/file/vscjava.vscode-java-dependency-0.27.6.vsix",
     "vscjava.vscode-gradle": "https://open-vsx.org/api/vscjava/vscode-gradle/3.18.0/file/vscjava.vscode-gradle-3.18.0.vsix",
     "usernamehw.errorlens": "https://open-vsx.org/api/usernamehw/errorlens/3.28.0/file/usernamehw.errorlens-3.28.0.vsix"
   },

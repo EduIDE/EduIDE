@@ -19,26 +19,13 @@ on:
 
   workflow_dispatch:
     inputs:
-      execution_mode:
-        description: "Build backend to use"
-        required: false
-        default: self-hosted-buildkit
-        type: choice
-        options:
-          - self-hosted-buildkit
-          - github-runners
       image_tag:
-        description: "Optional image tag override (e.g. my-test-tag)"
+        description: "Optional image tag override (e.g. my-test-tag, or 2.3.0 for the release train)"
         required: false
         default: ""
         type: string
-      arc_registry_cache:
-        description: "Enable ARC registry cache import/export (slower on stateful BuildKit; default off)"
-        required: false
-        default: false
-        type: boolean
       disable_layer_cache:
-        description: "Disable Docker layer cache (--no-cache) for stress testing while keeping BuildKit mount caches"
+        description: "Disable the Docker layer cache (--no-cache) for stress testing"
         required: false
         default: false
         type: boolean
@@ -48,91 +35,61 @@ permissions:
   packages: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build-and-push-base:
-    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feature/split-build-workflow-modes
+  # The base IDE image every language image is built FROM. Its immutable
+  # sha_tag is passed down so the language images cannot pick up a different
+  # base than the one just built.
+  base:
+    uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
     with:
       docker-file: images/base-ide/BaseDockerfile
       image-name: eduide/eduide/base
       docker-context: .
-      image-tag: ${{ inputs.image_tag || '' }}
-      execution-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
-      arc-registry-cache: ${{ github.event_name == 'workflow_dispatch' && inputs.arc_registry_cache || false }}
-      cache-from: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }}
-      cache-to: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }},mode=max,image-manifest=true,oci-mediatypes=true
+      image-tag: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
-      network: host
-      build-amd64: true
-      build-arm64: ${{ github.event_name != 'pull_request' }}
     secrets: inherit
 
-  build-and-push:
-    needs:
-      - build-and-push-base
+  images:
+    needs: base
+    name: ${{ matrix.image-name }}
     strategy:
+      # These are large, independent images. One language failing to build must
+      # not cancel the other thirteen.
       fail-fast: false
       matrix:
         include:
-          - docker-file: images/c/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/c
-          - docker-file: images/c-templates/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/c-templates
-          - docker-file: images/haskell/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/haskell
-          - docker-file: images/java-17/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/java-17
-          - docker-file: images/java-17-templates/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/java-17-templates
-          - docker-file: images/javascript/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/javascript
-          - docker-file: images/ocaml/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/ocaml
-          - docker-file: images/python/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/python
-          - docker-file: images/rust/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/rust
-          - docker-file: images/languageserver/java/Dockerfile
-            docker-context: "."
-            image-name: eduide/eduide/langserver-java
-          - docker-file: images/languageserver/rust/Dockerfile
-            docker-context: "."
-            image-name: eduide/eduide/langserver-rust
-          - docker-file: images/theia-no-ls/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/theia-no-ls
-          - docker-file: images/java-17-no-ls/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/java-17-no-ls
-          - docker-file: images/rust-no-ls/ToolDockerfile
-            docker-context: "."
-            image-name: eduide/eduide/rust-no-ls
-
-    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feature/split-build-workflow-modes
+          - image-name: eduide/eduide/c
+            docker-file: images/c/ToolDockerfile
+          - image-name: eduide/eduide/c-templates
+            docker-file: images/c-templates/ToolDockerfile
+          - image-name: eduide/eduide/haskell
+            docker-file: images/haskell/ToolDockerfile
+          - image-name: eduide/eduide/java-17
+            docker-file: images/java-17/ToolDockerfile
+          - image-name: eduide/eduide/java-17-templates
+            docker-file: images/java-17-templates/ToolDockerfile
+          - image-name: eduide/eduide/java-25
+            docker-file: images/java-25/ToolDockerfile
+          - image-name: eduide/eduide/java-25-templates
+            docker-file: images/java-25-templates/ToolDockerfile
+          - image-name: eduide/eduide/javascript
+            docker-file: images/javascript/ToolDockerfile
+          - image-name: eduide/eduide/ocaml
+            docker-file: images/ocaml/ToolDockerfile
+          - image-name: eduide/eduide/python
+            docker-file: images/python/ToolDockerfile
+          - image-name: eduide/eduide/rust
+            docker-file: images/rust/ToolDockerfile
+    uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
     with:
       docker-file: ${{ matrix.docker-file }}
       image-name: ${{ matrix.image-name }}
-      docker-context: ${{ matrix.docker-context }}
+      docker-context: .
       build-args: |
-        BASE_IDE_TAG=${{ needs.build-and-push-base.outputs.sha_tag }}
-      image-tag: ${{ inputs.image_tag || '' }}
-      execution-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.execution_mode || 'self-hosted-buildkit' }}
-      arc-registry-cache: ${{ github.event_name == 'workflow_dispatch' && inputs.arc_registry_cache || false }}
-      cache-from: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }}
-      cache-to: type=registry,ref=ghcr.io/eduide/eduide:${{ github.event_name == 'pull_request' && format('build-cache-pr-{0}', github.event.pull_request.number) || 'build-cache' }},mode=max,image-manifest=true,oci-mediatypes=true
+        BASE_IDE_TAG=${{ needs.base.outputs.sha_tag }}
+      image-tag: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
-      network: host
-      build-amd64: true
-      build-arm64: ${{ github.event_name != 'pull_request' }}
     secrets: inherit

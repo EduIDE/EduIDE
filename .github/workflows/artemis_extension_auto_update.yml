@@ -1,0 +1,77 @@
+name: Auto-update artemis-extension
+
+# Bumps the bundled artemis-extension (iris-thaumantias) pin in
+# images/base-ide/package.json.patch and opens a PR. Triggered by the
+# artemis-extension release pipeline (workflow_dispatch via API) once a new
+# version is published to Open VSX, or run manually for testing.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Released artemis-extension version (strict semver, e.g. 0.5.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-artemis-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate version (strict semver)
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version '$VERSION' is not strict semver MAJOR.MINOR.PATCH."
+            exit 1
+          fi
+
+      - name: Bump artemis-extension pin
+        id: bump
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          FILE="images/base-ide/package.json.patch"
+          NEW="https://open-vsx.org/api/aet-tum/iris-thaumantias/${VERSION}/file/aet-tum.iris-thaumantias-${VERSION}.vsix"
+          # Structural guard: the theiaPlugins object must exist (catches a file move/rename).
+          if ! jq -e '.theiaPlugins | type == "object"' "$FILE" >/dev/null; then
+            echo "::error::'.theiaPlugins' object not found in $FILE."
+            exit 1
+          fi
+          CUR=$(jq -r '.theiaPlugins["artemis-extension"] // empty' "$FILE")
+          if [[ "$CUR" == "$NEW" ]]; then
+            echo "Already pinned to $VERSION; nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tmp=$(mktemp)
+          # Adds the key if absent, updates it otherwise (forward-looking: main may
+          # not bundle artemis-extension yet).
+          jq --arg u "$NEW" '.theiaPlugins["artemis-extension"] = $u' "$FILE" > "$tmp"
+          mv "$tmp" "$FILE"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "Pinned artemis-extension to $VERSION"
+
+      - name: Create Pull Request
+        if: steps.bump.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update-artemis-extension
+          delete-branch: true
+          base: main
+          commit-message: "Update artemis-extension to ${{ inputs.version }}"
+          title: "Update artemis-extension to ${{ inputs.version }}"
+          body: |
+            Automated bump of the bundled artemis-extension (iris-thaumantias) to
+            version `${{ inputs.version }}` in `images/base-ide/package.json.patch`.
+
+            Triggered by the artemis-extension release pipeline.

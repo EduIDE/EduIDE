@@ -1,0 +1,119 @@
+# syntax=docker/dockerfile:1
+# TH-Mannheim Java 25 image (course "PR2").
+#
+# Resembles the course's documented dev container: Ubuntu 26.04, OpenJDK 25 and
+# Maven from apt, git, and the Java extension set (redhat.java, java-debug,
+# java-test, maven, java-dependency) plus Live Preview. Unlike the standard
+# EduIDE images this variant ships WITHOUT the EduIDE/Artemis extensions
+# (scorpio, artemis-extension, data-bridge), which are stripped from the base.
+
+# Load the base-ide image, only copy from here
+ARG BASE_IDE_TAG=latest
+ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
+FROM ${BASE_IMAGE} AS base-ide
+
+# Parallel stage: Install system dependencies (runs concurrently with plugin-image)
+FROM ubuntu:26.04 AS apt-deps
+
+# Create theia user and directories first (doesn't need apt)
+RUN useradd --system --create-home --user-group --uid 101 theia && \
+    chmod g+rw /home && \
+    mkdir -p /home/project && \
+    chown -R theia:theia /home/theia && \
+    chown -R theia:theia /home/project
+
+# Install required tools with BuildKit cache mounts.
+# Course toolchain: git, OpenJDK 25, Maven. Plus EduIDE runtime essentials.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
+    git openssh-client bash zsh libsecret-1-0 openjdk-25-jdk maven ca-certificates && \
+    apt-get autoremove -y
+
+# Parallel stage: Plugin download (runs concurrently with apt-deps)
+FROM node:22-bullseye AS plugin-image
+
+WORKDIR /home/theia
+
+# Configure to skip download of puppeteer
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+# Copy required configuration files
+COPY --from=base-ide /home/theia/package.json ./package.json.base
+COPY images/thm-java-25/package.json.patch ./package.json.patch
+COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
+
+# Merge the base package.json with the thm-java-25 patch without dropping base exclusions.
+RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
+    rm package.json.base package.json.patch
+
+# Copy from base-ide: scripts, configs, existing plugins, and production node_modules
+COPY --from=base-ide /home/theia/scripts /home/theia/scripts
+COPY --from=base-ide /home/theia/configs /home/theia/configs
+COPY --from=base-ide /home/theia/tsconfig.json /home/theia/tsconfig.json
+COPY --from=base-ide /home/theia/plugins /home/theia/plugins
+COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
+
+# Install ONLY @theia/cli (needed for download:plugins command)
+# This is much faster than full yarn install since we already have prod node_modules
+RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
+        echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
+        sleep $((n*3)); \
+    done
+
+# Download language-specific plugins (prune-and-sync drops scorpio/data-bridge/
+# artemis-extension because they are no longer configured in the merged config)
+RUN --mount=type=cache,id=theia-plugin-cache-thm-java-25,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
+
+# Final stage: Assemble the application
+FROM apt-deps AS final-ide
+
+ARG TARGETARCH
+
+# Copy Node.js from plugin-image (required for Theia runtime)
+COPY --from=plugin-image /usr/local/bin/node /usr/local/bin/
+COPY --from=plugin-image /usr/local/lib/node_modules/ /usr/local/lib/node_modules/
+
+# Switch to Theia user
+USER theia
+ENV HOME=/home/theia
+ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-${TARGETARCH}
+# Avoid deprecated sun.misc.Unsafe memory-access warnings on Java 25 (per course config)
+ENV MAVEN_OPTS=--sun-misc-unsafe-memory-access=allow
+WORKDIR /home/theia
+
+# Copy application from the base image (includes prod node_modules)
+COPY --from=base-ide --chown=theia:theia /home/theia /home/theia
+
+# Copy additional plugins
+COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
+
+# Safety net: guarantee the EduIDE/Artemis extensions are absent even if the
+# prune step ever falls back to keep-all mode.
+RUN rm -rf /home/theia/plugins/scorpio \
+           /home/theia/plugins/data-bridge \
+           /home/theia/plugins/artemis-extension
+
+# Copy the project configuration files
+COPY --chown=theia:theia images/thm-java-25/project /home/project
+
+EXPOSE 3000
+
+# Specify default shell for Theia and the Built-In plugins directory
+ENV SHELL=/bin/zsh \
+    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
+
+# Use installed git instead of dugite
+ENV USE_LOCAL_GIT=true
+
+WORKDIR /home/theia/applications/browser
+
+# Launch the backend application via node
+ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
+
+# Arguments passed to the application
+CMD [ "/home/project", "--hostname=0.0.0.0" ]

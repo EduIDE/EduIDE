@@ -28,6 +28,7 @@ Instructors select a matching image in [Artemis](https://github.com/ls1intum/Art
 | --- | --- | :---: |
 | Java 17 | `ghcr.io/eduide/eduide/java-17` | ✔️ |
 | Java 25 | `ghcr.io/eduide/eduide/java-25` | ✔️ |
+| Java 25 (TH-Mannheim) | `ghcr.io/eduide/eduide/thm-java-25` | ✔️ |
 | Python | `ghcr.io/eduide/eduide/python` | ✔️ |
 | C | `ghcr.io/eduide/eduide/c` | ✔️ |
 | JavaScript | `ghcr.io/eduide/eduide/javascript` | ✔️ |
@@ -94,6 +95,7 @@ Port mapping per service:
 | `haskell` | 3002 | <http://localhost:3002/> |
 | `java-17` | 3003 | <http://localhost:3003/> |
 | `java-25` | 3011 | <http://localhost:3011/> |
+| `thm-java-25` | 3013 | <http://localhost:3013/> |
 | `javascript` | 3004 | <http://localhost:3004/> |
 | `ocaml` | 3005 | <http://localhost:3005/> |
 | `python` | 3006 | <http://localhost:3006/> |

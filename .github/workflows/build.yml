@@ -75,6 +75,8 @@ jobs:
             docker-file: images/java-25/ToolDockerfile
           - image-name: eduide/eduide/java-25-templates
             docker-file: images/java-25-templates/ToolDockerfile
+          - image-name: eduide/eduide/thm-java-25
+            docker-file: images/thm-java-25/ToolDockerfile
           - image-name: eduide/eduide/javascript
             docker-file: images/javascript/ToolDockerfile
           - image-name: eduide/eduide/ocaml

@@ -1,0 +1,20 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "files.exclude": {
+        "**/.theia": true,
+        "persisted": true,
+        "lost+found": true
+    },
+    "editor.formatOnSave": true,
+    "java.help.collectErrorLog": false,
+    "java.help.firstView": "none",
+    "java.help.showReleaseNotes": false,
+    "java.silentNotification": true,
+    "java.saveActions.organizeImports": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.completion.guessMethodArguments": "auto",
+    "java.inlayHints.parameterNames.enabled": "literals",
+    "redhat.telemetry.enabled": false,
+    "workbench.colorTheme": "edu-ide-theme-dark",
+    "telemetry.telemetryLevel": "off"
+}

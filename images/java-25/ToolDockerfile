@@ -1,0 +1,130 @@
+# syntax=docker/dockerfile:1
+# Java 25 (Temurin) IDE image. Mirrors images/java-17 but installs the current
+# LTS (Java 25) from the Adoptium apt repository, and Maven from the Apache
+# tarball (Ubuntu's `maven` package would pull in a second, default OpenJDK).
+
+# Load the base-ide image, only copy from here
+ARG BASE_IDE_TAG=latest
+ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
+FROM ${BASE_IMAGE} AS base-ide
+
+# Parallel stage: Install system dependencies (runs concurrently with plugin-image)
+FROM ubuntu:24.04 AS apt-deps
+
+# Create theia user and directories first (doesn't need apt)
+RUN useradd --system --create-home --user-group --uid 101 theia && \
+    chmod g+rw /home && \
+    mkdir -p /home/project && \
+    chown -R theia:theia /home/theia && \
+    chown -R theia:theia /home/project
+
+# Install base tools, add the Adoptium apt repo, then install Temurin 25 (single
+# RUN so the keyring is present before the second `apt-get update`).
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
+    git openssh-client bash zsh libsecret-1-0 ca-certificates gnupg wget && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    wget --tries=5 --waitretry=2 --timeout=30 -qO- https://packages.adoptium.net/artifactory/api/gpg/key/public \
+    | gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg && \
+    chmod a+r /etc/apt/keyrings/adoptium.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb noble main" \
+    > /etc/apt/sources.list.d/adoptium.list && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
+    temurin-25-jdk && \
+    apt-get autoremove -y
+
+# Install Maven from the Apache tarball (avoids apt pulling in a second OpenJDK)
+ARG MAVEN_VERSION=3.9.16
+ARG MAVEN_SHA512=831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6
+RUN wget --tries=5 --waitretry=2 --timeout=30 -qO /tmp/maven.tar.gz \
+    "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" && \
+    echo "${MAVEN_SHA512}  /tmp/maven.tar.gz" | sha512sum -c - && \
+    mkdir -p /opt/maven && \
+    tar -xzf /tmp/maven.tar.gz -C /opt/maven --strip-components=1 && \
+    rm /tmp/maven.tar.gz && \
+    ln -s /opt/maven/bin/mvn /usr/local/bin/mvn
+
+# Parallel stage: Plugin download (runs concurrently with apt-deps)
+FROM node:22-bullseye AS plugin-image
+
+WORKDIR /home/theia
+
+# Configure to skip download of puppeteer
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+# Copy required configuration files
+COPY --from=base-ide /home/theia/package.json ./package.json.base
+COPY images/java-25/package.json.patch ./package.json.patch
+COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
+
+# Merge the base package.json with the java-25-specific patch without dropping base exclusions.
+RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
+    rm package.json.base package.json.patch
+
+# Copy from base-ide: scripts, configs, existing plugins, and production node_modules
+COPY --from=base-ide /home/theia/scripts /home/theia/scripts
+COPY --from=base-ide /home/theia/configs /home/theia/configs
+COPY --from=base-ide /home/theia/tsconfig.json /home/theia/tsconfig.json
+COPY --from=base-ide /home/theia/plugins /home/theia/plugins
+COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
+
+# Install ONLY @theia/cli (needed for download:plugins command)
+# This is much faster than full yarn install since we already have prod node_modules
+RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+        n=$((n+1)); \
+        if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
+        echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
+        sleep $((n*3)); \
+    done
+
+# Download language-specific plugins
+RUN --mount=type=cache,id=theia-plugin-cache-java-25,target=/home/theia/.plugin-cache,sharing=locked \
+    yarn download:plugins:smart
+
+# Final stage: Assemble the application
+FROM apt-deps AS final-ide
+
+ARG TARGETARCH
+
+# Copy Node.js from plugin-image (required for Theia runtime)
+COPY --from=plugin-image /usr/local/bin/node /usr/local/bin/
+COPY --from=plugin-image /usr/local/lib/node_modules/ /usr/local/lib/node_modules/
+
+# Switch to Theia user
+USER theia
+ENV HOME=/home/theia
+ENV JAVA_HOME=/usr/lib/jvm/temurin-25-jdk-${TARGETARCH}
+WORKDIR /home/theia
+
+# Copy application from the base image (includes prod node_modules)
+COPY --from=base-ide --chown=theia:theia /home/theia /home/theia
+
+# Gradle Remote Cache Setup
+RUN mkdir -p /home/theia/.gradle/init.d
+COPY --chown=theia:theia images/java-25/gradle/remote-cache.gradle /home/theia/.gradle/init.d/
+
+# Copy additional plugins
+COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
+
+# Copy the project configuration files
+COPY --chown=theia:theia images/java-25/project /home/project
+
+EXPOSE 3000
+
+# Specify default shell for Theia and the Built-In plugins directory
+ENV SHELL=/bin/zsh \
+    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
+
+# Use installed git instead of dugite
+ENV USE_LOCAL_GIT=true
+
+WORKDIR /home/theia/applications/browser
+
+# Launch the backend application via node
+ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
+
+# Arguments passed to the application
+CMD [ "/home/project", "--hostname=0.0.0.0" ]

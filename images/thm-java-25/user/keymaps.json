@@ -1,0 +1,10 @@
+[
+    {
+        "command": "workbench.action.closeActiveEditor",
+        "keybinding": "alt+w"
+    },
+    {
+        "command": "workbench.action.tasks.build",
+        "keybinding": "ctrl+alt+b"
+    }
+]

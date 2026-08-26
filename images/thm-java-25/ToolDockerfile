@@ -98,8 +98,17 @@ RUN rm -rf /home/theia/plugins/scorpio \
            /home/theia/plugins/data-bridge \
            /home/theia/plugins/artemis-extension
 
-# Copy the project configuration files
-COPY --chown=theia:theia images/thm-java-25/project /home/project
+# Ship IDE config as USER-LEVEL defaults (not in /home/project), so the workspace
+# stays empty and `git clone <url> .` works. settings.json goes to Theia's
+# resources/user defaults; keymaps.json is also seeded into the runtime config
+# folder (/home/theia/.theia-ide) where the KeymapsServer reliably reads it.
+RUN mkdir -p /home/theia/applications/browser/resources/user /home/theia/.theia-ide
+COPY --chown=theia:theia images/thm-java-25/user/settings.json /home/theia/applications/browser/resources/user/settings.json
+COPY --chown=theia:theia images/thm-java-25/user/keymaps.json  /home/theia/applications/browser/resources/user/keymaps.json
+COPY --chown=theia:theia images/thm-java-25/user/keymaps.json  /home/theia/.theia-ide/keymaps.json
+
+# Default git credential helper: cache in memory for 1h (no plaintext on disk)
+COPY --chown=theia:theia images/thm-java-25/gitconfig /home/theia/.gitconfig
 
 EXPOSE 3000
 

@@ -1,0 +1,52 @@
+// Remote Build Cache Configuration
+// Requires BUILD_CACHE_ENABLED=true AND BUILD_CACHE_URL to be set
+
+settingsEvaluated { settings ->
+    def cacheEnabled = System.getenv('BUILD_CACHE_ENABLED')?.toLowerCase() == 'true'
+    def cacheUrl = System.getenv('BUILD_CACHE_URL')
+    def cachePush = System.getenv('BUILD_CACHE_PUSH')?.toLowerCase() == 'true'
+
+    // Gradle Build Cache Configuration
+    if (cacheEnabled && cacheUrl?.trim()) {
+        // Enable build cache via start parameters
+        settings.gradle.startParameter.buildCacheEnabled = true
+
+        settings.buildCache {
+            local {
+                enabled = false
+            }
+            remote(HttpBuildCache) {
+                url = cacheUrl
+                push = cachePush
+                enabled = true
+            }
+        }
+
+        println "[Build Cache] Remote cache ENABLED"
+        println "[Build Cache] Push: ${cachePush}"
+    } else if (cacheEnabled && !cacheUrl?.trim()) {
+        println "[Build Cache] WARNING: Cache enabled but no URL configured"
+        println "[Build Cache] Set BUILD_CACHE_URL to activate remote caching"
+    }
+}
+
+// Dependency Cache Configuration
+def dependencyCacheEnabled = System.getenv('DEPENDENCY_CACHE_ENABLED')?.toLowerCase() == 'true'
+def dependencyCacheUrl = System.getenv('DEPENDENCY_CACHE_URL')
+
+if (dependencyCacheEnabled && dependencyCacheUrl?.trim()) {
+    allprojects {
+        repositories {
+            maven {
+                name = 'Dependency Cache'
+                url = dependencyCacheUrl
+                allowInsecureProtocol = true
+            }
+        }
+    }
+
+    println "[Dependency Cache] Proxy ENABLED"
+} else if (dependencyCacheEnabled && !dependencyCacheUrl?.trim()) {
+    println "[Dependency Cache] WARNING: Cache enabled but no URL configured"
+    println "[Dependency Cache] Set DEPENDENCY_CACHE_URL to activate remote caching"
+}

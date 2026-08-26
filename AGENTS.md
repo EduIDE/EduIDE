@@ -1,169 +1,145 @@
 # AGENTS.md — EduIDE
 
-Guide for AI agents working in this repository. Read this before making changes.
+The IDE itself, and the image factory that produces every variant students use.
+A fork of Eclipse Theia's `theia-ide` blueprint, heavily reworked.
 
----
+`CLAUDE.md` is a symlink to this file, so every agent reads the same thing.
 
-## What this repo does
-
-Builds and publishes language-specific [Eclipse Theia](https://theia-ide.org/) IDE Docker images for the [Artemis](https://github.com/ls1intum/Artemis) online learning platform. Students open a browser-based IDE pre-configured for their course's programming language (Java, Python, C, Haskell, OCaml, Rust, Swift, JavaScript).
-
-Images are published to `ghcr.io/eduide/eduide/<language>` (e.g. `ghcr.io/eduide/eduide/java-17`).
-
----
-
-## Repository layout
+## Layout
 
 ```
-images/
-  base-ide/          # Builds Theia from source → the shared foundation
-    BaseDockerfile   # Multi-stage build (install-deps → build-stage → prod-deps → base-ide)
-    package.json.patch
-    project/.vscode/settings.json
-  <lang>/            # One dir per language: c, haskell, java-17, javascript, ocaml, python, rust, swift
-    ToolDockerfile   # Extends base-ide; installs compiler + language plugins
-    package.json.patch
-    project/.vscode/settings.json
-
-applications/browser/   # Browser target for Theia (what gets compiled into the base image)
-theia-extensions/
-  product/             # Branding extension (included in all builds)
-  launcher/            # Electron-only — stripped during Docker builds
-  updater/             # Electron-only — stripped during Docker builds
-scripts/               # TypeScript utility scripts (run via yarn)
-.github/workflows/
-  build.yml            # Main CI: builds and pushes all images to GHCR
-  scorpio_auto_update.yml  # Auto-bumps Artemis Scorpio plugin version
-docker-compose.images.yml  # Local dev: builds all images together
+images/base-ide/BaseDockerfile      the base image every language image builds FROM
+images/<lang>/ToolDockerfile        one per published image
+applications/browser/               the Theia browser app
+theia-extensions/product/           branding and product extension
+scripts/                            build-time TypeScript and the package.json merge
+docker-compose.images.yml           how to build and run every image locally
+.github/workflows/build.yml         what CI publishes
+docs/how-to-build-ide-variants.md   the fuller walkthrough; more current than this file
 ```
 
----
+## What is actually published
 
-## Image architecture
-
-### Two-tier build
+Twelve images: `base`, plus eleven from the matrix in
+`.github/workflows/build.yml` under the **`images`** job.
 
 ```
-base-ide (BaseDockerfile)
-  └─ Compiles Theia from source, downloads core plugins, produces slim runtime layer
-
-<lang> (ToolDockerfile)  — one per language
-  ├─ Copies built Theia from base-ide
-  ├─ Installs language compiler/runtime (apt)
-  └─ Downloads language-specific VS Code extensions (Open VSX)
+c  c-templates  haskell  java-17  java-17-templates
+java-25  java-25-templates  javascript  ocaml  python  rust
 ```
 
-### ToolDockerfile internal stages (run in parallel)
+Do not hardcode that list anywhere. EduIDE-Helm's release train reads it from
+the matrix at run time, because a hand-kept copy went stale within days of
+being written and a release nearly shipped pinning two tags that were never
+built.
 
-- `base-ide` — imports the pre-built Theia layer
-- `apt-deps` — installs system packages (gcc, JDK, Python, etc.)
-- `plugin-image` — downloads language-specific plugins via `yarn download:plugins`
-- `final-ide` — assembles everything, sets up user `theia` (uid 101)
+**Three families, and they are not the same shape.**
 
-### Plugin configuration
+| Family | Has | Entrypoint |
+|---|---|---|
+| plain (`c`, `java-17`, `python`, …) | a `package.json.patch` and its own VS Code settings file | Theia's `main.js` |
+| `-templates` | `templates/<flavour>/`, `entrypoint.sh`. **No** `package.json.patch`, **no** `project/`. Plugins inherited from the language image | `entrypoint.sh`, which copies `$TEMPLATE` into `/home/project` |
+| base | the plugin set everything else inherits | — |
 
-Plugins are declared in `package.json` (`theiaPlugins` / `theiaPluginsExcludeIds`). Each language image has a `package.json.patch` that is deep-merged on top of the root `package.json` using a Node.js merge script inside the Dockerfile. Only override what changes — do not duplicate the full file.
+## Traps
 
----
+**There are two `package.json` merge implementations and the wrong one loses
+data.** `scripts/merge-package-json.js` unions `theiaPluginsExcludeIds` and
+honours `theiaPluginsExcludeIdsRemove`. An inline `node -e "…deepMerge…"` in
+several ToolDockerfiles **replaces arrays wholesale**, so a patch that sets
+`theiaPluginsExcludeIds` silently drops the base image's ~75 exclusions. The
+plain images are split between the two. If you copy an existing ToolDockerfile
+as a starting point, copy one that uses the script — `images/java-17` — not
+`images/c`.
 
-## Project settings (`.vscode/settings.json`)
+**`@theia/cli` is pinned in every ToolDockerfile.** Language images do not
+re-run `yarn install`; they `COPY --from=base-ide /home/theia/node_modules` and
+then `yarn add -W @theia/cli@<version>`. Bumping the root `package.json` without
+bumping that literal in all sixteen leaves them building against two versions.
 
-Each `images/<lang>/project/.vscode/settings.json` is copied to `/home/project/.vscode/settings.json` inside the container and loaded by Theia on startup. Theia reads project settings from `.vscode/settings.json` (not `.theia/settings.json`).
+**Builds run `yarn download:plugins:smart`, not `download:plugins`.** The plain
+script still exists and is not what anything uses.
 
-All images share a base set:
+**`BaseDockerfile` restores the merged `package.json` after `COPY . .`.** The
+sequence copies the repo over the merged file, splats `images/base-ide/` across
+the root, then restores from `package.json.merged`. Reordering those lines
+silently reverts the base image to the root plugin config.
 
-```json
-{
-  "extensions.ignoreRecommendations": true,
-  "files.exclude": { "**/.theia": true, "persisted": true, "lost+found": true },
-  "telemetry.telemetryLevel": false
-}
+**Several per-image `settings.json` files contain trailing commas**, such as
+`images/base-ide/project/.vscode/settings.json`. Theia
+reads JSONC and tolerates them; `jq` and `JSON.parse` do not. Do not "fix" them
+with a tool that reformats.
+
+**Settings go in a `.vscode` directory, not a `.theia` one.** Theia reads the
+former. The three retired `-no-ls` images use the latter and are not a pattern
+to copy.
+
+## Dead weight, so you do not mistake it for live code
+
+Retired when the language-server images were dropped, directories left in place:
+
+```
+images/java-17-no-ls/  images/rust-no-ls/  images/theia-no-ls/
+images/languageserver/{java,rust}/
 ```
 
-Language images may add language-specific keys on top of this.
+Their READMEs still advertise `ghcr.io/eduide/eduide/langserver-*` tags that are
+no longer produced. Nothing builds them.
 
----
+`images/swift/` builds locally through `docker-compose.images.yml` (port 3008)
+but is in no build matrix, so it is never published. The root README lists it as
+available, which is wrong.
 
-## Local development
+`images/README.md` and `PUBLISHING.md` are largely upstream Eclipse Theia text:
+they document a `jq`-based merge nothing uses, an `images/base-ide/package.json`
+that does not exist, publishing to `ghcr.io/eclipse-theia/…`, and a Kotlin image
+with no directory. Treat them as debt, not as a source of truth.
 
-### Build a single image pair
+`.github/workflows/scorpio_auto_update.yml` is dead on two counts: it targets
+`images/base-ide/package.json`, which does not exist, and greps for the
+`tum-aet/artemis-scorpio` namespace while the real pin in
+`images/base-ide/package.json.patch` uses `aet-tum/artemis-scorpio`.
 
-```sh
-# 1. Build the base (required first)
-docker build -t theia-base:local -f images/base-ide/BaseDockerfile .
+`lerna.json` says `1.70.200` and `package.json` says `1.70.201`. Both track
+upstream Theia. Pick deliberately if you touch either.
 
-# 2. Build a language image against the local base
-docker build -t theia-java-17:local \
-  --build-arg BASE_IMAGE=theia-base:local \
-  -f images/java-17/ToolDockerfile .
+## Building
 
-# 3. Run it
-docker run --rm -p 3000:3000 theia-java-17:local
-# → open http://localhost:3000
-```
+```bash
+# base first - everything else is FROM it
+docker build -f images/base-ide/BaseDockerfile -t theia-base:local .
 
-### Build everything with Compose
+# then one language image
+docker build --build-arg BASE_IMAGE=theia-base:local \
+  -f images/java-17/ToolDockerfile -t eduide-java-17:local .
 
-```sh
+# or the lot, with the base wired in as an additional context
 docker compose -f docker-compose.images.yml build
-docker compose -f docker-compose.images.yml up java-17   # port 3003
 ```
 
-The compose file uses `additional_contexts: base-ide: "service:base-ide"` so language images automatically consume the locally-built base service rather than pulling from the registry.
+CI threads the base image's **immutable sha tag** into every language build
+(`BASE_IDE_TAG`), so they cannot pick up a drifting base. Locally that is what
+`additional_contexts` in the compose file does.
 
-Port mapping: base-ide → 3000, c → 3001, haskell → 3002, java-17 → 3003, javascript → 3004, ocaml → 3005, python → 3006, rust → 3007, swift → 3008.
+## Adding an image
 
----
+1. `images/<lang>/ToolDockerfile` — copy `images/java-17`, not `images/c`
+2. Its `package.json.patch` and VS Code settings, modelled on
+   `images/java-17/project/.vscode/settings.json`
+   (omit both for a `-templates` image; add `templates/` and `entrypoint.sh`)
+3. A service in `docker-compose.images.yml` on the next free port
+4. A matrix entry under the **`images`** job in `.github/workflows/build.yml`
 
-## CI/CD
+Then add it to `appDefinitions.apps` in EduIDE-Helm's `eduide` chart, which is
+what actually offers it to students. Building an image deploys nothing:
+`haskell`, `java-25` and `java-25-templates` are all published today and no
+environment offers any of them.
 
-Workflow: [.github/workflows/build.yml](.github/workflows/build.yml)
+`docs/how-to-build-ide-variants.md` is the longer version and is current.
 
-| Trigger | Tags applied |
-|---------|-------------|
-| Pull request | `pr-<number>`, `pr-<number>-<sha>` |
-| Push to main | `latest`, `latest-<sha>` |
-| Release published | `<version>`, `<version>-<sha>` |
+## Conventions
 
-**Job order:**
-
-1. `determine-tag` — computes Docker tags
-2. `build-and-push-base` — builds `eduide/eduide/base` (amd64 always, arm64 on non-PR)
-3. `build-and-push` — builds all 8 language images in parallel, passing `BASE_IDE_TAG`
-
-Note: `swift` is defined in `docker-compose.images.yml` but **not** in the CI matrix — it is not automatically published.
-
----
-
-## Adding a new language image
-
-1. Create `images/<lang>/` with:
-   - `ToolDockerfile` — copy an existing one (e.g. `c/ToolDockerfile`) as a template
-   - `package.json.patch` — only the plugin overrides needed
-   - `project/.vscode/settings.json` — at minimum the base settings block above
-2. Add the service to `docker-compose.images.yml` (follow the existing pattern with `additional_contexts`)
-3. Add a matrix entry to `.github/workflows/build.yml` under `build-and-push`
-
----
-
-## Key conventions
-
-- **Theia version** is set in the root `package.json` and all `@theia/*` packages must stay in sync. Use `yarn update:theia <version>` to bulk-update.
-- **Node.js** v22-bullseye in build stages, slim variant in runtime stages.
-- **Yarn** v1 (classic) with `--frozen-lockfile` for reproducible installs.
-- **User inside containers** is `theia` (uid 101); files under `/home/project` are owned by this user.
-- **Electron-specific code** (`theia-extensions/launcher`, `theia-extensions/updater`, `applications/electron`) is deleted before the build step in `BaseDockerfile` — do not add Docker-relevant logic there.
-- **Plugin downloads** happen inside the Dockerfile (not pre-committed); `yarn download:plugins` reads `theiaPlugins` from `package.json`.
-- **Scorpio** is the Artemis integration plugin; its version lives in `images/base-ide/package.json` and is auto-bumped by the `scorpio_auto_update` workflow.
-
----
-
-## Useful scripts
-
-| Command | What it does |
-|---------|-------------|
-| `yarn update:theia <version>` | Updates all `@theia/*` deps to the given version |
-| `yarn permissions:writeable` | Fixes plugin file permissions (called inside Dockerfiles) |
-| `yarn browser build` | Compiles the browser Theia app |
-| `yarn build:extensions` | Compiles custom Theia extensions |
-| `yarn download:plugins` | Downloads plugins declared in `package.json` |
+- The `theia` user is uid 101 in every image.
+- Electron code is deleted during the base build; do not add to it.
+- Release tags are `vX.Y.Z`; the image tag is the same string without the `v`.
+- Workflows must pass `actionlint`.

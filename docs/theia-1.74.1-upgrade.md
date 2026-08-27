@@ -34,6 +34,19 @@ No AI provider packages (`@theia/ai-openai`, `@theia/ai-anthropic`, ...) and no 
 - `lerna.json` still says 1.70.200 (pre-existing inconsistency with root package.json, tracked in AGENTS.md).
 - `yarn lint` failures in `scripts/merge-package-json.js` (no-null rule) predate this change.
 
+## Dependency hardening (follow-up PR)
+
+A `yarn audit --level high` sweep of the full lockfile after the upgrade showed 34 packages with high or critical advisories. Fixes, in order of preference:
+
+- **In-range lockfile refresh** (no package.json change): removed the stale lock entries for axios, basic-ftp, engine.io, express-rate-limit (carries the ip-address 10.x fix), fast-uri, flatted, form-data, glob 10, handlebars, hono, @hono/node-server, @grpc/grpc-js, lodash, minimatch 9, nanoid, path-to-regexp 8, picomatch 4, postcss, protobufjs, socket.io-parser, tar-fs, undici and let yarn re-resolve to the patched releases.
+- **Dropped the `**/multer` resolution**: Theia 1.74 requests multer ^2.2.0 itself (upstream dropped the same resolution); the 1.4.4-lts.1 pin was holding back the fix for three DoS advisories in the file upload path.
+- **Targeted resolutions**: ws ^8.21.0 for the socket.io family (engine.io, engine.io-client, socket.io-adapter pin ~8.x minors), adm-zip ^0.6.0 under scanoss.
+- **Updater extension**: electron-updater 6.6.2 -> 6.8.9 and builder-util-runtime 9.3.1 -> 9.7.0 (token-leak advisory; desktop-only code path).
+
+Remaining, deliberately not fixed: `decompress` 4.2.1 and `image-size` 0.5.5 (no patched release exists; both only reachable via `@theia/cli` at build time) and `ip-address` 9.0.5 (cross-major fix only; reachable via lerna's socks-proxy-agent at build time). Old-major library lines (glob 7/8, minimatch 3/5, picomatch 2, ws 7) have no patch in their major and only serve dev tooling.
+
+`@theia/scanoss` drags basic-ftp, protobufjs, @grpc/grpc-js, and adm-zip into the shipped browser app. All are patched now, but removing the package entirely would shrink the attack surface; left as a separate product decision.
+
 ## Verification
 
 - `PUPPETEER_SKIP_DOWNLOAD=true yarn install` - clean, lockfile regenerated.

@@ -43,6 +43,16 @@ built.
 
 ## Traps
 
+**Theia >= 1.74 bundles AI code even though EduIDE ships no AI packages.**
+`@theia/plugin-ext` has a hard dependency on `@theia/ai-core` and
+`@theia/ai-mcp` (for the VS Code `lm` plugin API and MCP support), and
+ai-core's default activation service reports AI as *active*. The product
+extension neutralizes this: `DisabledAIActivationService` rebinds
+`AIActivationService` and `ViewsFilter` filters the AI/MCP contributions
+(both in `theia-extensions/product/src/browser/theia-ide-contribution.tsx`).
+Do not remove those bindings, and re-check them on every Theia upgrade.
+Details in `docs/theia-1.74.1-upgrade.md`.
+
 **There are two `package.json` merge implementations and the wrong one loses
 data.** `scripts/merge-package-json.js` unions `theiaPluginsExcludeIds` and
 honours `theiaPluginsExcludeIdsRemove`. An inline `node -e "…deepMerge…"` in

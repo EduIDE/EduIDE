@@ -1,19 +1,19 @@
 # Java image memory tuning
 
-The `java-17` and `java-17-templates` images cap every resident JVM and node process so that many student environments can run per host. Without this tuning, a hello-world environment settles above 2GB: two JDT language server JVMs (redhat.java 1.56 defaults to `-Xmx2G`), up to three Gradle daemons (512MB each, 3h idle timeout, unable to share because they run on different JVMs), and uncapped node processes.
+The Java images (`java-17`, `java-17-templates`, `java-25`, `java-25-templates`) cap every resident JVM and node process so that many student environments can run per host. Without this tuning, a hello-world environment settles above 2GB: two JDT language server JVMs (redhat.java 1.56 defaults to `-Xmx2G`), up to three Gradle daemons (512MB each, 3h idle timeout, unable to share because they run on different JVMs), and uncapped node processes.
 
 ## Where each knob lives
 
 | Knob | File | Applied to |
 |---|---|---|
-| `org.gradle.jvmargs`, `org.gradle.java.home`, daemon idle timeout, workers | `images/java-17/gradle/gradle.properties` -> baked to `~/.gradle/gradle.properties` | Both Gradle daemons (IDE import + terminal) |
-| Test JVM heap cap (Gradle) | `images/java-17/gradle/test-memory.gradle` -> baked to `~/.gradle/init.d/` | Any Gradle project, incl. mounted course repos |
-| `java.jdt.ls.vmargs`, `java.server.launchMode` | `images/java-17/theia/user-settings.json` -> baked to `/home/theia/.theia-ide/settings.json` | JDT language server |
+| `org.gradle.jvmargs`, `org.gradle.java.home`, daemon idle timeout, workers | `images/java-{17,25}/gradle/gradle.properties` -> baked to `~/.gradle/gradle.properties` | Both Gradle daemons (IDE import + terminal) |
+| Test JVM heap cap (Gradle) | `images/java-{17,25}/gradle/test-memory.gradle` -> baked to `~/.gradle/init.d/` | Any Gradle project, incl. mounted course repos |
+| `java.jdt.ls.vmargs`, `java.server.launchMode` | `images/java-{17,25}/theia/user-settings.json` -> baked to `/home/theia/.theia-ide/settings.json` | JDT language server |
 | `MAVEN_OPTS`, `NODE_OPTIONS`, `MALLOC_ARENA_MAX` | `ENV` block in both `ToolDockerfile`s | Maven, Theia node processes, all glibc processes |
 | Surefire test JVM heap cap | `templates/maven/pom.xml` (`argLine`) | Maven test forks (Surefire does not inherit `MAVEN_OPTS`) |
 | Debuggee heap cap | `templates/*/.vscode/launch.json` (`vmArgs`) | The student's app under debug |
 
-Both `ToolDockerfile`s copy the shared files from `images/java-17/`, same pattern as `remote-cache.gradle`.
+Each Java version directory carries its own copy of the three tuning files (same pattern as `remote-cache.gradle`); the `*-templates` Dockerfiles reuse their version's copies. Keep the copies in sync unless a version deliberately diverges.
 
 ## The one-daemon invariant
 

@@ -1,212 +1,119 @@
-<br/>
-<div id="theia-logo" align="center">
-    <br />
-    <img src="https://raw.githubusercontent.com/eclipse-theia/theia-ide/master/theia-extensions/product/src/browser/icons/TheiaIDE.png" alt="Theia Logo" width="300"/>
-    <h3>EduIDE</h3>
+<div align="center">
+    <img src="docs/images/eduide-logo.png" alt="EduIDE" width="140"/>
+    <h1>EduIDE</h1>
+    <p><strong>A full IDE in the browser, pre-configured for the course a student is actually taking.</strong></p>
 </div>
-
-<div id="badges" align="center">
-
-EduIDE is built with this project.\
-This repository is a fork of the Eclipse Theia IDE project, tailored for computer science education.
-
-</div>
-
-[Main Theia Repository](https://github.com/eclipse-theia/theia) — [Eclipse Theia IDE Repository](https://github.com/eclipse-theia/theia-ide)
 
 ---
 
-## What is EduIDE?
+Students open a link and get a real IDE - compiler, language server, debugger,
+terminal, linting and editor settings already set up for their language. Nothing
+to install, nothing to configure, and every student gets the identical
+environment, so "it works on my machine" stops being a thing anyone has to
+debug.
 
-EduIDE provides **browser-based, language-specific IDE environments** for higher education. Students open a full IDE in their browser — no local installation required — pre-configured with the compiler, language server, linter, and editor settings appropriate for their course.
+Instructors pick the matching image when creating a programming exercise in
+[Artemis](https://github.com/ls1intum/Artemis). EduIDE does the rest.
 
-Instructors select a matching image in [Artemis](https://github.com/ls1intum/Artemis) when creating a programming exercise. EduIDE handles the rest.
+It is built on [Eclipse Theia](https://theia-ide.org/), and it is a real IDE
+rather than a text box in a web page:
 
-### Available images
+<div align="center">
+  <img src="docs/images/eduide-editor.png" alt="EduIDE editing and running a Java program" width="820"/>
+</div>
 
-| Language | Image | Language server & autocomplete |
-| --- | --- | :---: |
-| Java 17 | `ghcr.io/eduide/eduide/java-17` | ✔️ |
-| Python | `ghcr.io/eduide/eduide/python` | ✔️ |
-| C | `ghcr.io/eduide/eduide/c` | ✔️ |
-| JavaScript | `ghcr.io/eduide/eduide/javascript` | ✔️ |
-| Rust | `ghcr.io/eduide/eduide/rust` | ✔️ |
-| Swift | `ghcr.io/eduide/eduide/swift` | ✔️ |
-| OCaml | `ghcr.io/eduide/eduide/ocaml` | ✔️ |
-| Haskell | `ghcr.io/eduide/eduide/haskell` | ❌ |
+<div align="center">
+  <img src="docs/images/eduide-welcome.png" alt="The EduIDE welcome screen" width="820"/>
+</div>
 
-### Architecture overview
+## Try it in one command
 
-All images share a common **two-tier build**:
-
-1. **`base-ide`** — Compiles the Theia application from source, downloads core plugins (Git, Markdown, Scorpio/Artemis integration), and produces a slim runtime layer.
-2. **Language images** — Each starts from the `base-ide` layer, adds a language compiler/runtime (via apt), and downloads language-specific VS Code extensions from [Open VSX](https://open-vsx.org/).
-
-This means Theia is only built once. Adding or updating a language image does not require rebuilding the IDE.
-
-## Running locally
-
-### Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/) with BuildKit enabled (Docker Desktop 4.x or Docker Engine 23+)
-- [Docker Compose](https://docs.docker.com/compose/) v2.x
-
-### Option A — Run a pre-built image
-
-Pull and run any language image directly:
+Any published image runs standalone. No Kubernetes, no Artemis, no account:
 
 ```sh
 docker run --rm -p 3000:3000 ghcr.io/eduide/eduide/java-17:latest
 ```
 
-Then open <http://localhost:3000/> in your browser.
+Open <http://127.0.0.1:3000/>. The screenshot above is that container.
 
-### Option B — Build and run locally with Docker Compose
+Swap `java-17` for any of these:
 
-The repository includes `docker-compose.images.yml` which builds all images and wires them together. Language images automatically consume the locally-built `base-ide` via `additional_contexts`.
+| | Image | | Image |
+| --- | --- | --- | --- |
+| Java 17 | `java-17` | Python | `python` |
+| Java 25 | `java-25` | Rust | `rust` |
+| C | `c` | OCaml | `ocaml` |
+| JavaScript | `javascript` | Haskell | `haskell` |
 
-**Build everything** (base first, then all language images in parallel):
+Three `-templates` variants (`java-17-templates`, `java-25-templates`,
+`c-templates`) ship a starter project and are what Artemis exercises usually
+use. All images are published to `ghcr.io/eduide/eduide/<name>`.
 
-```sh
-docker compose -f docker-compose.images.yml build
-```
+## Documentation
 
-**Build a single language image** (base is rebuilt or reused from cache):
+| | |
+| --- | --- |
+| [Documentation site](https://eduide.github.io/Docs/) | Everything, start here |
+| [Running EduIDE for your university](https://eduide.github.io/Docs/admins/intro) | Installing it on a Kubernetes cluster |
+| [Developer guide](https://eduide.github.io/Docs/developer/intro) | Architecture and how the pieces fit |
+| [Building an IDE variant](docs/how-to-build-ide-variants.md) | Adding a language, in detail |
 
-```sh
-docker compose -f docker-compose.images.yml build java-17
-```
+## How it fits together
 
-**Start a specific IDE** and open it in the browser:
+This repository is the IDE and the images. Running it as a service for a whole
+university takes three more:
 
-```sh
-docker compose -f docker-compose.images.yml up java-17
-# → http://localhost:3003/
-```
+| Repository | |
+| --- | --- |
+| **EduIDE** (here) | The Theia-based IDE and every language image |
+| [EduIDE-Cloud](https://github.com/EduIDE/EduIDE-Cloud) | The operator and REST service that start and stop sessions |
+| [EduIDE-Landing-Page](https://github.com/EduIDE/EduIDE-Landing-Page) | Where students pick an environment |
+| [EduIDE-Helm](https://github.com/EduIDE/EduIDE-Helm) | The Helm charts that install all of it |
 
-Port mapping per service:
-
-| Service | Host port | URL |
-| --- | --- | --- |
-| `base-ide` | 3000 | <http://localhost:3000/> |
-| `c` | 3001 | <http://localhost:3001/> |
-| `haskell` | 3002 | <http://localhost:3002/> |
-| `java-17` | 3003 | <http://localhost:3003/> |
-| `javascript` | 3004 | <http://localhost:3004/> |
-| `ocaml` | 3005 | <http://localhost:3005/> |
-| `python` | 3006 | <http://localhost:3006/> |
-| `rust` | 3007 | <http://localhost:3007/> |
-| `swift` | 3008 | <http://localhost:3008/> |
-
----
+Every image is a **two-tier build**: `base-ide` compiles Theia from source once,
+and each language image starts from that layer and adds its toolchain and its
+VS Code extensions from [Open VSX](https://open-vsx.org/). Adding a language
+never rebuilds the IDE.
 
 ## Contributing
 
-### Repository structure
+Contributions are welcome, including from outside TUM.
 
-```text
-images/
-  base-ide/          # Builds Theia from source (BaseDockerfile)
-  <lang>/            # One directory per language (ToolDockerfile)
-    ToolDockerfile
-    package.json.patch              # Plugin overrides merged on top of root package.json
-    project/.vscode/settings.json  # Workspace settings loaded by Theia on startup
-applications/browser/        # Browser target (compiled into base-ide)
-theia-extensions/product/    # Custom branding extension (included in all images)
-scripts/                     # Utility scripts (update-theia-version, make-files-writeable)
-docker-compose.images.yml    # Local build and run
-.github/workflows/build.yml  # CI: builds and pushes all images to GHCR
-```
-
-### Adding a new language image
-
-1. **Create `images/<lang>/`** with three files:
-
-   **`ToolDockerfile`** — copy `images/c/ToolDockerfile` as a starting point and replace the apt packages and plugin download step with your language's tooling.
-
-   **`package.json.patch`** — declare only the plugin overrides. The file is deep-merged with the root `package.json` at build time:
-
-   ```json
-   {
-     "theiaPlugins": {
-       "my-publisher.my-extension": "https://open-vsx.org/api/my-publisher/my-extension/1.0.0/file/..."
-     },
-     "theiaPluginsExcludeIds": [
-       "vscode.php"
-     ]
-   }
-   ```
-
-   Browse plugins at [open-vsx.org](https://open-vsx.org/).
-
-   **`project/.vscode/settings.json`** — workspace settings Theia loads on startup. At minimum include:
-
-   ```json
-   {
-     "extensions.ignoreRecommendations": true,
-     "files.exclude": { "**/.theia": true, "persisted": true, "lost+found": true },
-     "telemetry.telemetryLevel": false
-   }
-   ```
-
-2. **Add the service to `docker-compose.images.yml`** following the existing pattern (include `additional_contexts` so local builds use the locally-built base):
-
-   ```yaml
-   <lang>:
-     image: theia-<lang>:local
-     build:
-       context: .
-       dockerfile: images/<lang>/ToolDockerfile
-       args:
-         BASE_IMAGE: theia-base:local
-       additional_contexts:
-         base-ide: "service:base-ide"
-     depends_on:
-       - base-ide
-     ports:
-       - "30XX:3000"
-   ```
-
-3. **Add a matrix entry to `.github/workflows/build.yml`** under the `build-and-push` job so CI publishes the image.
-
-4. **Test locally** before opening a PR:
-
-   ```sh
-   docker compose -f docker-compose.images.yml build <lang>
-   docker compose -f docker-compose.images.yml up <lang>
-   # open http://localhost:30XX/ and verify the IDE starts and the language tools work
-   ```
-
-### Updating the Theia version
-
-All `@theia/*` packages must stay in sync. Use the provided script:
+Build and run everything locally with Docker Compose. The base image builds
+first; language images pick it up automatically:
 
 ```sh
-yarn update:theia <new-version>
-# example:
+docker compose -f docker-compose.images.yml build java-17
+docker compose -f docker-compose.images.yml up java-17     # http://127.0.0.1:3003/
+```
+
+Each language has a host port; see `docker-compose.images.yml`.
+
+**Adding a language** takes four things: `images/<lang>/ToolDockerfile`, a
+`package.json.patch` listing only the plugin overrides, a service in
+`docker-compose.images.yml`, and a matrix entry in
+`.github/workflows/build.yml`. Copy `images/java-17` as the starting point -
+[the full walkthrough is here](docs/how-to-build-ide-variants.md).
+
+Building an image does not offer it to anyone. It also needs an entry in
+`appDefinitions.apps` in the `eduide` chart in
+[EduIDE-Helm](https://github.com/EduIDE/EduIDE-Helm), which is what puts it on
+the landing page and preloads it onto the cluster's nodes.
+
+**Updating Theia** touches every `@theia/*` package at once:
+
+```sh
 yarn update:theia 1.69.0
 ```
 
-Then rebuild and test locally before pushing.
-
-### CI / CD
-
-The GitHub Actions workflow (`.github/workflows/build.yml`) runs on every pull request, push to `main`, and release:
-
-- **PRs** produce images tagged `pr-<number>` and `pr-<number>-<sha>` — useful for review testing.
-- **`main`** produces `latest` and `latest-<sha>`.
-- **Releases** produce a semver tag and a SHA-tagged variant.
-
-The `base-ide` image is always built first. All language images are built in parallel afterwards, receiving `BASE_IDE_TAG` as a build argument so they pull the matching base.
-
-Arm64 builds are included for all events except PRs (to keep PR feedback fast).
-
----
+CI builds `base-ide` first and threads its immutable tag into every language
+build, so a pull request can never test against a base image that has since
+moved. PRs publish `pr-<number>` tags you can pull and try.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). "Theia" is a trademark of the Eclipse Foundation -
+<https://www.eclipse.org/theia>.
 
-## Trademark
-
-"Theia" is a trademark of the Eclipse Foundation — <https://www.eclipse.org/theia>
+This project is a fork of [Eclipse Theia IDE](https://github.com/eclipse-theia/theia-ide),
+tailored for computer science education.

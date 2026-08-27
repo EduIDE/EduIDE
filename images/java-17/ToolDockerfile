@@ -77,9 +77,20 @@ WORKDIR /home/theia
 # Copy application from the base image (includes prod node_modules)
 COPY --from=base-ide --chown=theia:theia /home/theia /home/theia
 
-# Gradle Remote Cache Setup
-RUN mkdir -p /home/theia/.gradle/init.d
+# Gradle Remote Cache Setup + memory tuning
+# The /home/theia/jdk symlink gives gradle.properties an arch-independent
+# org.gradle.java.home so IDE-import and terminal builds share one daemon.
+RUN ln -s "${JAVA_HOME}" /home/theia/jdk && \
+    mkdir -p /home/theia/.gradle/init.d
 COPY --chown=theia:theia images/java-17/gradle/remote-cache.gradle /home/theia/.gradle/init.d/
+COPY --chown=theia:theia images/java-17/gradle/test-memory.gradle /home/theia/.gradle/init.d/
+COPY --chown=theia:theia images/java-17/gradle/gradle.properties /home/theia/.gradle/gradle.properties
+
+# Bake user-level (machine-scoped) Java LS memory settings. Must be user-level:
+# java.jdt.ls.vmargs is security-gated in workspace settings and /home/project
+# may be replaced by a mounted student volume.
+RUN mkdir -p /home/theia/.theia-ide
+COPY --chown=theia:theia images/java-17/theia/user-settings.json /home/theia/.theia-ide/settings.json
 
 # Copy additional plugins
 COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
@@ -95,6 +106,11 @@ ENV SHELL=/bin/zsh \
 
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
+
+# Cap JVM/node heaps and glibc arena count for constrained student environments
+ENV MAVEN_OPTS="-XX:+UseSerialGC -Xmx256m -XX:MaxMetaspaceSize=192m" \
+    NODE_OPTIONS="--max-old-space-size=512" \
+    MALLOC_ARENA_MAX=2
 
 WORKDIR /home/theia/applications/browser
 

@@ -1,0 +1,7 @@
+// Cap forked test JVMs (Gradle default allows 512m per fork).
+// Lives in ~/.gradle/init.d so it covers the template and any mounted course repo.
+allprojects {
+    tasks.withType(Test).configureEach {
+        maxHeapSize = '256m'
+    }
+}

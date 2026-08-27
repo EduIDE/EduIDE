@@ -86,7 +86,6 @@
   "resolutions": {
     "@types/puppeteer": "^5.4.7",
     "@yarnpkg/parsers": "3.0.0-rc.44",
-    "**/multer": "1.4.4-lts.1",
     "**/nan": "2.23.0",
     "**/cpu-features": "0.0.9",
     "**/perfect-scrollbar": "1.5.5",
@@ -98,6 +97,10 @@
     "**/lerna/tar": "^7.5.19",
     "**/node-gyp/tar": "^7.5.19",
     "**/nx/brace-expansion": "^5.0.9",
+    "**/engine.io/ws": "^8.21.0",
+    "**/engine.io-client/ws": "^8.21.0",
+    "**/socket.io-adapter/ws": "^8.21.0",
+    "**/scanoss/adm-zip": "^0.6.0",
     "**/pacote": "^21.5.1",
     "**/pacote/tar": "^7.5.19",
     "lerna/js-yaml": "^4.2.0",

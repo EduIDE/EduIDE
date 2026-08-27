@@ -8,7 +8,7 @@ Date: 2026-08-27. Branch: `feat/esbuild-bundling` (PR #155, on top of the esbuil
 
 - All `@theia/*` packages: 1.72.1 -> 1.74.1 (root, both applications, all three theia-extensions).
 - `@theia/preview` removed from the browser app: the package was discontinued upstream after 1.72; Markdown preview is covered by the VS Code built-ins.
-- Electron toolchain aligned with upstream `theia-ide` v1.74.100: electron 39.8.7 -> 42.3.0, electron-builder and app-builder-lib 24.13.2 -> 26.0.12, electron-chromedriver ^28.3.3, electron-mocha ^13.1.0, mocha ^11.
+- Electron toolchain aligned with upstream `theia-ide` v1.74.100: electron 39.8.7 -> 42.3.0, electron-chromedriver ^28.3.3, electron-mocha ^13.1.0, mocha ^11. electron-builder and app-builder-lib go to 26.15.3 instead of upstream's 26.0.12, because app-builder-lib < 26.15.0 carries GHSA-7g7r-gx96-252g (high) and fails dependency review.
 - Root devDependencies aligned with upstream v1.74.100 (lerna ^9, node-gyp ^11.5, eslint plugin refreshes).
 - Resolutions aligned with upstream v1.74.100, plus targeted `tar` pins (`**/scanoss/tar`, `**/lerna/tar`, `**/node-gyp/tar`, `**/pacote/tar` -> `^7.5.19`). This removes the vulnerable tar 7.5.7/7.5.15 entries that failed the dependency-review CI check (GHSA-23hp-3jrh-7fpw and friends). Note: the globs also force a few `tar@^6` requesters (electron packaging tooling) onto tar 7, the same cross-major forcing upstream applies to pacote.
 - `@theia/cli@1.70.0` literal bumped to `@theia/cli@1.74.1` in all 14 ToolDockerfiles (see the AGENTS.md trap: language images pin the CLI literally and do not read the root package.json).

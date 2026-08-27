@@ -7,7 +7,7 @@
     "@theia/core": "1.70.0",
     "@theia/output": "1.70.0",
     "@theia/preferences": "1.70.0",
-    "builder-util-runtime": "9.3.1",
+    "builder-util-runtime": "9.7.0",
     "electron-log": "^4.3.0",
     "electron-updater": "6.6.2",
     "fs-extra": "^10.0.0",

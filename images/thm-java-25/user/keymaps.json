@@ -1,7 +1,7 @@
 [
     {
         "command": "workbench.action.closeActiveEditor",
-        "keybinding": "alt+w"
+        "keybinding": "alt+x"
     },
     {
         "command": "workbench.action.tasks.build",

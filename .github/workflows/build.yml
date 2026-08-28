@@ -48,7 +48,11 @@ jobs:
       docker-file: images/base-ide/BaseDockerfile
       image-name: eduide/eduide/base
       docker-context: .
-      image-tag: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
+      # Deliberately NOT passed on a release. An override is used verbatim by
+      # the shared workflow, which would defeat its `${RELEASE_TAG#v}`
+      # normalisation and publish `v1.2.0` instead of `1.2.0` - a tag no chart
+      # can consume, since appVersion and the image tag must be one string.
+      image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
     secrets: inherit
 
@@ -92,6 +96,7 @@ jobs:
       docker-context: .
       build-args: |
         BASE_IDE_TAG=${{ needs.base.outputs.sha_tag }}
-      image-tag: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
+      # Deliberately NOT passed on a release. See the note on the base job.
+      image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
     secrets: inherit

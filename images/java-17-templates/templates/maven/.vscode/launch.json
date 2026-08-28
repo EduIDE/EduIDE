@@ -6,7 +6,8 @@
             "name": "Debug App",
             "request": "launch",
             "mainClass": "com.example.App",
-            "projectName": "my-project"
+            "projectName": "my-project",
+            "vmArgs": "-Xmx256m"
         }
     ]
 }

@@ -282,6 +282,10 @@ Once added, your variant will be built automatically on:
 - Releases
 - Manual workflow dispatch
 
+## Memory tuning
+
+The Java variants cap all resident JVM and node processes so many environments fit on one host. See [java-image-memory-tuning.md](java-image-memory-tuning.md) before changing Gradle or language server settings in those images.
+
 ## Tips
 
 - **Keep it minimal**: Only include tools and extensions actually needed for the language

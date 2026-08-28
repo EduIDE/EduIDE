@@ -1,0 +1,16 @@
+{
+    "java.server.launchMode": "Standard",
+    "java.jdt.ls.vmargs": "-XX:+UseG1GC -XX:+UseStringDeduplication -XX:G1PeriodicGCInterval=30000 -Xmx768m -Xms64m -Xss512k -XX:MaxMetaspaceSize=256m -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=25",
+    "java.completion.maxResults": 30,
+    "java.help.collectErrorLog": false,
+    "java.help.firstView": "none",
+    "java.help.showReleaseNotes": false,
+    "java.silentNotification": true,
+    "redhat.telemetry.enabled": false,
+    "files.watcherExclude": {
+        "**/.gradle/**": true,
+        "**/build/**": true,
+        "**/target/**": true,
+        "**/.git/objects/**": true
+    }
+}

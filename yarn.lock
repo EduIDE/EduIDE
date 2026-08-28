@@ -904,6 +904,11 @@
   resolved "https://registry.yarnpkg.com/@eclipse-dash/nodejs-wrapper/-/nodejs-wrapper-0.0.1.tgz#f2629671cf090a84c4d69a8fec42f198e583d103"
   integrity sha512-Rkk8O8hEVi/+LC/co7ly1zGLVwCNJG3yPbalsz1FHAqk6WZyEaWNf29EX6jz4vTfR5wpv2xAfF2yokKuStiOdA==
 
+"@electron-internal/extract-zip@^1.0.1":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@electron-internal/extract-zip/-/extract-zip-1.0.5.tgz#6782c0f6066e60b7fd286fe7a5c7600f7650d420"
+  integrity sha512-+bqFCP98pLI0Tt0XQo1TmlXtwjWchISndDOxCkEcIuUgXWpBnLyRI+2DU+mesvnMMX6L1XDqYNA0lXNDHd/yiA==
+
 "@electron/asar@3.4.1", "@electron/asar@^3.3.1":
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/@electron/asar/-/asar-3.4.1.tgz#4e9196a4b54fba18c56cd8d5cac67c5bdc588065"
@@ -6981,14 +6986,14 @@ electron-window@^0.8.0:
   dependencies:
     is-electron-renderer "^2.0.0"
 
-electron@42.3.0:
-  version "42.3.0"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-42.3.0.tgz#028d2f64bf69182f36fc74b72f59b48fc143f681"
-  integrity sha512-9ZiLdRXk+WDxW1OgIUz8J2rIQ5TYU9o629gCOjU48Q3dQiOmym7osWsH5Ubs/Jh4uuFLn6m6SBD2rmRXLAPz9g==
+electron@42.5.1:
+  version "42.5.1"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-42.5.1.tgz#ca6c6119c119b818c145c7e838c3484e36c35b05"
+  integrity sha512-2VFNJcHHbrhIpGsJHdkLoi/nWPZPxN3GHVPe+9At3Oz3/TJRwpr+7JL97ddBDbKyLmHGx3GfI2jvzcEQL28uFw==
   dependencies:
+    "@electron-internal/extract-zip" "^1.0.1"
     "@electron/get" "^5.0.0"
     "@types/node" "^24.9.0"
-    extract-zip "^2.0.1"
 
 emoji-regex@8.0.0, emoji-regex@^8.0.0:
   version "8.0.0"
@@ -7824,7 +7829,7 @@ external-editor@^3.0.3:
     iconv-lite "^0.4.24"
     tmp "^0.0.33"
 
-extract-zip@^2.0.0, extract-zip@^2.0.1:
+extract-zip@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/extract-zip/-/extract-zip-2.0.1.tgz#663dca56fe46df890d5f131ef4a06d22bb8ba13a"
   integrity sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==

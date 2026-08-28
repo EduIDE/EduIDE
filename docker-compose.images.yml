@@ -105,6 +105,20 @@ services:
     ports:
       - "3012:3000"
 
+  thm-java-25:
+    image: theia-thm-java-25:local
+    build:
+      context: .
+      dockerfile: images/thm-java-25/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base:local
+      additional_contexts:
+        base-ide: "service:base-ide"
+    depends_on:
+      - base-ide
+    ports:
+      - "3013:3000"
+
   javascript:
     image: theia-javascript:local
     build:

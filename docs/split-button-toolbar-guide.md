@@ -200,7 +200,7 @@ Common icons for toolbar buttons (see [Codicon reference](https://microsoft.gith
 - **Icon:** `play`
 - **Priority:** `0` (leftmost)
 - **Config source:** `tasks.json` via `TaskConfigurations.getTasks()`
-- **Execution:** `TaskService.runTaskByLabel()`
+- **Execution:** `TaskService.run()`
 - **Last-run tracking:** `TaskService.getLastTask()`
 - **Listeners:** `TaskConfigurationManager.onDidChangeTaskConfig`, `TaskWatcher.onTaskCreated`
 

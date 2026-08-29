@@ -3,7 +3,7 @@ import { nls, MenuPath } from '@theia/core';
 import { TaskService } from '@theia/task/lib/browser/task-service';
 import { TaskConfigurations } from '@theia/task/lib/browser/task-configurations';
 import { TaskConfigurationManager } from '@theia/task/lib/browser/task-configuration-manager';
-import { TaskConfiguration, TaskWatcher } from '@theia/task/lib/common';
+import { ContributedTaskConfiguration, TaskConfiguration, TaskWatcher } from '@theia/task/lib/common';
 import { AbstractSplitButtonContribution } from './abstract-split-button-contribution';
 
 export const TASK_RUN_TOOLBAR_MENU: MenuPath = ['task-toolbar', 'run'];
@@ -53,7 +53,8 @@ export class TaskToolbarContribution extends AbstractSplitButtonContribution<Tas
 
     protected async executeConfiguration(config: TaskConfiguration): Promise<void> {
         const token = this.taskService.startUserAction();
-        await this.taskService.runTaskByLabel(token, config.label);
+        const source = (config as ContributedTaskConfiguration)._source;
+        await this.taskService.run(token, source, config.label, config._scope);
     }
 
     protected getConfigurationLabel(config: TaskConfiguration): string {

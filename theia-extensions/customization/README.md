@@ -9,6 +9,24 @@ control condition for the evaluation.
 
 The concept this implements lives in Outline, *IDE Customization* (v2).
 
+## What it looks like
+
+Java 17 + Gradle, the same file open at each level.
+
+| Beginner | Advanced | Expert |
+|---|---|---|
+| ![Beginner](../../docs/images/customization/level-beginner.png) | ![Advanced](../../docs/images/customization/level-advanced.png) | ![Expert](../../docs/images/customization/level-expert.png) |
+| Explorer, Search, Artemis. One Run button. Four menus. | Source control, tests, the build tool, the refactoring toolbar. Still no debugger. | Stock EduIDE: the debugger, Outline, Memory Inspector, the full task list. |
+
+The picker, and the panel its last row opens:
+
+![The level picker](../../docs/images/customization/level-picker.png)
+
+![The Customize panel](../../docs/images/customization/customize-panel.png)
+
+Screenshots are produced from a running container, not drawn — see the capture
+script referenced in the pull request if they need refreshing.
+
 ## Layout
 
 | File | What it is |

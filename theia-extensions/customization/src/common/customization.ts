@@ -77,6 +77,7 @@ export type ElementGroup =
     | 'tasks'
     | 'editor'
     | 'diagnostics'
+    | 'submit'
     | 'menus'
     | 'statusBar'
     | 'startup'
@@ -88,6 +89,7 @@ export const ELEMENT_GROUP_LABELS: Record<ElementGroup, string> = {
     tasks: 'Run configurations',
     editor: 'Editor',
     diagnostics: 'Diagnostics',
+    submit: 'Submitting',
     menus: 'Menus',
     statusBar: 'Status bar',
     startup: 'Startup',
@@ -189,6 +191,25 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'toolbar.comment', label: 'Un-/Comment', group: 'toolbar', defaults: ADVANCED_ONLY },
     { id: 'toolbar.refactor', label: 'Refactor…', group: 'toolbar', defaults: ADVANCED_ONLY },
     { id: 'toolbar.sourceAction', label: 'Source Action…', group: 'toolbar', defaults: ADVANCED_ONLY },
+
+    // ── Submitting ───────────────────────────────────────────────────
+    // Artemis grades what is pushed, and neither Scorpio nor the Artemis
+    // extension offers a way to push — Scorpio clones and sets git identity,
+    // the Artemis view logs in and chats. Hiding Source Control without this
+    // button leaves a beginner able to write and run code but not hand it in.
+    {
+        id: 'submit.button', label: 'Submit to Artemis', group: 'submit', defaults: SCAFFOLDING,
+        preferences: {
+            // Commit everything without asking about staging: a beginner should
+            // not meet an index to hand work in.
+            on: { 'git.enableSmartCommit': true, 'git.suggestSmartCommit': false },
+            off: { 'git.suggestSmartCommit': true }
+        }
+    },
+    {
+        id: 'submit.promptMessage', label: 'Ask for a commit message when submitting',
+        group: 'submit', defaults: ADVANCED_ONLY
+    },
 
     // ── Run configurations ───────────────────────────────────────────
     // The task set is workspace data, so it cannot be catalogued element by

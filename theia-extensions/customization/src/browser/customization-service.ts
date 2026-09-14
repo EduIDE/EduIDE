@@ -133,9 +133,11 @@ export class CustomizationService implements FrontendApplicationContribution {
      * 2. The task declares `eduide.minLevel`: that is authoritative, because
      *    whoever wrote the task knows what it is for.
      * 3. Otherwise fall back to the task's group, which every `tasks.json`
-     *    already has: the default build task and test tasks are beginner work,
-     *    anything else needs advanced. A task with no group at all is treated
-     *    as advanced.
+     *    already has: below expert the only task offered is the **default
+     *    build task** — the one the Run button runs, which compiles and then
+     *    runs in every template we ship. Everything else, tests included, is
+     *    expert work. A student who has not met the debugger has usually not
+     *    met a test runner either, and `Build` is redundant when `Run` builds.
      */
     isTaskAllowed(task: TaskConfiguration): boolean {
         if (this.isEnabled('task.showAll')) {
@@ -145,10 +147,10 @@ export class CustomizationService implements FrontendApplicationContribution {
         if (declared) {
             return isAtLeast(this.level, declared);
         }
-        if (TaskCustomization.isDefaultBuildTask(task) || TaskCustomization.isTestTask(task)) {
+        if (TaskCustomization.isDefaultBuildTask(task)) {
             return true;
         }
-        return isAtLeast(this.level, 'advanced');
+        return isAtLeast(this.level, 'expert');
     }
 
     protected declaredMinLevel(task: TaskConfiguration): EduIdeLevel | undefined {

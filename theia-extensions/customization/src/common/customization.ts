@@ -126,6 +126,14 @@ export interface CustomizableElement {
     /** Theia widgets this element shows and hides. */
     readonly views?: readonly ManagedView[];
     /**
+     * Hides and blocks terminals a student opened themselves, leaving the
+     * terminals tasks create alone — a beginner still has to see what `Run`
+     * printed.
+     */
+    readonly userTerminals?: boolean;
+    /** Status bar entry ids this element hides. */
+    readonly statusBarItems?: readonly string[];
+    /**
      * Top-level menu bar paths this element shows and hides, e.g.
      * `['menubar', '7_terminal']`. Written as plain segments so the catalogue
      * stays free of Theia imports.
@@ -172,18 +180,15 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
         id: 'view.memoryInspector', label: 'Memory Inspector', group: 'views', defaults: EXPERT_ONLY,
         pending: '@theia/memory-inspector is not a dependency of the browser app yet'
     },
-    {
-        id: 'view.terminal', label: 'Shell terminal', group: 'views', defaults: ADVANCED_UP,
-        pending: 'needs the terminal commands and menu gated, not just a widget hidden'
-    },
+    { id: 'view.terminal', label: 'Shell terminal', group: 'views', defaults: ADVANCED_UP, userTerminals: true },
 
     // ── Editor toolbar ───────────────────────────────────────────────
     { id: 'toolbar.run', label: 'Run split button', group: 'toolbar', defaults: ON },
     { id: 'toolbar.debug', label: 'Debug split button', group: 'toolbar', defaults: EXPERT_ONLY },
-    { id: 'toolbar.rename', label: 'Rename', group: 'toolbar', defaults: ADVANCED_ONLY, pending: 'toolbar contribution not written yet' },
-    { id: 'toolbar.comment', label: 'Un-/Comment', group: 'toolbar', defaults: ADVANCED_ONLY, pending: 'toolbar contribution not written yet' },
-    { id: 'toolbar.extractMethod', label: 'Extract method', group: 'toolbar', defaults: ADVANCED_ONLY, pending: 'toolbar contribution not written yet' },
-    { id: 'toolbar.generateAccessors', label: 'Generate getters/setters', group: 'toolbar', defaults: ADVANCED_ONLY, pending: 'toolbar contribution not written yet' },
+    { id: 'toolbar.rename', label: 'Rename', group: 'toolbar', defaults: ADVANCED_ONLY },
+    { id: 'toolbar.comment', label: 'Un-/Comment', group: 'toolbar', defaults: ADVANCED_ONLY },
+    { id: 'toolbar.refactor', label: 'Refactor…', group: 'toolbar', defaults: ADVANCED_ONLY },
+    { id: 'toolbar.sourceAction', label: 'Source Action…', group: 'toolbar', defaults: ADVANCED_ONLY },
 
     // ── Run configurations ───────────────────────────────────────────
     // The task set is workspace data, so it cannot be catalogued element by
@@ -275,7 +280,17 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
 
     // ── Status bar ───────────────────────────────────────────────────
     { id: 'status.level', label: 'Experience level indicator', group: 'statusBar', defaults: ON },
-    { id: 'status.editorInfo', label: 'Encoding, EOL, indentation, language', group: 'statusBar', defaults: ADVANCED_UP, pending: 'status bar entry ids not gated yet' },
+    {
+        id: 'status.editorInfo', label: 'Cursor position, encoding, EOL, indentation, language',
+        group: 'statusBar', defaults: ADVANCED_UP,
+        statusBarItems: [
+            'editor-status-cursor-position',
+            'editor-status-encoding',
+            'editor-status-eol',
+            'editor-status-language',
+            'editor-status-tabbing-config'
+        ]
+    },
 
     // ── Startup ──────────────────────────────────────────────────────
     {
@@ -292,6 +307,30 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
 
 export const ELEMENTS_BY_ID: ReadonlyMap<string, CustomizableElement> =
     new Map(ELEMENT_CATALOGUE.map(element => [element.id, element]));
+
+/**
+ * The Advanced editor-toolbar buttons.
+ *
+ * Every command here is a Monaco built-in, so the buttons work in any language
+ * the image ships. `Refactor…` and `Source Action…` open Monaco's pickers
+ * rather than firing one refactoring: "Extract method" and "Generate getters
+ * and setters" are entries the Java extension contributes into those pickers,
+ * and it exposes no command id of its own that we could bind directly.
+ */
+export interface ToolbarButton {
+    readonly elementId: string;
+    readonly commandId: string;
+    /** Codicon name. */
+    readonly icon: string;
+    readonly label: string;
+}
+
+export const TOOLBAR_BUTTONS: readonly ToolbarButton[] = [
+    { elementId: 'toolbar.rename', commandId: 'editor.action.rename', icon: 'edit', label: 'Rename' },
+    { elementId: 'toolbar.comment', commandId: 'editor.action.commentLine', icon: 'comment', label: 'Un-/Comment' },
+    { elementId: 'toolbar.refactor', commandId: 'editor.action.refactor', icon: 'symbol-method', label: 'Refactor…' },
+    { elementId: 'toolbar.sourceAction', commandId: 'editor.action.sourceAction', icon: 'symbol-property', label: 'Source Action…' }
+];
 
 /** The file opened on startup while `startup.openFile` is on, per build tool. */
 export const STARTUP_FILE_CANDIDATES: readonly string[] = [

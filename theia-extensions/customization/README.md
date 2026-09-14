@@ -44,6 +44,9 @@ runtime APIs instead:
 | Views | `WidgetManager.onWillCreateWidget` rejection, plus `ApplicationShell.closeWidget` for anything already open |
 | Toolbar buttons | `elementId` on `AbstractSplitButtonContribution`, gating `isVisible` |
 | Menu bar | top-level nodes moved out of and back into the `menubar` compound node |
+| Terminals | `kind === 'user'` widgets closed and blocked; task terminals untouched |
+| Status bar entries | `StatusBar.removeElement`, re-applied on every editor change |
+| Advanced toolbar | `RefactorToolbarContribution` in the product extension, gated per element |
 | Run configurations | `TaskToolbarContribution.fetchConfigurations` filtered by `isTaskAllowed` (see below) |
 | Level for `when` clauses | the `eduide.level` context key |
 
@@ -72,13 +75,30 @@ does not enforce yet carry a `pending` reason and render disabled in the
 Customize panel, so the panel stays a truthful picture rather than promising
 switches that do nothing:
 
-- the Advanced refactoring toolbar (`toolbar.rename` and friends)
-- the Iris "Explain this error" action (`assist.*`)
+- the Iris "Explain this error" action (`assist.*`) — needs the Artemis
+  extension's own API, which is not available to build against here
 - `view.memoryInspector` — `@theia/memory-inspector` is not a dependency of the
   browser app yet
-- `view.terminal` — needs the terminal commands and menu gated, not just a
-  widget hidden
+- `diag.checkstyleLive` — needs a Checkstyle ruleset in the image, which is an
+  image change rather than IDE code
+- `diag.sonar` — held until the per-session memory budget is measured
 - `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
+
+## Terminals and status bar entries
+
+`view.terminal` hides terminals a student opened themselves and blocks new
+ones, **leaving the terminals tasks create alone** — a beginner still has to
+read what `Run` printed. Terminal widgets carry a `kind`, and only `'user'`
+ones are touched. A blocked attempt fails with a sentence naming the way back
+rather than a bare error, because the student is about to wonder why nothing
+happened.
+
+`status.editorInfo` takes the editor entries off the status bar. They are re-set
+whenever the editor changes, so they are removed again on every
+`onCurrentEditorChanged`. That costs a frame of flicker, and it is the price of
+not rebinding Theia's `StatusBar` — `bindStatusBar` binds `StatusBar` with
+`.to(StatusBarImpl)` rather than `toService`, so intercepting it cleanly is not
+as simple as it looks.
 
 ## Run configurations
 

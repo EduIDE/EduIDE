@@ -20,6 +20,9 @@ import {
 import { ContextKey, ContextKeyService } from '@theia/core/lib/browser/context-key-service';
 import { CompoundMenuNode, MenuModelRegistry, MenuNode, MutableCompoundMenuNode } from '@theia/core/lib/common/menu';
 import { TaskConfiguration, TaskCustomization } from '@theia/task/lib/common/task-protocol';
+import { TERMINAL_WIDGET_FACTORY_ID } from '@theia/terminal/lib/browser/terminal-widget-impl';
+import { StatusBar } from '@theia/core/lib/browser/status-bar';
+import { EditorManager } from '@theia/editor/lib/browser';
 import { PreferenceScope, PreferenceService } from '@theia/core/lib/common/preferences';
 import {
     CustomizableElement,
@@ -63,6 +66,10 @@ export class CustomizationService implements FrontendApplicationContribution {
     protected readonly contextKeyService: ContextKeyService;
     @inject(MenuModelRegistry)
     protected readonly menus: MenuModelRegistry;
+    @inject(StatusBar)
+    protected readonly statusBar: StatusBar;
+    @inject(EditorManager)
+    protected readonly editorManager: EditorManager;
     @inject(ILogger)
     protected readonly logger: ILogger;
 
@@ -83,6 +90,11 @@ export class CustomizationService implements FrontendApplicationContribution {
 
     @postConstruct()
     protected init(): void {
+        // The editor status entries are re-set whenever the editor changes, so
+        // suppressing them once is not enough — they have to be taken off again
+        // each time they come back. That costs a frame of flicker, which is the
+        // price of not rebinding Theia's StatusBar.
+        this.editorManager.onCurrentEditorChanged(() => this.applyStatusBarItems());
         this.preferences.onPreferenceChanged(event => {
             if (event.preferenceName === CustomizationPreferences.LEVEL
                 || event.preferenceName === CustomizationPreferences.OVERRIDES) {
@@ -198,6 +210,16 @@ export class CustomizationService implements FrontendApplicationContribution {
                     new Error(`Widget '${event.factoryId}' is hidden by the EduIDE ${this.level} level.`)
                 ));
             }
+            if (event.factoryId === TERMINAL_WIDGET_FACTORY_ID
+                && this.isUserTerminal(event.widget)
+                && !this.userTerminalsAllowed()) {
+                // Worth a real sentence: the student is about to wonder why
+                // nothing happened, and this is the way back.
+                event.waitUntil(Promise.reject(new Error(
+                    `The terminal is hidden at the EduIDE ${this.level} level. `
+                    + 'Turn "Shell terminal" on in EduIDE: Customize… to get it back.'
+                )));
+            }
         });
         this.refreshBlockedWidgetIds();
     }
@@ -218,6 +240,8 @@ export class CustomizationService implements FrontendApplicationContribution {
             this.refreshBlockedWidgetIds();
             await this.applyPreferences();
             await this.applyViews();
+            await this.applyTerminals();
+            this.applyStatusBarItems();
             this.applyMenus();
         } finally {
             this.applying = false;
@@ -305,6 +329,48 @@ export class CustomizationService implements FrontendApplicationContribution {
                 `EduIDE customization: could not restore '${view.id}' for '${element.id}'; it returns on the next reload`,
                 error
             );
+        }
+    }
+
+    // ── Terminals ────────────────────────────────────────────────────
+
+    /**
+     * Terminals a task opened stay: a beginner still has to read what `Run`
+     * printed. Only the ones a student opened themselves are hidden.
+     */
+    protected userTerminalsAllowed(): boolean {
+        const element = ELEMENT_CATALOGUE.find(candidate => candidate.userTerminals);
+        return element ? this.isEnabled(element.id) : true;
+    }
+
+    protected isUserTerminal(widget: Widget): boolean {
+        return (widget as { kind?: string }).kind === 'user';
+    }
+
+    protected async applyTerminals(): Promise<void> {
+        if (this.userTerminalsAllowed()) {
+            return;
+        }
+        for (const widget of this.shell.widgets.filter(candidate => this.isUserTerminal(candidate))) {
+            try {
+                await this.shell.closeWidget(widget.id, { save: false });
+            } catch (error) {
+                this.logger.warn(`EduIDE customization: could not close terminal '${widget.id}'`, error);
+            }
+        }
+    }
+
+    // ── Status bar ───────────────────────────────────────────────────
+
+    protected applyStatusBarItems(): void {
+        for (const element of ELEMENT_CATALOGUE) {
+            if (element.pending || !element.statusBarItems || this.isEnabled(element.id)) {
+                continue;
+            }
+            for (const id of element.statusBarItems) {
+                this.statusBar.removeElement(id).catch(error =>
+                    this.logger.warn(`EduIDE customization: could not remove status bar item '${id}'`, error));
+            }
         }
     }
 

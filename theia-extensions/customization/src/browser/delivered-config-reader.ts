@@ -62,6 +62,14 @@ export class DeliveredConfigReader {
                 return undefined;
             }
             const content = await this.fileService.read(uri);
+            if (!jsoncparser.stripComments(content.value).trim()) {
+                // A file that is entirely comments, which is the shape the
+                // templates ship. It parses to nothing and the parser calls
+                // that an error, but saying nothing is not the same as saying
+                // something wrong — warning here would tell every student on a
+                // stock template that their exercise is misconfigured.
+                return undefined;
+            }
             const errors: jsoncparser.ParseError[] = [];
             const parsed = jsoncparser.parse(content.value, errors, { allowTrailingComma: true });
             if (errors.length > 0) {

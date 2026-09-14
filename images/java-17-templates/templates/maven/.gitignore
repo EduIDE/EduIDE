@@ -1,0 +1,4 @@
+# Maven's build output. Artemis grades the source you push, and the Submit
+# button commits everything it finds, so keeping build artifacts out of the
+# repository matters more here than in a local checkout.
+target/

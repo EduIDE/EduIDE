@@ -1,0 +1,9 @@
+# Gradle's caches and build output. Artemis grades the source you push, and
+# the Submit button commits everything it finds, so keeping build artifacts
+# out of the repository matters more here than in a local checkout.
+.gradle/
+build/
+
+# Keep the wrapper: an exercise has to build without a Gradle install.
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties

@@ -8,6 +8,7 @@
  ********************************************************************************/
 
 import { inject, injectable } from '@theia/core/shared/inversify';
+import * as React from '@theia/core/shared/react';
 import { Command, CommandContribution, CommandRegistry } from '@theia/core/lib/common/command';
 import { Emitter, Event } from '@theia/core/lib/common/event';
 import { MessageService } from '@theia/core/lib/common/message-service';
@@ -72,13 +73,13 @@ export class SubmitContribution implements CommandContribution, TabBarToolbarCon
         this.scmService.onDidRemoveRepository(() => this.onDidChangeEmitter.fire());
         registry.registerItem({
             id: 'eduide-submit',
-            command: SubmitCommands.SUBMIT.id,
-            icon: 'codicon codicon-cloud-upload',
-            text: nls.localize('eduide/submit/label', 'Submit'),
-            tooltip: nls.localize('eduide/submit/tooltip', 'Commit everything and push it to Artemis'),
             group: 'navigation',
             priority: 5,
             onDidChange: this.onDidChange,
+            // Rendered rather than declared: a plain toolbar item shows either
+            // an icon or a label, and an unlabelled cloud is not something a
+            // beginner can be expected to recognise as "hand this in".
+            render: () => this.render(),
             isVisible: (widget?: Widget) =>
                 widget instanceof EditorWidget
                 && this.customization.isEnabled('submit.button')
@@ -86,6 +87,17 @@ export class SubmitContribution implements CommandContribution, TabBarToolbarCon
                 // Scorpio never cloned anything.
                 && this.repository !== undefined
         });
+    }
+
+    protected render(): React.ReactNode {
+        return <div
+            className='eduide-submit'
+            title={nls.localize('eduide/submit/tooltip', 'Commit everything and push it to Artemis')}
+            onClick={() => this.submit()}
+        >
+            <span className='codicon codicon-cloud-upload' />
+            <span className='eduide-submit-label'>{nls.localize('eduide/submit/label', 'Submit')}</span>
+        </div>;
     }
 
     protected get repository(): ScmRepository | undefined {

@@ -196,3 +196,26 @@
     background: var(--theia-editorGroup-border);
     color: var(--theia-descriptionForeground);
 }
+
+/* Submit button ----------------------------------------------------- */
+
+.eduide-submit {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--theia-button-border);
+    color: var(--theia-icon-foreground);
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.eduide-submit:hover {
+    background-color: var(--theia-toolbar-activeBackground, rgb(90 93 94 / 31%));
+}
+
+.eduide-submit-label {
+    font-size: var(--theia-ui-font-size1);
+    white-space: nowrap;
+}

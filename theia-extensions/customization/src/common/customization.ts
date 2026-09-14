@@ -24,6 +24,30 @@ export function isEduIdeLevel(value: unknown): value is EduIdeLevel {
     return typeof value === 'string' && (EDU_IDE_LEVELS as readonly string[]).includes(value);
 }
 
+/** Whether `level` is at least as high as `minimum`. */
+export function isAtLeast(level: EduIdeLevel, minimum: EduIdeLevel): boolean {
+    return EDU_IDE_LEVELS.indexOf(level) >= EDU_IDE_LEVELS.indexOf(minimum);
+}
+
+/**
+ * Property a `tasks.json` entry may carry to declare the level it belongs to:
+ *
+ * ```jsonc
+ * { "label": "Build", "type": "shell", "command": "./gradlew build",
+ *   "eduide": { "minLevel": "advanced" } }
+ * ```
+ *
+ * `TaskCustomization` has an index signature, so the property survives all the
+ * way from the workspace to the Run button. This is the authoritative answer:
+ * the task set comes from the exercise repository, not from EduIDE, so whoever
+ * wrote the task is the one who knows which level it belongs to.
+ */
+export const EDUIDE_TASK_PROPERTY = 'eduide';
+
+export interface EduIdeTaskAnnotation {
+    readonly minLevel?: string;
+}
+
 export namespace CustomizationPreferences {
     export const LEVEL = 'eduide.level';
     export const OVERRIDES = 'eduide.overrides';
@@ -107,12 +131,7 @@ export interface CustomizableElement {
      * stays free of Theia imports.
      */
     readonly menus?: readonly (readonly string[])[];
-    /**
-     * `tasks.json` labels this element allows. A task whose label is claimed by
-     * a disabled element is dropped from the Run button and its dropdown; a
-     * task no element claims is always allowed.
-     */
-    readonly tasks?: readonly string[];
+
     /**
      * Set when the catalogue lists an element the runtime does not enforce yet.
      * The Customize panel shows it, disabled, with this text as the reason, so
@@ -167,8 +186,11 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'toolbar.generateAccessors', label: 'Generate getters/setters', group: 'toolbar', defaults: ADVANCED_ONLY, pending: 'toolbar contribution not written yet' },
 
     // ── Run configurations ───────────────────────────────────────────
-    { id: 'task.build', label: 'Build task', group: 'tasks', defaults: ADVANCED_UP, tasks: ['Build'] },
-    { id: 'task.checkstyle', label: 'Check style task', group: 'tasks', defaults: ADVANCED_UP, tasks: ['Check style'] },
+    // The task set is workspace data, so it cannot be catalogued element by
+    // element. The level filters it instead, and this switch turns the filter
+    // off — without it, tasks would be the one thing a student could not get
+    // back without changing level.
+    { id: 'task.showAll', label: 'Offer every task, ignoring level marks', group: 'tasks', defaults: EXPERT_ONLY },
 
     // ── Editor ───────────────────────────────────────────────────────
     {

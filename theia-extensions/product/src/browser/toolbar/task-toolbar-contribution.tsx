@@ -50,7 +50,7 @@ export class TaskToolbarContribution extends AbstractSplitButtonContribution<Tas
     protected async fetchConfigurations(): Promise<TaskConfiguration[]> {
         const token = this.taskService.startUserAction();
         const tasks = await this.taskConfigurations.getTasks(token);
-        return tasks.filter(task => this.customization.isTaskAllowed(task.label));
+        return tasks.filter(task => this.customization.isTaskAllowed(task));
     }
 
     protected async executeConfiguration(config: TaskConfiguration): Promise<void> {

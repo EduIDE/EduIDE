@@ -19,6 +19,7 @@ import {
 } from '@theia/core/lib/browser';
 import { ContextKey, ContextKeyService } from '@theia/core/lib/browser/context-key-service';
 import { CompoundMenuNode, MenuModelRegistry, MenuNode, MutableCompoundMenuNode } from '@theia/core/lib/common/menu';
+import { TaskConfiguration, TaskCustomization } from '@theia/task/lib/common/task-protocol';
 import { PreferenceScope, PreferenceService } from '@theia/core/lib/common/preferences';
 import {
     CustomizableElement,
@@ -27,7 +28,10 @@ import {
     EduIdeLevel,
     EDUIDE_LEVEL_CONTEXT_KEY,
     ELEMENT_CATALOGUE,
+    EduIdeTaskAnnotation,
+    EDUIDE_TASK_PROPERTY,
     ELEMENTS_BY_ID,
+    isAtLeast,
     isEduIdeLevel,
     MAIN_MENU_BAR,
     ManagedView,
@@ -114,18 +118,47 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     /**
-     * Whether a `tasks.json` task may be offered. A task no element claims is
-     * always allowed, so a course adding its own task does not have to touch
-     * the catalogue to make it appear.
+     * Whether a task may be offered by the Run button at the current level.
+     *
+     * The task set comes from the workspace — in the Artemis flow, from the
+     * exercise repository Scorpio clones — so it cannot be catalogued task by
+     * task. Three rules, in order:
+     *
+     * 1. `task.showAll` on: everything is offered.
+     * 2. The task declares `eduide.minLevel`: that is authoritative, because
+     *    whoever wrote the task knows what it is for.
+     * 3. Otherwise fall back to the task's group, which every `tasks.json`
+     *    already has: the default build task and test tasks are beginner work,
+     *    anything else needs advanced. A task with no group at all is treated
+     *    as advanced.
      */
-    isTaskAllowed(label: string): boolean {
-        const normalized = label.trim().toLowerCase();
-        for (const element of ELEMENT_CATALOGUE) {
-            if (element.tasks?.some(task => task.toLowerCase() === normalized)) {
-                return this.isEnabled(element.id);
-            }
+    isTaskAllowed(task: TaskConfiguration): boolean {
+        if (this.isEnabled('task.showAll')) {
+            return true;
         }
-        return true;
+        const declared = this.declaredMinLevel(task);
+        if (declared) {
+            return isAtLeast(this.level, declared);
+        }
+        if (TaskCustomization.isDefaultBuildTask(task) || TaskCustomization.isTestTask(task)) {
+            return true;
+        }
+        return isAtLeast(this.level, 'advanced');
+    }
+
+    protected declaredMinLevel(task: TaskConfiguration): EduIdeLevel | undefined {
+        const annotation = task[EDUIDE_TASK_PROPERTY] as EduIdeTaskAnnotation | undefined;
+        const declared = annotation?.minLevel;
+        if (declared === undefined) {
+            return undefined;
+        }
+        if (!isEduIdeLevel(declared)) {
+            this.logger.warn(
+                `EduIDE customization: task '${task.label}' declares eduide.minLevel '${declared}', which is not a level; ignoring it`
+            );
+            return undefined;
+        }
+        return declared;
     }
 
     // ── Mutation ─────────────────────────────────────────────────────

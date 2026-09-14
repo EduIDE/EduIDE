@@ -44,7 +44,7 @@ runtime APIs instead:
 | Views | `WidgetManager.onWillCreateWidget` rejection, plus `ApplicationShell.closeWidget` for anything already open |
 | Toolbar buttons | `elementId` on `AbstractSplitButtonContribution`, gating `isVisible` |
 | Menu bar | top-level nodes moved out of and back into the `menubar` compound node |
-| Run configurations | `TaskToolbarContribution.fetchConfigurations` filtered by `isTaskAllowed` |
+| Run configurations | `TaskToolbarContribution.fetchConfigurations` filtered by `isTaskAllowed` (see below) |
 | Level for `when` clauses | the `eduide.level` context key |
 
 `MenuModelRegistry` fires its change event when a registration is **disposed**,
@@ -80,5 +80,40 @@ switches that do nothing:
   widget hidden
 - `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
 
-`task.checkstyle` gates a `Check style` task the Gradle template does not ship
-yet, so the toggle is real but has nothing to hide until the template gains it.
+## Run configurations
+
+The Run button's configurations are **not ours**. `TaskToolbarContribution` reads
+`tasks.json` from the workspace, and in the Artemis flow that workspace is the
+exercise repository Scorpio clones — so the task set is whatever the instructor
+wrote, in whatever language the course uses. It cannot be catalogued task by
+task. Three rules decide, in order:
+
+1. `task.showAll` on — everything is offered. Without this switch, tasks would
+   be the one thing a student could not get back without changing level.
+2. The task declares its own level. `TaskCustomization` has an index signature,
+   so a custom property written in `tasks.json` survives to the toolbar:
+
+   ```jsonc
+   {
+     "label": "Check style",
+     "type": "shell",
+     "command": "./gradlew checkstyleMain",
+     "eduide": { "minLevel": "advanced" }
+   }
+   ```
+
+   This is authoritative, because whoever wrote the task knows what it is for.
+   A `minLevel` that is not a level is ignored, with a warning.
+3. Otherwise the task's **group** decides, which every `tasks.json` already has:
+   the default build task and test tasks are beginner work, anything else needs
+   advanced. A task with no group at all is treated as advanced.
+
+Against the four shipped templates that gives:
+
+| Template | Beginner | Advanced |
+|---|---|---|
+| java-17 gradle, maven | Run, Test | Run, Build, Test |
+| c make, bazel | Run | Run, Build |
+
+which is what the concept asks for, without a single task label hardcoded
+anywhere.

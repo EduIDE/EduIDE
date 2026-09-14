@@ -36,7 +36,13 @@ export namespace CustomizationCommands {
 }
 
 export namespace CustomizationMenus {
-    export const HELP_EXPERIENCE: MenuPath = [...CommonMenus.HELP, 'eduide-experience'];
+    /**
+     * View, above `Open View…`. The level decides which parts of the IDE are
+     * on screen, which is what the rest of this menu is about, and View is the
+     * one menu kept at every level — so the entry never moves or disappears as
+     * a student changes level. `0_eduide` sorts ahead of Theia's `0_primary`.
+     */
+    export const VIEW_EXPERIENCE: MenuPath = [...CommonMenus.VIEW, '0_eduide'];
 }
 
 const LEVEL_LABELS: Record<EduIdeLevel, string> = {
@@ -117,9 +123,9 @@ export class CustomizationContribution implements CommandContribution, MenuContr
     }
 
     registerMenus(menus: MenuModelRegistry): void {
-        menus.registerMenuAction(CustomizationMenus.HELP_EXPERIENCE, {
+        menus.registerMenuAction(CustomizationMenus.VIEW_EXPERIENCE, {
             commandId: CustomizationCommands.EXPERIENCE_LEVEL.id,
-            label: nls.localize('eduide/customization/helpMenu', 'Experience Level…'),
+            label: nls.localize('eduide/customization/viewMenu', 'Experience Level…'),
             order: '0'
         });
     }

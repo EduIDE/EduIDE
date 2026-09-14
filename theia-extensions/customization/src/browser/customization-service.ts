@@ -123,6 +123,17 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     /**
+     * Whether the split buttons show their dropdown.
+     *
+     * Only at expert, where the IDE is stock. Below it the levels leave a
+     * single configuration, and a chevron that opens a one-line menu is
+     * furniture rather than a choice.
+     */
+    offersConfigurationMenu(): boolean {
+        return this.level === 'expert';
+    }
+
+    /**
      * Whether a task may be offered by the Run button at the current level.
      *
      * The task set comes from the workspace — in the Artemis flow, from the

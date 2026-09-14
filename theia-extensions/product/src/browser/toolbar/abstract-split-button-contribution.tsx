@@ -166,10 +166,7 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
                 tooltip={this.getTooltip(configToRun, hasConfigs)}
                 menuTooltip={this.getMenuTooltip()}
                 enabled={hasConfigs}
-                // One configuration is not a choice, so the chevron would only
-                // open a menu with a single entry. Below expert, levels usually
-                // leave exactly one.
-                showMenu={this.cachedConfigs.length > 1}
+                showMenu={hasConfigs && this.customization.offersConfigurationMenu()}
                 onRun={e => this.handleExecute(e)}
                 onShowMenu={e => this.handleShowMenu(e, widget)}
             />

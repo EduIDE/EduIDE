@@ -1,0 +1,16 @@
+// EduIDE experience level for this exercise.
+//
+// Everything here is commented out, so this file does nothing as shipped.
+// Uncomment to say which level a student should START at — they can still
+// change it afterwards, and once they have, this file stops applying.
+//
+// {
+//     // "beginner", "advanced" or "expert".
+//     "level": "beginner",
+//
+//     // Individual elements on top of that level, by catalogue id.
+//     // See theia-extensions/customization/README.md for the full list.
+//     "overrides": {
+//         "view.scm": true
+//     }
+// }

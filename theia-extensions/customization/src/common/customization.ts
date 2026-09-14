@@ -1,0 +1,368 @@
+/********************************************************************************
+ * Copyright (C) 2026 EduIDE
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ *
+ * SPDX-License-Identifier: MIT
+ ********************************************************************************/
+
+/**
+ * The three experience levels.
+ *
+ * `expert` is not a configuration: it is EduIDE with nothing applied. Beginner
+ * and advanced are presets over the element catalogue below, and every element
+ * can be overridden individually at every level, expert included.
+ */
+export type EduIdeLevel = 'beginner' | 'advanced' | 'expert';
+
+export const EDU_IDE_LEVELS: readonly EduIdeLevel[] = ['beginner', 'advanced', 'expert'];
+
+export const DEFAULT_LEVEL: EduIdeLevel = 'beginner';
+
+export function isEduIdeLevel(value: unknown): value is EduIdeLevel {
+    return typeof value === 'string' && (EDU_IDE_LEVELS as readonly string[]).includes(value);
+}
+
+/** Whether `level` is at least as high as `minimum`. */
+export function isAtLeast(level: EduIdeLevel, minimum: EduIdeLevel): boolean {
+    return EDU_IDE_LEVELS.indexOf(level) >= EDU_IDE_LEVELS.indexOf(minimum);
+}
+
+/**
+ * Property a `tasks.json` entry may carry to declare the level it belongs to:
+ *
+ * ```jsonc
+ * { "label": "Build", "type": "shell", "command": "./gradlew build",
+ *   "eduide": { "minLevel": "advanced" } }
+ * ```
+ *
+ * `TaskCustomization` has an index signature, so the property survives all the
+ * way from the workspace to the Run button. This is the authoritative answer:
+ * the task set comes from the exercise repository, not from EduIDE, so whoever
+ * wrote the task is the one who knows which level it belongs to.
+ */
+export const EDUIDE_TASK_PROPERTY = 'eduide';
+
+export interface EduIdeTaskAnnotation {
+    readonly minLevel?: string;
+}
+
+export namespace CustomizationPreferences {
+    export const LEVEL = 'eduide.level';
+    export const OVERRIDES = 'eduide.overrides';
+}
+
+/** Environment variable EduIDE-Cloud passes through `LaunchRequest.env.fromMap`. */
+export const EDUIDE_LEVEL_ENV = 'EDUIDE_LEVEL';
+
+/**
+ * Where an exercise declares the level it wants a student to start at,
+ * relative to the workspace root. `.vscode` because that is already where the
+ * exercise keeps `launch.json` and `tasks.json`, so an instructor writing one
+ * is writing the others in the same folder.
+ */
+export const DELIVERED_CONFIG_SEGMENTS: readonly string[] = ['.vscode', 'eduide.json'];
+
+/**
+ * The shape of that file.
+ *
+ * It *seeds*, it does not enforce: the values are used only when the student
+ * has not chosen for themselves, and switching level afterwards is theirs to
+ * do. A file that could pin a student to a level would be a different feature
+ * — one that has to say so in the UI, because a disabled control with no
+ * explanation is worse than no control.
+ *
+ * Note it lives in the exercise repository, which the student can edit and
+ * which travels back to Artemis on submit. That rules it out as any kind of
+ * boundary; it is a starting point an instructor can express, nothing more.
+ */
+export interface DeliveredConfig {
+    /** Level to start at, when the student has none of their own. */
+    readonly level?: EduIdeLevel;
+    /** Element overrides to start with, keyed by catalogue id. */
+    readonly overrides?: Readonly<Record<string, boolean>>;
+}
+
+/** Context key mirroring the active level, for `when` clauses. */
+export const EDUIDE_LEVEL_CONTEXT_KEY = 'eduide.level';
+
+/** Theia's main menu bar path. Duplicated so this module stays import-free. */
+export const MAIN_MENU_BAR: readonly string[] = ['menubar'];
+
+/**
+ * Menu path used only to make `MenuModelRegistry` fire a change event under the
+ * menu bar, which is what makes the bar rebuild. Registering a menu action fires
+ * nothing; disposing one fires `REMOVED`, so a throwaway action registered and
+ * disposed here is the public-API way to force a refill. The group sits inside
+ * Help so nothing is left behind at the top level.
+ */
+export const MENU_REFRESH_PATH: readonly string[] = ['menubar', '9_help', 'eduide-refresh'];
+
+export type ElementGroup =
+    | 'views'
+    | 'toolbar'
+    | 'tasks'
+    | 'editor'
+    | 'diagnostics'
+    | 'menus'
+    | 'statusBar'
+    | 'startup'
+    | 'assistance';
+
+export const ELEMENT_GROUP_LABELS: Record<ElementGroup, string> = {
+    views: 'Views',
+    toolbar: 'Editor toolbar',
+    tasks: 'Run configurations',
+    editor: 'Editor',
+    diagnostics: 'Diagnostics',
+    menus: 'Menus',
+    statusBar: 'Status bar',
+    startup: 'Startup',
+    assistance: 'Assistance'
+};
+
+/** Preference key/value pairs written when an element is switched on or off. */
+export type PreferenceValues = Readonly<Record<string, unknown>>;
+
+export type ViewArea = 'left' | 'right' | 'bottom';
+
+/**
+ * A Theia widget an element shows and hides.
+ *
+ * `match: 'includes'` is for views contributed by VS Code extensions, whose
+ * container id (`plugin-view-container:<publisher>.<extension>.<view>`) is only
+ * known once the plugin is resolved; the value is then matched
+ * case-insensitively against the widget id.
+ */
+export interface ManagedView {
+    readonly id: string;
+    readonly area: ViewArea;
+    readonly match?: 'exact' | 'includes';
+}
+
+export interface CustomizableElement {
+    /** Stable id, e.g. `view.scm`. Also the key under `eduide.overrides`. */
+    readonly id: string;
+    /** What the student sees in the Customize panel. */
+    readonly label: string;
+    readonly group: ElementGroup;
+    /** Where the element starts at each level. Every cell is overridable. */
+    readonly defaults: Readonly<Record<EduIdeLevel, boolean>>;
+    /** Written verbatim through `PreferenceService` when the element flips. */
+    readonly preferences?: { readonly on?: PreferenceValues; readonly off?: PreferenceValues };
+    /** Theia widgets this element shows and hides. */
+    readonly views?: readonly ManagedView[];
+    /**
+     * Hides and blocks terminals a student opened themselves, leaving the
+     * terminals tasks create alone — a beginner still has to see what `Run`
+     * printed.
+     */
+    readonly userTerminals?: boolean;
+    /** Status bar entry ids this element hides. */
+    readonly statusBarItems?: readonly string[];
+    /**
+     * Top-level menu bar paths this element shows and hides, e.g.
+     * `['menubar', '7_terminal']`. Written as plain segments so the catalogue
+     * stays free of Theia imports.
+     */
+    readonly menus?: readonly (readonly string[])[];
+
+    /**
+     * Set when the catalogue lists an element the runtime does not enforce yet.
+     * The Customize panel shows it, disabled, with this text as the reason, so
+     * the panel stays a truthful picture of the catalogue.
+     */
+    readonly pending?: string;
+}
+
+const ON = { beginner: true, advanced: true, expert: true } as const;
+const ADVANCED_UP = { beginner: false, advanced: true, expert: true } as const;
+const EXPERT_ONLY = { beginner: false, advanced: false, expert: true } as const;
+const ADVANCED_ONLY = { beginner: false, advanced: true, expert: false } as const;
+const BEGINNER_ONLY = { beginner: true, advanced: false, expert: false } as const;
+const SCAFFOLDING = { beginner: true, advanced: true, expert: false } as const;
+const OFF = { beginner: false, advanced: false, expert: false } as const;
+
+/**
+ * The catalogue. This table is the specification: the levels are presets over
+ * it, and the Customize panel renders it directly, so the two cannot drift.
+ */
+export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
+    // ── Views ────────────────────────────────────────────────────────
+    { id: 'view.explorer', label: 'Explorer', group: 'views', defaults: ON, views: [{ id: 'explorer-view-container', area: 'left' }] },
+    { id: 'view.search', label: 'Search', group: 'views', defaults: ON, views: [{ id: 'search-view-container', area: 'left' }] },
+    {
+        id: 'view.artemis', label: 'Artemis', group: 'views', defaults: ON,
+        views: [{ id: 'artemis', area: 'left', match: 'includes' }, { id: 'scorpio', area: 'left', match: 'includes' }]
+    },
+    { id: 'view.problems', label: 'Problems', group: 'views', defaults: ON, views: [{ id: 'problems', area: 'bottom' }] },
+    { id: 'view.scm', label: 'Source Control', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'scm-view-container', area: 'left' }] },
+    { id: 'view.testing', label: 'Testing', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'test-view-container', area: 'left' }] },
+    { id: 'view.gradle', label: 'Gradle tasks', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'gradle', area: 'left', match: 'includes' }] },
+    { id: 'view.output', label: 'Output', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'outputView', area: 'bottom' }] },
+    { id: 'view.debug', label: 'Run and Debug', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'debug', area: 'left' }] },
+    { id: 'view.debugConsole', label: 'Debug Console', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'debug-console', area: 'bottom' }] },
+    { id: 'view.outline', label: 'Outline', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'outline-view', area: 'right' }] },
+    {
+        id: 'view.memoryInspector', label: 'Memory Inspector', group: 'views', defaults: EXPERT_ONLY,
+        views: [{ id: 'memory-layout-widget', area: 'right' }]
+    },
+    { id: 'view.terminal', label: 'Shell terminal', group: 'views', defaults: ADVANCED_UP, userTerminals: true },
+
+    // ── Editor toolbar ───────────────────────────────────────────────
+    { id: 'toolbar.run', label: 'Run split button', group: 'toolbar', defaults: ON },
+    { id: 'toolbar.debug', label: 'Debug split button', group: 'toolbar', defaults: EXPERT_ONLY },
+    { id: 'toolbar.rename', label: 'Rename', group: 'toolbar', defaults: ADVANCED_ONLY },
+    { id: 'toolbar.comment', label: 'Un-/Comment', group: 'toolbar', defaults: ADVANCED_ONLY },
+    { id: 'toolbar.refactor', label: 'Refactor…', group: 'toolbar', defaults: ADVANCED_ONLY },
+    { id: 'toolbar.sourceAction', label: 'Source Action…', group: 'toolbar', defaults: ADVANCED_ONLY },
+
+    // ── Run configurations ───────────────────────────────────────────
+    // The task set is workspace data, so it cannot be catalogued element by
+    // element. The level filters it instead, and this switch turns the filter
+    // off — without it, tasks would be the one thing a student could not get
+    // back without changing level.
+    { id: 'task.showAll', label: 'Offer every task, ignoring level marks', group: 'tasks', defaults: EXPERT_ONLY },
+
+    // ── Editor ───────────────────────────────────────────────────────
+    {
+        id: 'editor.bracketGuides', label: 'Bracket-pair guides and colours', group: 'editor', defaults: SCAFFOLDING,
+        preferences: {
+            on: {
+                'editor.bracketPairColorization.enabled': true,
+                'editor.guides.bracketPairs': 'active',
+                'editor.guides.highlightActiveIndentation': true
+            },
+            off: {
+                'editor.bracketPairColorization.enabled': false,
+                'editor.guides.bracketPairs': false,
+                'editor.guides.highlightActiveIndentation': false
+            }
+        }
+    },
+    {
+        id: 'editor.formatOnSave', label: 'Format on save', group: 'editor', defaults: ON,
+        preferences: { on: { 'editor.formatOnSave': true }, off: { 'editor.formatOnSave': false } }
+    },
+    {
+        id: 'editor.organizeImportsOnSave', label: 'Organize imports on save', group: 'editor', defaults: ON,
+        preferences: { on: { 'java.saveActions.organizeImports': true }, off: { 'java.saveActions.organizeImports': false } }
+    },
+    {
+        id: 'editor.lightbulb', label: 'Quick-fix lightbulb', group: 'editor', defaults: ON,
+        preferences: { on: { 'editor.lightbulb.enabled': 'on' }, off: { 'editor.lightbulb.enabled': 'off' } }
+    },
+    {
+        id: 'editor.minimap', label: 'Minimap', group: 'editor', defaults: ADVANCED_UP,
+        preferences: { on: { 'editor.minimap.enabled': true }, off: { 'editor.minimap.enabled': false } }
+    },
+    {
+        id: 'editor.breadcrumbs', label: 'Breadcrumbs', group: 'editor', defaults: ADVANCED_UP,
+        preferences: { on: { 'breadcrumbs.enabled': true }, off: { 'breadcrumbs.enabled': false } }
+    },
+    {
+        id: 'editor.stickyScroll', label: 'Sticky scroll', group: 'editor', defaults: ADVANCED_UP,
+        preferences: { on: { 'editor.stickyScroll.enabled': true }, off: { 'editor.stickyScroll.enabled': false } }
+    },
+    {
+        id: 'editor.inlayHints', label: 'Inlay hints', group: 'editor', defaults: ADVANCED_UP,
+        preferences: {
+            on: { 'editor.inlayHints.enabled': 'onUnlessPressed', 'java.inlayHints.parameterNames.enabled': 'literals' },
+            off: { 'editor.inlayHints.enabled': 'off', 'java.inlayHints.parameterNames.enabled': 'none' }
+        }
+    },
+    {
+        id: 'editor.referencesCodeLens', label: 'References CodeLens', group: 'editor', defaults: ADVANCED_UP,
+        preferences: { on: { 'java.referencesCodeLens.enabled': true }, off: { 'java.referencesCodeLens.enabled': false } }
+    },
+    {
+        id: 'editor.runDebugCodeLens', label: 'Run | Debug CodeLens above main', group: 'editor', defaults: EXPERT_ONLY,
+        preferences: {
+            on: { 'java.debug.settings.enableRunDebugCodeLens': true },
+            off: { 'java.debug.settings.enableRunDebugCodeLens': false }
+        }
+    },
+
+    // ── Diagnostics ──────────────────────────────────────────────────
+    {
+        id: 'diag.errorLensWarnings', label: 'Warnings inline, not only errors', group: 'diagnostics', defaults: BEGINNER_ONLY,
+        preferences: {
+            on: { 'errorLens.enabledDiagnosticLevels': ['error', 'warning'] },
+            off: { 'errorLens.enabledDiagnosticLevels': ['error'] }
+        }
+    },
+    { id: 'diag.checkstyleLive', label: 'Checkstyle findings in Problems', group: 'diagnostics', defaults: ADVANCED_ONLY, pending: 'no Checkstyle ruleset in the image yet' },
+    { id: 'diag.sonar', label: 'SonarQube for IDE', group: 'diagnostics', defaults: OFF, pending: 'held until the per-session memory budget is measured' },
+
+    // ── Menus ────────────────────────────────────────────────────────
+    // Theia labels '6_debug' "Run", and it holds nothing but debug entries, so
+    // it travels with the debugger rather than with the Run split button.
+    { id: 'menu.selection', label: 'Selection menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '3_selection']] },
+    // Kept at every level: it is a beginner's only menu route back to a view
+    // they closed, and the Customize panel is a poor substitute for that.
+    { id: 'menu.view', label: 'View menu', group: 'menus', defaults: ON, menus: [[...MAIN_MENU_BAR, '4_view']] },
+    { id: 'menu.go', label: 'Go menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '5_go']] },
+    { id: 'menu.run', label: 'Run menu (debug)', group: 'menus', defaults: EXPERT_ONLY, menus: [[...MAIN_MENU_BAR, '6_debug']] },
+    { id: 'menu.terminal', label: 'Terminal menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '7_terminal']] },
+
+    // ── Status bar ───────────────────────────────────────────────────
+    { id: 'status.level', label: 'Experience level indicator', group: 'statusBar', defaults: ON },
+    {
+        id: 'status.editorInfo', label: 'Cursor position, encoding, EOL, indentation, language',
+        group: 'statusBar', defaults: ADVANCED_UP,
+        statusBarItems: [
+            'editor-status-cursor-position',
+            'editor-status-encoding',
+            'editor-status-eol',
+            'editor-status-language',
+            'editor-status-tabbing-config'
+        ]
+    },
+
+    // ── Startup ──────────────────────────────────────────────────────
+    {
+        id: 'startup.welcomePage', label: 'EduIDE Welcome page', group: 'startup', defaults: EXPERT_ONLY,
+        preferences: { on: { 'workbench.startupEditor': 'welcomePage' }, off: { 'workbench.startupEditor': 'none' } }
+    },
+    { id: 'startup.openFile', label: 'Open the exercise file on start', group: 'startup', defaults: SCAFFOLDING },
+    { id: 'startup.walkthrough', label: 'Offer the level walkthrough', group: 'startup', defaults: BEGINNER_ONLY, pending: 'contributes.walkthroughs needs Theia 1.75' },
+
+    // ── Assistance ───────────────────────────────────────────────────
+    { id: 'assist.irisExplain', label: '"Explain this error" action', group: 'assistance', defaults: SCAFFOLDING, pending: 'Iris code action not written yet' },
+    { id: 'assist.irisHint', label: 'Include a hint toward a fix', group: 'assistance', defaults: BEGINNER_ONLY, pending: 'Iris code action not written yet' }
+];
+
+export const ELEMENTS_BY_ID: ReadonlyMap<string, CustomizableElement> =
+    new Map(ELEMENT_CATALOGUE.map(element => [element.id, element]));
+
+/**
+ * The Advanced editor-toolbar buttons.
+ *
+ * Every command here is a Monaco built-in, so the buttons work in any language
+ * the image ships. `Refactor…` and `Source Action…` open Monaco's pickers
+ * rather than firing one refactoring: "Extract method" and "Generate getters
+ * and setters" are entries the Java extension contributes into those pickers,
+ * and it exposes no command id of its own that we could bind directly.
+ */
+export interface ToolbarButton {
+    readonly elementId: string;
+    readonly commandId: string;
+    /** Codicon name. */
+    readonly icon: string;
+    readonly label: string;
+}
+
+export const TOOLBAR_BUTTONS: readonly ToolbarButton[] = [
+    { elementId: 'toolbar.rename', commandId: 'editor.action.rename', icon: 'edit', label: 'Rename' },
+    { elementId: 'toolbar.comment', commandId: 'editor.action.commentLine', icon: 'comment', label: 'Un-/Comment' },
+    { elementId: 'toolbar.refactor', commandId: 'editor.action.refactor', icon: 'symbol-method', label: 'Refactor…' },
+    { elementId: 'toolbar.sourceAction', commandId: 'editor.action.sourceAction', icon: 'symbol-property', label: 'Source Action…' }
+];
+
+/** The file opened on startup while `startup.openFile` is on, per build tool. */
+export const STARTUP_FILE_CANDIDATES: readonly string[] = [
+    'src/main/java/com/example/App.java',
+    'src/main/java/Main.java',
+    'README.md'
+];

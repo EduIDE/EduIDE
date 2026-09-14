@@ -16,7 +16,8 @@
     "@theia/task": "1.74.1",
     "@theia/vsx-registry": "1.74.1",
     "@theia/workspace": "1.74.1",
-    "inversify": "^6.0.1"
+    "inversify": "^6.0.1",
+    "theia-ide-customization-ext": "1.70.201"
   },
   "devDependencies": {
     "rimraf": "^2.7.1",

@@ -1,0 +1,44 @@
+{
+  "private": true,
+  "name": "theia-ide-customization-ext",
+  "version": "1.70.201",
+  "description": "EduIDE experience levels and per-element customization",
+  "dependencies": {
+    "@theia/core": "1.74.1",
+    "@theia/editor": "1.74.1",
+    "@theia/filesystem": "1.74.1",
+    "@theia/task": "1.74.1",
+    "@theia/terminal": "1.74.1",
+    "@theia/workspace": "1.74.1",
+    "inversify": "^6.0.1",
+    "jsonc-parser": "^3.3.1"
+  },
+  "devDependencies": {
+    "rimraf": "^2.7.1",
+    "typescript": "~5.9.3"
+  },
+  "theiaExtensions": [
+    {
+      "frontend": "lib/browser/customization-frontend-module"
+    }
+  ],
+  "keywords": [
+    "theia-extension"
+  ],
+  "license": "MIT",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "clean": "rimraf lib *.tsbuildinfo",
+    "build": "tsc -b",
+    "lint": "eslint --ext js,jsx,ts,tsx src",
+    "lint:fix": "eslint --ext js,jsx,ts,tsx src --fix",
+    "update:theia": "ts-node ../../scripts/update-theia-version.ts",
+    "update:next": "ts-node ../../scripts/update-theia-version.ts next"
+  },
+  "peerDependencies": {
+    "react": "^16.8.0"
+  }
+}

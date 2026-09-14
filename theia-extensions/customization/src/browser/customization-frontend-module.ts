@@ -13,14 +13,20 @@ import { ContainerModule } from '@theia/core/shared/inversify';
 import { CommandContribution } from '@theia/core/lib/common/command';
 import { MenuContribution } from '@theia/core/lib/common/menu';
 import { FrontendApplicationContribution, WidgetFactory } from '@theia/core/lib/browser';
+import { StatusBar } from '@theia/core/lib/browser/status-bar';
 import { CustomizationService } from './customization-service';
 import { CustomizationContribution } from './customization-contribution';
 import { CustomizeWidget } from './customize-widget';
 import { StartupFileContribution } from './startup-file-contribution';
 import { bindCustomizationPreferences } from './customization-preferences';
+import { bindLevelAwareStatusBar } from './level-aware-status-bar';
 
-export default new ContainerModule(bind => {
+export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     bindCustomizationPreferences(bind);
+
+    if (isBound(StatusBar)) {
+        bindLevelAwareStatusBar(rebind);
+    }
 
     bind(CustomizationService).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(CustomizationService);

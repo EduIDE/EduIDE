@@ -21,8 +21,7 @@ import { ContextKey, ContextKeyService } from '@theia/core/lib/browser/context-k
 import { CompoundMenuNode, MenuModelRegistry, MenuNode, MutableCompoundMenuNode } from '@theia/core/lib/common/menu';
 import { TaskConfiguration, TaskCustomization } from '@theia/task/lib/common/task-protocol';
 import { TERMINAL_WIDGET_FACTORY_ID } from '@theia/terminal/lib/browser/terminal-widget-impl';
-import { StatusBar } from '@theia/core/lib/browser/status-bar';
-import { EditorManager } from '@theia/editor/lib/browser';
+import { StatusBarImpl } from '@theia/core/lib/browser/status-bar';
 import { PreferenceScope, PreferenceService } from '@theia/core/lib/common/preferences';
 import {
     CustomizableElement,
@@ -66,10 +65,8 @@ export class CustomizationService implements FrontendApplicationContribution {
     protected readonly contextKeyService: ContextKeyService;
     @inject(MenuModelRegistry)
     protected readonly menus: MenuModelRegistry;
-    @inject(StatusBar)
-    protected readonly statusBar: StatusBar;
-    @inject(EditorManager)
-    protected readonly editorManager: EditorManager;
+    @inject(StatusBarImpl)
+    protected readonly statusBar: StatusBarImpl;
     @inject(ILogger)
     protected readonly logger: ILogger;
 
@@ -87,14 +84,10 @@ export class CustomizationService implements FrontendApplicationContribution {
     readonly onDidChange: Event<void> = this.onDidChangeEmitter.event;
 
     protected applying = false;
+    protected viewSweepTimer: ReturnType<typeof setTimeout> | undefined;
 
     @postConstruct()
     protected init(): void {
-        // The editor status entries are re-set whenever the editor changes, so
-        // suppressing them once is not enough — they have to be taken off again
-        // each time they come back. That costs a frame of flicker, which is the
-        // price of not rebinding Theia's StatusBar.
-        this.editorManager.onCurrentEditorChanged(() => this.applyStatusBarItems());
         this.preferences.onPreferenceChanged(event => {
             if (event.preferenceName === CustomizationPreferences.LEVEL
                 || event.preferenceName === CustomizationPreferences.OVERRIDES) {
@@ -221,7 +214,34 @@ export class CustomizationService implements FrontendApplicationContribution {
                 )));
             }
         });
+        // Views contributed by VS Code extensions are created well after the
+        // layout is initialised, so the startup sweep never sees them. Re-run it
+        // when a widget appears that a disabled element claims.
+        this.widgetManager.onDidCreateWidget(event => {
+            if (this.claimedByDisabledElement(event.widget)) {
+                this.scheduleViewSweep();
+            }
+        });
         this.refreshBlockedWidgetIds();
+    }
+
+    protected claimedByDisabledElement(widget: Widget): boolean {
+        return ELEMENT_CATALOGUE.some(element =>
+            !element.pending
+            && element.views !== undefined
+            && !this.isEnabled(element.id)
+            && element.views.some(view => this.viewMatches(view, widget)));
+    }
+
+    protected scheduleViewSweep(): void {
+        if (this.viewSweepTimer) {
+            clearTimeout(this.viewSweepTimer);
+        }
+        this.viewSweepTimer = setTimeout(() => {
+            this.viewSweepTimer = undefined;
+            this.applyViews().catch(error =>
+                this.logger.warn('EduIDE customization: view sweep failed', error));
+        }, 100);
     }
 
     async onDidInitializeLayout(_app: FrontendApplication): Promise<void> {
@@ -362,6 +382,23 @@ export class CustomizationService implements FrontendApplicationContribution {
 
     // ── Status bar ───────────────────────────────────────────────────
 
+    /**
+     * Whether a status bar entry is suppressed at the current level.
+     *
+     * The entries are re-set on every editor change, so removing them once
+     * loses the race. `LevelAwareStatusBar` asks this on the way in instead;
+     * `applyStatusBarItems` only clears what was already on screen when the
+     * level dropped.
+     */
+    isStatusBarItemHidden(id: string): boolean {
+        for (const element of ELEMENT_CATALOGUE) {
+            if (element.statusBarItems?.includes(id)) {
+                return !this.isEnabled(element.id);
+            }
+        }
+        return false;
+    }
+
     protected applyStatusBarItems(): void {
         for (const element of ELEMENT_CATALOGUE) {
             if (element.pending || !element.statusBarItems || this.isEnabled(element.id)) {
@@ -426,10 +463,15 @@ export class CustomizationService implements FrontendApplicationContribution {
         }
     }
 
+    protected viewMatches(view: ManagedView, widget: Widget): boolean {
+        return view.match === 'includes'
+            ? widget.id.toLowerCase().includes(view.id.toLowerCase())
+            : widget.id === view.id;
+    }
+
     protected matchingWidgets(view: ManagedView): Widget[] {
         if (view.match === 'includes') {
-            const needle = view.id.toLowerCase();
-            return this.shell.widgets.filter(candidate => candidate.id.toLowerCase().includes(needle));
+            return this.shell.widgets.filter(candidate => this.viewMatches(view, candidate));
         }
         const widget = this.shell.getWidgetById(view.id);
         return widget ? [widget] : [];

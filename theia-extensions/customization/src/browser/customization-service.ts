@@ -1,0 +1,263 @@
+/********************************************************************************
+ * Copyright (C) 2026 EduIDE
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ *
+ * SPDX-License-Identifier: MIT
+ ********************************************************************************/
+
+import { inject, injectable, postConstruct } from '@theia/core/shared/inversify';
+import { Emitter, Event } from '@theia/core/lib/common/event';
+import { ILogger } from '@theia/core/lib/common/logger';
+import {
+    ApplicationShell,
+    FrontendApplication,
+    FrontendApplicationContribution,
+    Widget,
+    WidgetManager
+} from '@theia/core/lib/browser';
+import { ContextKey, ContextKeyService } from '@theia/core/lib/browser/context-key-service';
+import { PreferenceScope, PreferenceService } from '@theia/core/lib/common/preferences';
+import {
+    CustomizableElement,
+    CustomizationPreferences,
+    DEFAULT_LEVEL,
+    EduIdeLevel,
+    EDUIDE_LEVEL_CONTEXT_KEY,
+    ELEMENT_CATALOGUE,
+    ELEMENTS_BY_ID,
+    isEduIdeLevel,
+    ManagedView
+} from '../common/customization';
+
+/**
+ * Owns the active experience level and applies it to the running frontend.
+ *
+ * A level is a preset over the element catalogue, never a cage: `isEnabled`
+ * resolves the student's override first and only then the level default, so
+ * every element can be switched individually at every level, expert included.
+ *
+ * Everything here is reversible at runtime. Theia's `ContributionFilter` is
+ * evaluated once, when the DI container is assembled, so it cannot carry a
+ * level the student flips; it stays in the product extension for the things
+ * EduIDE never wants at any level.
+ */
+@injectable()
+export class CustomizationService implements FrontendApplicationContribution {
+
+    @inject(PreferenceService)
+    protected readonly preferences: PreferenceService;
+    @inject(ApplicationShell)
+    protected readonly shell: ApplicationShell;
+    @inject(WidgetManager)
+    protected readonly widgetManager: WidgetManager;
+    @inject(ContextKeyService)
+    protected readonly contextKeyService: ContextKeyService;
+    @inject(ILogger)
+    protected readonly logger: ILogger;
+
+    protected levelContextKey: ContextKey<string> | undefined;
+
+    /** Widget ids currently blocked from being created. */
+    protected readonly blockedWidgetIds = new Set<string>();
+    /** Area a managed widget was in when we closed it, for putting it back. */
+    protected readonly rememberedAreas = new Map<string, ApplicationShell.Area>();
+
+    protected readonly onDidChangeEmitter = new Emitter<void>();
+    /** Fires whenever the level or any override changes. */
+    readonly onDidChange: Event<void> = this.onDidChangeEmitter.event;
+
+    protected applying = false;
+
+    @postConstruct()
+    protected init(): void {
+        this.preferences.onPreferenceChanged(event => {
+            if (event.preferenceName === CustomizationPreferences.LEVEL
+                || event.preferenceName === CustomizationPreferences.OVERRIDES) {
+                this.apply();
+            }
+        });
+    }
+
+    // ── State ────────────────────────────────────────────────────────
+
+    get level(): EduIdeLevel {
+        const stored = this.preferences.get<string>(CustomizationPreferences.LEVEL);
+        return isEduIdeLevel(stored) ? stored : DEFAULT_LEVEL;
+    }
+
+    protected get overrides(): Record<string, boolean> {
+        return this.preferences.get<Record<string, boolean>>(CustomizationPreferences.OVERRIDES) ?? {};
+    }
+
+    /** Whether the element is on, taking the student's override into account. */
+    isEnabled(elementId: string): boolean {
+        const element = ELEMENTS_BY_ID.get(elementId);
+        if (!element) {
+            return true;
+        }
+        const override = this.overrides[elementId];
+        return typeof override === 'boolean' ? override : element.defaults[this.level];
+    }
+
+    /** Whether the element differs from the current level's preset. */
+    isOverridden(elementId: string): boolean {
+        return typeof this.overrides[elementId] === 'boolean';
+    }
+
+    // ── Mutation ─────────────────────────────────────────────────────
+
+    async setLevel(level: EduIdeLevel): Promise<void> {
+        await this.preferences.set(CustomizationPreferences.LEVEL, level, PreferenceScope.User);
+    }
+
+    /**
+     * Set or clear one override. Passing `undefined` drops the override and
+     * hands the element back to the level preset.
+     */
+    async setOverride(elementId: string, enabled: boolean | undefined): Promise<void> {
+        const next = { ...this.overrides };
+        if (enabled === undefined) {
+            delete next[elementId];
+        } else {
+            next[elementId] = enabled;
+        }
+        await this.preferences.set(CustomizationPreferences.OVERRIDES, next, PreferenceScope.User);
+    }
+
+    /** Drop every override, so the level preset is all that is left. */
+    async resetOverrides(): Promise<void> {
+        await this.preferences.set(CustomizationPreferences.OVERRIDES, {}, PreferenceScope.User);
+    }
+
+    // ── Lifecycle ────────────────────────────────────────────────────
+
+    initialize(): void {
+        this.levelContextKey = this.contextKeyService.createKey<string>(EDUIDE_LEVEL_CONTEXT_KEY, this.level);
+        // Registered before the layout is restored, so a view that is off never
+        // gets rebuilt from a workspace layout saved at a higher level.
+        this.widgetManager.onWillCreateWidget(event => {
+            if (this.blockedWidgetIds.has(event.factoryId)) {
+                event.waitUntil(Promise.reject(
+                    new Error(`Widget '${event.factoryId}' is hidden by the EduIDE ${this.level} level.`)
+                ));
+            }
+        });
+        this.refreshBlockedWidgetIds();
+    }
+
+    async onDidInitializeLayout(_app: FrontendApplication): Promise<void> {
+        await this.apply();
+    }
+
+    // ── Applying ─────────────────────────────────────────────────────
+
+    async apply(): Promise<void> {
+        if (this.applying) {
+            return;
+        }
+        this.applying = true;
+        try {
+            this.levelContextKey?.set(this.level);
+            this.refreshBlockedWidgetIds();
+            await this.applyPreferences();
+            await this.applyViews();
+        } finally {
+            this.applying = false;
+        }
+        this.onDidChangeEmitter.fire();
+    }
+
+    protected refreshBlockedWidgetIds(): void {
+        this.blockedWidgetIds.clear();
+        for (const element of ELEMENT_CATALOGUE) {
+            if (element.pending || !element.views || this.isEnabled(element.id)) {
+                continue;
+            }
+            for (const view of element.views) {
+                if (view.match !== 'includes') {
+                    this.blockedWidgetIds.add(view.id);
+                }
+            }
+        }
+    }
+
+    protected async applyPreferences(): Promise<void> {
+        for (const element of ELEMENT_CATALOGUE) {
+            if (element.pending || !element.preferences) {
+                continue;
+            }
+            const values = this.isEnabled(element.id) ? element.preferences.on : element.preferences.off;
+            if (!values) {
+                continue;
+            }
+            for (const [key, value] of Object.entries(values)) {
+                try {
+                    await this.preferences.set(key, value, PreferenceScope.User);
+                } catch (error) {
+                    this.logger.warn(`EduIDE customization: could not set '${key}'`, error);
+                }
+            }
+        }
+    }
+
+    protected async applyViews(): Promise<void> {
+        for (const element of ELEMENT_CATALOGUE) {
+            if (element.pending || !element.views) {
+                continue;
+            }
+            const enabled = this.isEnabled(element.id);
+            for (const view of element.views) {
+                if (enabled) {
+                    await this.showView(element, view);
+                } else {
+                    await this.hideView(view);
+                }
+            }
+        }
+    }
+
+    protected async hideView(view: ManagedView): Promise<void> {
+        for (const widget of this.matchingWidgets(view)) {
+            const area = this.shell.getAreaFor(widget);
+            if (area) {
+                this.rememberedAreas.set(widget.id, area);
+            }
+            try {
+                await this.shell.closeWidget(widget.id, { save: false });
+            } catch (error) {
+                this.logger.warn(`EduIDE customization: could not hide '${widget.id}'`, error);
+            }
+        }
+    }
+
+    protected async showView(element: CustomizableElement, view: ManagedView): Promise<void> {
+        if (this.matchingWidgets(view).length > 0) {
+            return;
+        }
+        if (view.match === 'includes') {
+            // The container id is only known once the plugin is resolved, so we
+            // cannot create it ourselves. It comes back on the next reload.
+            return;
+        }
+        try {
+            const widget = await this.widgetManager.getOrCreateWidget(view.id);
+            this.shell.addWidget(widget, { area: this.rememberedAreas.get(view.id) ?? view.area });
+        } catch (error) {
+            this.logger.warn(
+                `EduIDE customization: could not restore '${view.id}' for '${element.id}'; it returns on the next reload`,
+                error
+            );
+        }
+    }
+
+    protected matchingWidgets(view: ManagedView): Widget[] {
+        if (view.match === 'includes') {
+            const needle = view.id.toLowerCase();
+            return this.shell.widgets.filter(candidate => candidate.id.toLowerCase().includes(needle));
+        }
+        const widget = this.shell.getWidgetById(view.id);
+        return widget ? [widget] : [];
+    }
+}

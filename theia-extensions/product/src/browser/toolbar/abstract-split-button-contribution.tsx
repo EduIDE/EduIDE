@@ -11,6 +11,7 @@ import { Emitter, Event, MenuPath } from '@theia/core';
 import { EditorWidget } from '@theia/editor/lib/browser';
 import { CommandMenu, MenuNode } from '@theia/core/lib/common/menu';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
+import { CustomizationService } from 'theia-ide-customization-ext/lib/browser/customization-service';
 import * as React from '@theia/core/shared/react';
 import { SplitButton } from './split-button';
 
@@ -32,6 +33,8 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
     protected readonly workspaceService: WorkspaceService;
     @inject(BrowserMenuNodeFactory)
     protected readonly menuNodeFactory: BrowserMenuNodeFactory;
+    @inject(CustomizationService)
+    protected readonly customization: CustomizationService;
 
     protected readonly onDidChangeEmitter = new Emitter<void>();
     protected readonly onDidChange: Event<void> = this.onDidChangeEmitter.event;
@@ -54,6 +57,13 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
     /** Delay in milliseconds before refreshing configurations (debounce). */
     protected abstract readonly refreshDelayMs: number;
 
+    /**
+     * Id of the catalogue element that gates this button, if any. The button is
+     * hidden while that element is off, which is how the Debug button
+     * disappears below the expert level.
+     */
+    protected readonly elementId: string | undefined;
+
     // ── Abstract methods ─────────────────────────────────────────────
 
     /** Fetch all available configurations from the respective provider. */
@@ -73,6 +83,7 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
 
     /** Call from @postConstruct after wiring up subclass-specific listeners. */
     protected async initialize(): Promise<void> {
+        this.customization.onDidChange(() => this.onDidChangeEmitter.fire());
         await this.workspaceService.ready;
         const roots = await this.workspaceService.roots;
         if (!roots || roots.length === 0) {
@@ -91,9 +102,14 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
             group: this.group,
             priority: this.priority,
             onDidChange: this.onDidChange,
-            isVisible: (widget?: Widget) => widget instanceof EditorWidget,
+            isVisible: (widget?: Widget) => widget instanceof EditorWidget && this.isEnabledForLevel(),
             render: (widget?: Widget) => this.render(widget)
         };
+    }
+
+    /** Whether the current experience level and overrides allow this button. */
+    protected isEnabledForLevel(): boolean {
+        return this.elementId === undefined || this.customization.isEnabled(this.elementId);
     }
 
     // ── Configuration management ─────────────────────────────────────

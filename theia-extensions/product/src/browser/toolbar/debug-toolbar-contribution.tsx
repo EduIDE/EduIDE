@@ -23,6 +23,7 @@ export class DebugToolbarContribution extends AbstractSplitButtonContribution<De
     protected readonly group = 'navigation';
     protected readonly priority = 1; // Right after the run button
     protected readonly refreshDelayMs = DEBUG_REFRESH_DELAY_MS;
+    protected readonly elementId = 'toolbar.debug';
 
     protected lastUsedConfig: DebugConfiguration | undefined;
 

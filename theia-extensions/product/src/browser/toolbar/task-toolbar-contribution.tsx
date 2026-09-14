@@ -27,6 +27,7 @@ export class TaskToolbarContribution extends AbstractSplitButtonContribution<Tas
     protected readonly group = 'navigation';
     protected readonly priority = 0;
     protected readonly refreshDelayMs = TASK_REFRESH_DELAY_MS;
+    protected readonly elementId = 'toolbar.run';
 
     @postConstruct()
     protected init(): void {

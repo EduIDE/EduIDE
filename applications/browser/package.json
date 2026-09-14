@@ -61,6 +61,7 @@
     "@theia/getting-started": "1.74.1",
     "@theia/keymaps": "1.74.1",
     "@theia/markers": "1.74.1",
+    "@theia/memory-inspector": "1.74.1",
     "@theia/messages": "1.74.1",
     "@theia/metrics": "1.74.1",
     "@theia/mini-browser": "1.74.1",

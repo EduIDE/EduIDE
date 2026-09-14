@@ -178,7 +178,7 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'view.outline', label: 'Outline', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'outline-view', area: 'right' }] },
     {
         id: 'view.memoryInspector', label: 'Memory Inspector', group: 'views', defaults: EXPERT_ONLY,
-        pending: '@theia/memory-inspector is not a dependency of the browser app yet'
+        views: [{ id: 'memory-layout-widget', area: 'right' }]
     },
     { id: 'view.terminal', label: 'Shell terminal', group: 'views', defaults: ADVANCED_UP, userTerminals: true },
 

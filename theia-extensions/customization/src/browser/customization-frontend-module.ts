@@ -18,8 +18,6 @@ import { CustomizationService } from './customization-service';
 import { CustomizationContribution } from './customization-contribution';
 import { CustomizeWidget } from './customize-widget';
 import { StartupFileContribution } from './startup-file-contribution';
-import { SubmitContribution } from './submit-contribution';
-import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { bindCustomizationPreferences } from './customization-preferences';
 import { bindLevelAwareStatusBar } from './level-aware-status-bar';
 
@@ -40,11 +38,6 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
 
     bind(StartupFileContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(StartupFileContribution);
-
-    bind(SubmitContribution).toSelf().inSingletonScope();
-    [CommandContribution, TabBarToolbarContribution].forEach(serviceIdentifier =>
-        bind(serviceIdentifier).toService(SubmitContribution)
-    );
 
     bind(CustomizeWidget).toSelf();
     bind(WidgetFactory).toDynamicValue(context => ({

@@ -26,7 +26,7 @@ Three routes, all landing on the same state:
 
 - the `🎓 <level>` indicator in the status bar, clicked;
 - `EduIDE: Experience Level` or `EduIDE: Customize…` in the command palette;
-- `Help ▸ Experience Level…`.
+- `View ▸ Experience Level…`, at the top of the menu.
 
 The quick pick's last row opens the Customize panel, so the discoverable entry
 point is not a dead end for anyone who wants more than a level.
@@ -77,12 +77,45 @@ switches that do nothing:
 
 - the Iris "Explain this error" action (`assist.*`) — needs the Artemis
   extension's own API, which is not available to build against here
-- `view.memoryInspector` — `@theia/memory-inspector` is not a dependency of the
-  browser app yet
 - `diag.checkstyleLive` — needs a Checkstyle ruleset in the image, which is an
   image change rather than IDE code
 - `diag.sonar` — held until the per-session memory budget is measured
 - `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
+
+## What an exercise can ask for
+
+An exercise may ship `.vscode/eduide.json`, next to its `launch.json` and
+`tasks.json`:
+
+```jsonc
+{
+    "level": "beginner",
+    "overrides": { "view.scm": true }
+}
+```
+
+It **seeds, it does not enforce**. The values apply only to a student who has
+no level of their own; the moment they pick one, the file stops having an
+opinion and stays quiet on every later start. Nothing here disables the quick
+pick, and nothing here is a boundary — the file lives in the student's own
+clone, where they can edit it, and it travels back to Artemis on submit.
+
+Comments and trailing commas are fine, since instructors write this by hand. A
+malformed file, an unknown level or an unknown element id is logged and
+skipped: a course cannot break a student's session with a typo. The templates
+ship an entirely commented-out copy, which parses to nothing and exists to show
+the shape.
+
+Two limits worth knowing before relying on it:
+
+- **It seeds per session, not per student.** A student's preferences live in
+  the container, so unless a persistent home is mounted, every new session
+  starts with no level of their own and the file applies again. Whether that
+  is right depends on whether a level is meant to follow the student or the
+  exercise — the question is open.
+- **It is one of three authorities**, with the student's own choice and the
+  launch environment. Only this one is built; the precedence between them is
+  still to be designed.
 
 ## Terminals and status bar entries
 

@@ -23,10 +23,12 @@ import { TaskConfiguration, TaskCustomization } from '@theia/task/lib/common/tas
 import { TERMINAL_WIDGET_FACTORY_ID } from '@theia/terminal/lib/browser/terminal-widget-impl';
 import { StatusBarImpl } from '@theia/core/lib/browser/status-bar';
 import { PreferenceScope, PreferenceService } from '@theia/core/lib/common/preferences';
+import { DeliveredConfigReader } from './delivered-config-reader';
 import {
     CustomizableElement,
     CustomizationPreferences,
     DEFAULT_LEVEL,
+    DeliveredConfig,
     EduIdeLevel,
     EDUIDE_LEVEL_CONTEXT_KEY,
     ELEMENT_CATALOGUE,
@@ -69,6 +71,8 @@ export class CustomizationService implements FrontendApplicationContribution {
     protected readonly statusBar: StatusBarImpl;
     @inject(ILogger)
     protected readonly logger: ILogger;
+    @inject(DeliveredConfigReader)
+    protected readonly deliveredConfig: DeliveredConfigReader;
 
     protected levelContextKey: ContextKey<string> | undefined;
 
@@ -258,7 +262,47 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     async onDidInitializeLayout(_app: FrontendApplication): Promise<void> {
+        await this.seedFromExercise();
         await this.apply();
+    }
+
+    // ── Seeding from the exercise ────────────────────────────────────
+
+    /**
+     * Adopts what the exercise asked for, but only for a student who has not
+     * chosen for themselves.
+     *
+     * `inspectInScope(..., User)` is the test for "has chosen": it sees the
+     * student's own value and nothing else, so a level that came from a
+     * previous seed and a level the student picked are indistinguishable here
+     * — which is the point. Once a value is theirs, the exercise stops having
+     * an opinion, and the seed writes into the same scope so the status bar,
+     * the quick pick and the Customize panel all agree about where the level
+     * came from.
+     */
+    protected async seedFromExercise(): Promise<void> {
+        let delivered: DeliveredConfig | undefined;
+        try {
+            delivered = await this.deliveredConfig.read();
+        } catch (error) {
+            this.logger.warn('EduIDE customization: could not read the exercise configuration', error);
+            return;
+        }
+        if (!delivered) {
+            return;
+        }
+        if (delivered.level !== undefined && !this.hasOwnValue(CustomizationPreferences.LEVEL)) {
+            await this.preferences.set(CustomizationPreferences.LEVEL, delivered.level, PreferenceScope.User);
+            this.logger.info(`EduIDE customization: starting at ${delivered.level}, as the exercise asks`);
+        }
+        if (delivered.overrides !== undefined && !this.hasOwnValue(CustomizationPreferences.OVERRIDES)) {
+            await this.preferences.set(CustomizationPreferences.OVERRIDES, { ...delivered.overrides }, PreferenceScope.User);
+        }
+    }
+
+    /** Whether the student has set this preference themselves. */
+    protected hasOwnValue(preferenceName: string): boolean {
+        return this.preferences.inspectInScope(preferenceName, PreferenceScope.User) !== undefined;
     }
 
     // ── Applying ─────────────────────────────────────────────────────

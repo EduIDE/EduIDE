@@ -10,7 +10,8 @@
     "@theia/task": "1.74.1",
     "@theia/terminal": "1.74.1",
     "@theia/workspace": "1.74.1",
-    "inversify": "^6.0.1"
+    "inversify": "^6.0.1",
+    "jsonc-parser": "^3.3.1"
   },
   "devDependencies": {
     "rimraf": "^2.7.1",

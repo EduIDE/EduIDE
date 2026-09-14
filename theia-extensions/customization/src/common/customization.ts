@@ -56,6 +56,34 @@ export namespace CustomizationPreferences {
 /** Environment variable EduIDE-Cloud passes through `LaunchRequest.env.fromMap`. */
 export const EDUIDE_LEVEL_ENV = 'EDUIDE_LEVEL';
 
+/**
+ * Where an exercise declares the level it wants a student to start at,
+ * relative to the workspace root. `.vscode` because that is already where the
+ * exercise keeps `launch.json` and `tasks.json`, so an instructor writing one
+ * is writing the others in the same folder.
+ */
+export const DELIVERED_CONFIG_SEGMENTS: readonly string[] = ['.vscode', 'eduide.json'];
+
+/**
+ * The shape of that file.
+ *
+ * It *seeds*, it does not enforce: the values are used only when the student
+ * has not chosen for themselves, and switching level afterwards is theirs to
+ * do. A file that could pin a student to a level would be a different feature
+ * — one that has to say so in the UI, because a disabled control with no
+ * explanation is worse than no control.
+ *
+ * Note it lives in the exercise repository, which the student can edit and
+ * which travels back to Artemis on submit. That rules it out as any kind of
+ * boundary; it is a starting point an instructor can express, nothing more.
+ */
+export interface DeliveredConfig {
+    /** Level to start at, when the student has none of their own. */
+    readonly level?: EduIdeLevel;
+    /** Element overrides to start with, keyed by catalogue id. */
+    readonly overrides?: Readonly<Record<string, boolean>>;
+}
+
 /** Context key mirroring the active level, for `when` clauses. */
 export const EDUIDE_LEVEL_CONTEXT_KEY = 'eduide.level';
 

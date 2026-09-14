@@ -15,6 +15,7 @@ import { MenuContribution } from '@theia/core/lib/common/menu';
 import { FrontendApplicationContribution, WidgetFactory } from '@theia/core/lib/browser';
 import { StatusBar } from '@theia/core/lib/browser/status-bar';
 import { CustomizationService } from './customization-service';
+import { DeliveredConfigReader } from './delivered-config-reader';
 import { CustomizationContribution } from './customization-contribution';
 import { CustomizeWidget } from './customize-widget';
 import { StartupFileContribution } from './startup-file-contribution';
@@ -27,6 +28,8 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     if (isBound(StatusBar)) {
         bindLevelAwareStatusBar(rebind);
     }
+
+    bind(DeliveredConfigReader).toSelf().inSingletonScope();
 
     bind(CustomizationService).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(CustomizationService);

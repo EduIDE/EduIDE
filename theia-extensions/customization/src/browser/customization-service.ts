@@ -18,6 +18,7 @@ import {
     WidgetManager
 } from '@theia/core/lib/browser';
 import { ContextKey, ContextKeyService } from '@theia/core/lib/browser/context-key-service';
+import { CompoundMenuNode, MenuModelRegistry, MenuNode, MutableCompoundMenuNode } from '@theia/core/lib/common/menu';
 import { PreferenceScope, PreferenceService } from '@theia/core/lib/common/preferences';
 import {
     CustomizableElement,
@@ -28,7 +29,9 @@ import {
     ELEMENT_CATALOGUE,
     ELEMENTS_BY_ID,
     isEduIdeLevel,
-    ManagedView
+    MAIN_MENU_BAR,
+    ManagedView,
+    MENU_REFRESH_PATH
 } from '../common/customization';
 
 /**
@@ -54,6 +57,8 @@ export class CustomizationService implements FrontendApplicationContribution {
     protected readonly widgetManager: WidgetManager;
     @inject(ContextKeyService)
     protected readonly contextKeyService: ContextKeyService;
+    @inject(MenuModelRegistry)
+    protected readonly menus: MenuModelRegistry;
     @inject(ILogger)
     protected readonly logger: ILogger;
 
@@ -63,6 +68,8 @@ export class CustomizationService implements FrontendApplicationContribution {
     protected readonly blockedWidgetIds = new Set<string>();
     /** Area a managed widget was in when we closed it, for putting it back. */
     protected readonly rememberedAreas = new Map<string, ApplicationShell.Area>();
+    /** Top-level menus we took out of the menu bar, kept so we can put them back. */
+    protected readonly removedMenus = new Map<string, MenuNode>();
 
     protected readonly onDidChangeEmitter = new Emitter<void>();
     /** Fires whenever the level or any override changes. */
@@ -104,6 +111,21 @@ export class CustomizationService implements FrontendApplicationContribution {
     /** Whether the element differs from the current level's preset. */
     isOverridden(elementId: string): boolean {
         return typeof this.overrides[elementId] === 'boolean';
+    }
+
+    /**
+     * Whether a `tasks.json` task may be offered. A task no element claims is
+     * always allowed, so a course adding its own task does not have to touch
+     * the catalogue to make it appear.
+     */
+    isTaskAllowed(label: string): boolean {
+        const normalized = label.trim().toLowerCase();
+        for (const element of ELEMENT_CATALOGUE) {
+            if (element.tasks?.some(task => task.toLowerCase() === normalized)) {
+                return this.isEnabled(element.id);
+            }
+        }
+        return true;
     }
 
     // ── Mutation ─────────────────────────────────────────────────────
@@ -163,6 +185,7 @@ export class CustomizationService implements FrontendApplicationContribution {
             this.refreshBlockedWidgetIds();
             await this.applyPreferences();
             await this.applyViews();
+            this.applyMenus();
         } finally {
             this.applying = false;
         }
@@ -249,6 +272,58 @@ export class CustomizationService implements FrontendApplicationContribution {
                 `EduIDE customization: could not restore '${view.id}' for '${element.id}'; it returns on the next reload`,
                 error
             );
+        }
+    }
+
+    // ── Menu bar ─────────────────────────────────────────────────────
+
+    protected applyMenus(): void {
+        const menubar = this.menus.getMenu([...MAIN_MENU_BAR]);
+        if (!menubar || !MutableCompoundMenuNode.is(menubar) || !CompoundMenuNode.is(menubar)) {
+            return;
+        }
+        let changed = false;
+        for (const element of ELEMENT_CATALOGUE) {
+            if (element.pending || !element.menus) {
+                continue;
+            }
+            const enabled = this.isEnabled(element.id);
+            for (const path of element.menus) {
+                const id = path[path.length - 1];
+                const present = menubar.children.find(child => child.id === id);
+                if (enabled && !present) {
+                    const removed = this.removedMenus.get(id);
+                    if (removed) {
+                        menubar.addNode(removed);
+                        this.removedMenus.delete(id);
+                        changed = true;
+                    }
+                } else if (!enabled && present) {
+                    this.removedMenus.set(id, present);
+                    menubar.removeNode(present);
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
+            this.refreshMenuBar();
+        }
+    }
+
+    /**
+     * `MenuModelRegistry` fires a change event when a registration is disposed,
+     * not when it is added, and the browser menu bar rebuilds on that event.
+     * Registering a throwaway action and disposing it is therefore the
+     * public-API way to make the bar redraw after we moved nodes around.
+     */
+    protected refreshMenuBar(): void {
+        try {
+            this.menus.registerMenuAction([...MENU_REFRESH_PATH], {
+                commandId: 'eduide.internal.menuRefresh',
+                label: ''
+            }).dispose();
+        } catch (error) {
+            this.logger.warn('EduIDE customization: could not refresh the menu bar', error);
         }
     }
 

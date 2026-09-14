@@ -43,7 +43,20 @@ runtime APIs instead:
 | Settings | `PreferenceService.set(key, value, PreferenceScope.User)` |
 | Views | `WidgetManager.onWillCreateWidget` rejection, plus `ApplicationShell.closeWidget` for anything already open |
 | Toolbar buttons | `elementId` on `AbstractSplitButtonContribution`, gating `isVisible` |
+| Menu bar | top-level nodes moved out of and back into the `menubar` compound node |
+| Run configurations | `TaskToolbarContribution.fetchConfigurations` filtered by `isTaskAllowed` |
 | Level for `when` clauses | the `eduide.level` context key |
+
+`MenuModelRegistry` fires its change event when a registration is **disposed**,
+not when one is added, and the browser menu bar rebuilds on that event. Moving
+nodes around therefore fires nothing, so the bar is redrawn by registering a
+throwaway action and disposing it — see `refreshMenuBar`. The throwaway group
+sits inside Help so nothing is left behind at the top level.
+
+Theia labels `menubar/6_debug` "Run" and it holds nothing but debug entries, so
+that menu travels with the debugger rather than with the Run split button. At
+Beginner the menu bar is therefore **File · Edit · Help**; the concept's mockup
+shows a Run menu there, and the mockup is the thing that is wrong.
 
 `SidePanelHandler` has no `removeTab` in Theia 1.74.1, so views are hidden by
 blocking and closing their widgets rather than by removing tabs.
@@ -59,8 +72,6 @@ does not enforce yet carry a `pending` reason and render disabled in the
 Customize panel, so the panel stays a truthful picture rather than promising
 switches that do nothing:
 
-- menu trimming (`menu.*`)
-- the task allow-list (`task.*`)
 - the Advanced refactoring toolbar (`toolbar.rename` and friends)
 - the Iris "Explain this error" action (`assist.*`)
 - `view.memoryInspector` — `@theia/memory-inspector` is not a dependency of the
@@ -68,3 +79,6 @@ switches that do nothing:
 - `view.terminal` — needs the terminal commands and menu gated, not just a
   widget hidden
 - `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
+
+`task.checkstyle` gates a `Check style` task the Gradle template does not ship
+yet, so the toggle is real but has nothing to hide until the template gains it.

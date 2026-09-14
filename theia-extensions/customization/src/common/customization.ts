@@ -35,6 +35,18 @@ export const EDUIDE_LEVEL_ENV = 'EDUIDE_LEVEL';
 /** Context key mirroring the active level, for `when` clauses. */
 export const EDUIDE_LEVEL_CONTEXT_KEY = 'eduide.level';
 
+/** Theia's main menu bar path. Duplicated so this module stays import-free. */
+export const MAIN_MENU_BAR: readonly string[] = ['menubar'];
+
+/**
+ * Menu path used only to make `MenuModelRegistry` fire a change event under the
+ * menu bar, which is what makes the bar rebuild. Registering a menu action fires
+ * nothing; disposing one fires `REMOVED`, so a throwaway action registered and
+ * disposed here is the public-API way to force a refill. The group sits inside
+ * Help so nothing is left behind at the top level.
+ */
+export const MENU_REFRESH_PATH: readonly string[] = ['menubar', '9_help', 'eduide-refresh'];
+
 export type ElementGroup =
     | 'views'
     | 'toolbar'
@@ -90,6 +102,18 @@ export interface CustomizableElement {
     /** Theia widgets this element shows and hides. */
     readonly views?: readonly ManagedView[];
     /**
+     * Top-level menu bar paths this element shows and hides, e.g.
+     * `['menubar', '7_terminal']`. Written as plain segments so the catalogue
+     * stays free of Theia imports.
+     */
+    readonly menus?: readonly (readonly string[])[];
+    /**
+     * `tasks.json` labels this element allows. A task whose label is claimed by
+     * a disabled element is dropped from the Run button and its dropdown; a
+     * task no element claims is always allowed.
+     */
+    readonly tasks?: readonly string[];
+    /**
      * Set when the catalogue lists an element the runtime does not enforce yet.
      * The Customize panel shows it, disabled, with this text as the reason, so
      * the panel stays a truthful picture of the catalogue.
@@ -143,8 +167,8 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'toolbar.generateAccessors', label: 'Generate getters/setters', group: 'toolbar', defaults: ADVANCED_ONLY, pending: 'toolbar contribution not written yet' },
 
     // ── Run configurations ───────────────────────────────────────────
-    { id: 'task.build', label: 'Build task', group: 'tasks', defaults: ADVANCED_UP, pending: 'task allow-list not wired into the Run button yet' },
-    { id: 'task.checkstyle', label: 'Check style task', group: 'tasks', defaults: ADVANCED_UP, pending: 'the Gradle template does not ship the task yet' },
+    { id: 'task.build', label: 'Build task', group: 'tasks', defaults: ADVANCED_UP, tasks: ['Build'] },
+    { id: 'task.checkstyle', label: 'Check style task', group: 'tasks', defaults: ADVANCED_UP, tasks: ['Check style'] },
 
     // ── Editor ───────────────────────────────────────────────────────
     {
@@ -217,9 +241,13 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'diag.sonar', label: 'SonarQube for IDE', group: 'diagnostics', defaults: OFF, pending: 'held until the per-session memory budget is measured' },
 
     // ── Menus ────────────────────────────────────────────────────────
-    { id: 'menu.runDebug', label: 'Debug entries in the Run menu', group: 'menus', defaults: EXPERT_ONLY, pending: 'core menu trimming not written yet' },
-    { id: 'menu.terminal', label: 'Terminal menu', group: 'menus', defaults: ADVANCED_UP, pending: 'core menu trimming not written yet' },
-    { id: 'menu.go', label: 'Go menu', group: 'menus', defaults: ADVANCED_UP, pending: 'core menu trimming not written yet' },
+    // Theia labels '6_debug' "Run", and it holds nothing but debug entries, so
+    // it travels with the debugger rather than with the Run split button.
+    { id: 'menu.selection', label: 'Selection menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '3_selection']] },
+    { id: 'menu.view', label: 'View menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '4_view']] },
+    { id: 'menu.go', label: 'Go menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '5_go']] },
+    { id: 'menu.run', label: 'Run menu (debug)', group: 'menus', defaults: EXPERT_ONLY, menus: [[...MAIN_MENU_BAR, '6_debug']] },
+    { id: 'menu.terminal', label: 'Terminal menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '7_terminal']] },
 
     // ── Status bar ───────────────────────────────────────────────────
     { id: 'status.level', label: 'Experience level indicator', group: 'statusBar', defaults: ON },

@@ -83,7 +83,12 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
 
     /** Call from @postConstruct after wiring up subclass-specific listeners. */
     protected async initialize(): Promise<void> {
-        this.customization.onDidChange(() => this.onDidChangeEmitter.fire());
+        this.customization.onDidChange(() => {
+            // The level can change which configurations are offered, not only
+            // whether the button shows, so the cache has to be rebuilt too.
+            this.refreshConfigurations();
+            this.onDidChangeEmitter.fire();
+        });
         await this.workspaceService.ready;
         const roots = await this.workspaceService.roots;
         if (!roots || roots.length === 0) {

@@ -266,7 +266,9 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     // Theia labels '6_debug' "Run", and it holds nothing but debug entries, so
     // it travels with the debugger rather than with the Run split button.
     { id: 'menu.selection', label: 'Selection menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '3_selection']] },
-    { id: 'menu.view', label: 'View menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '4_view']] },
+    // Kept at every level: it is a beginner's only menu route back to a view
+    // they closed, and the Customize panel is a poor substitute for that.
+    { id: 'menu.view', label: 'View menu', group: 'menus', defaults: ON, menus: [[...MAIN_MENU_BAR, '4_view']] },
     { id: 'menu.go', label: 'Go menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '5_go']] },
     { id: 'menu.run', label: 'Run menu (debug)', group: 'menus', defaults: EXPERT_ONLY, menus: [[...MAIN_MENU_BAR, '6_debug']] },
     { id: 'menu.terminal', label: 'Terminal menu', group: 'menus', defaults: ADVANCED_UP, menus: [[...MAIN_MENU_BAR, '7_terminal']] },

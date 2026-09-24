@@ -13,7 +13,7 @@ The **base-ide** multi-stage build (install → build → runtime) produces the 
 - Installs build prerequisites and caches workspace dependencies for faster rebuilds
 - Compiles the browser-only Theia application from source and downloads core plugins (Git, Markdown, JSON, etc.)
 - Removes Electron launchers and packaging code along with other development artefacts
-- Emits a slim runtime layer based on `node:22-bookworm-slim`, ready to be copied into language-specific images
+- Emits a slim runtime layer based on `node:22-trixie-slim`, ready to be copied into language-specific images
 
 ### Stage 2: Language-Specific Images
 
@@ -58,7 +58,7 @@ ARG BASE_IMAGE=ghcr.io/eclipse-theia/theia-ide/base-ide:latest
 FROM ${BASE_IMAGE} AS base-ide
 
 # Start from a minimal Node.js image for your runtime tools
-FROM node:22-bookworm-slim
+FROM node:22-trixie-slim
 
 # Create theia user
 RUN adduser --system --group theia && \

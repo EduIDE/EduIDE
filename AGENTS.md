@@ -59,9 +59,12 @@ passes.** Debian 11 went EOL on 2026-08-31 and took the v1.2.1 release build
 with it: `apt-get update` kept succeeding against a frozen `bullseye-security`
 index while the `.deb` files behind it had been purged, so the build 404'd on a
 single package and looked like a flaky mirror. Everything sits on
-`node:22-bookworm` and `ubuntu:24.04` now. The nightly `schedule` build is the
-only job that runs apt without a cache, so it is the early warning - when it
-goes red, the next release is already broken. `docs/base-image-lifecycle.md`.
+`node:22-trixie` and `ubuntu:24.04` now - pick the suite that is current
+stable, not one already handed to the LTS team. Apt only meets the live
+mirrors on the nightly `schedule` run and on a `workflow_dispatch` with
+`disable_layer_cache`; every other trigger reuses the cached layer, so the
+nightly is the standing early warning. When it goes red, the next release is
+already broken. `docs/base-image-lifecycle.md`.
 
 **There are two `package.json` merge implementations and the wrong one loses
 data.** `scripts/merge-package-json.js` unions `theiaPluginsExcludeIds` and

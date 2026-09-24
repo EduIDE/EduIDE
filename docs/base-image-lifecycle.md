@@ -9,7 +9,7 @@ next person recognises it in the first minute instead of the first hour.
 
 | Base | Used by | Supported until |
 |---|---|---|
-| `node:22-bookworm`, `node:22-bookworm-slim` | `BaseDockerfile` (all three stages), every `plugin-image` stage, `theia-no-ls` final stage | Debian 12: security support 2028-06, LTS 2030-06 |
+| `node:22-trixie`, `node:22-trixie-slim` | `BaseDockerfile` (all three stages), every `plugin-image` stage, `theia-no-ls` final stage | Debian 13: regular support 2028-08-09, then LTS to 2030-06-30 |
 | `ubuntu:24.04` | the `apt-deps` stage of most language images, including `python` | 2029-04 (standard), 2034-04 (ESM) |
 | `ubuntu:26.04` | `thm-java-25` | 2031-04 (standard) |
 | `eclipse-temurin:21-jdk-jammy` | `languageserver/java` (unpublished) | Ubuntu 22.04: 2027-04 |
@@ -18,6 +18,12 @@ next person recognises it in the first minute instead of the first hour.
 
 Node's own version is pinned separately in each Dockerfile (`node:22-…`). Bumping the Node major
 and bumping the Debian suite are two different decisions - do not fold them into one commit.
+
+Pick the Debian suite that is *current stable*, not merely the one that is still supported. A
+Debian release gets three years of regular support and two more of LTS, and the LTS half is where
+the sharp edges live: fewer architectures, fewer covered packages, and a pool that gets emptied
+the moment it ends. Debian 12 was already in its LTS half when this migration happened, which is
+why it was skipped in favour of 13.
 
 ## How an EOL distro actually breaks the build
 
@@ -41,10 +47,15 @@ before you touch anything else.
 
 ## Nightly builds are the early warning
 
-`.github/workflows/build.yml` runs on a `schedule` with `no-cache: true`. That nightly job is the
-only thing that exercises `apt-get` against the live mirrors; every other trigger reuses the cached
-apt layer and will keep passing for weeks after the distro has died underneath it. The bullseye
-failure was visible in the nightly build for three days before the release hit it.
+`.github/workflows/build.yml` sets `no-cache: true` on the nightly `schedule` run, and on a manual
+`workflow_dispatch` when `disable_layer_cache` is ticked. Those are the runs that actually exercise
+`apt-get` against the live mirrors; a PR or push build reuses the cached apt layer and will keep
+passing for weeks after the distro has died underneath it. The nightly is the only one of the two
+that happens on its own, which makes it the standing early warning - the bullseye failure sat in it
+for three days before the release hit the same wall.
+
+If you are about to cut a release and want certainty rather than last night's evidence, dispatch
+the workflow manually with `disable_layer_cache` on.
 
 A red nightly build is not noise. Treat it as the thing it is: the next release, failing early.
 

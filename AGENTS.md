@@ -16,6 +16,7 @@ scripts/                            build-time TypeScript and the package.json m
 docker-compose.images.yml           how to build and run every image locally
 .github/workflows/build.yml         what CI publishes
 docs/how-to-build-ide-variants.md   the fuller walkthrough; more current than this file
+docs/base-image-lifecycle.md        which distro each image sits on, and when it expires
 ```
 
 ## What is actually published
@@ -52,6 +53,15 @@ extension neutralizes this: `DisabledAIActivationService` rebinds
 (both in `theia-extensions/product/src/browser/theia-ide-contribution.tsx`).
 Do not remove those bindings, and re-check them on every Theia upgrade.
 Details in `docs/theia-1.74.1-upgrade.md`.
+
+**Every base image has an expiry date, and apt does not fail honestly when it
+passes.** Debian 11 went EOL on 2026-08-31 and took the v1.2.1 release build
+with it: `apt-get update` kept succeeding against a frozen `bullseye-security`
+index while the `.deb` files behind it had been purged, so the build 404'd on a
+single package and looked like a flaky mirror. Everything sits on
+`node:22-bookworm` and `ubuntu:24.04` now. The nightly `schedule` build is the
+only job that runs apt without a cache, so it is the early warning - when it
+goes red, the next release is already broken. `docs/base-image-lifecycle.md`.
 
 **There are two `package.json` merge implementations and the wrong one loses
 data.** `scripts/merge-package-json.js` unions `theiaPluginsExcludeIds` and

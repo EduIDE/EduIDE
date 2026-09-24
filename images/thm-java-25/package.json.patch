@@ -1,0 +1,27 @@
+{
+  "theiaPlugins": {
+    "scorpio": null,
+    "artemis-extension": null,
+    "data-bridge": null,
+    "redhat.java": "https://open-vsx.org/api/redhat/java/1.56.2026082608/file/redhat.java-1.56.2026082608.vsix",
+    "vscjava.vscode-java-debug": "https://open-vsx.org/api/vscjava/vscode-java-debug/0.59.0/file/vscjava.vscode-java-debug-0.59.0.vsix",
+    "vscjava.vscode-java-test": "https://open-vsx.org/api/vscjava/vscode-java-test/0.46.0/file/vscjava.vscode-java-test-0.46.0.vsix",
+    "vscjava.vscode-maven": "https://open-vsx.org/api/vscjava/vscode-maven/0.45.3/file/vscjava.vscode-maven-0.45.3.vsix",
+    "vscjava.vscode-java-dependency": "https://open-vsx.org/api/vscjava/vscode-java-dependency/0.27.6/file/vscjava.vscode-java-dependency-0.27.6.vsix",
+    "ms-vscode.live-server": "https://open-vsx.org/api/ms-vscode/live-server/0.4.20/file/ms-vscode.live-server-0.4.20.vsix"
+  },
+  "theiaPluginsExcludeIds": [
+    "scorpio",
+    "artemis-extension",
+    "data-bridge",
+    "github.copilot",
+    "ms-vscode.js-debug-companion",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "vscode.builtin-notebook-renderers",
+    "vscode.extension-editing",
+    "vscode.github",
+    "vscode.github-authentication",
+    "vscode.ipynb",
+    "vscode.microsoft-authentication"
+  ]
+}

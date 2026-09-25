@@ -90,6 +90,7 @@ The final runtime image that combines everything.
 - Optionally install shell enhancements (Oh My Zsh, plugins)
 - Copy project settings (including `.theia/settings.json`)
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
+- Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`), see [Image version stamp](#image-version-stamp)
 - Define the entrypoint to launch Theia
 
 **Example from C variant (lines 66-69):**
@@ -281,6 +282,40 @@ Once added, your variant will be built automatically on:
 - Pushes to `master`
 - Releases
 - Manual workflow dispatch
+
+## Image version stamp
+
+Every published image carries its own coordinates, so a running session can say
+which image it came from. This is what the "Version" section of the About dialog
+shows, and it is the only way to tell a stale deployment from a current one from
+inside the IDE.
+
+Each `ToolDockerfile` ends its final stage with:
+
+```dockerfile
+ARG APP_VERSION=""
+ARG IMAGE_NAME=""
+ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
+    EDUIDE_IMAGE_TAG=${APP_VERSION}
+```
+
+`IMAGE_NAME` comes from the matrix entry in `.github/workflows/build.yml`, so it
+cannot drift from the name the image is actually pushed under. `APP_VERSION` is
+supplied by the shared build workflow's `stamp-app-version: true` input, which
+appends the tag it derived for this build - `latest`, `pr-<N>`, `<branch-slug>`
+or the release version with the leading `v` already stripped. That is the same
+string the image is tagged with, derived once in the shared workflow, so the
+value inside the image and the tag outside it cannot disagree.
+
+Place the block as the last instruction before `ENTRYPOINT`. The tag changes on
+every branch and pull request, so an earlier position would invalidate the layer
+cache for everything below it.
+
+A hand-built image (`docker build` without `--build-arg APP_VERSION=...`, which
+includes every `docker-compose.images.yml` build) leaves both variables empty and
+the About dialog shows `unknown`. The frontend also just reads the two
+environment variables at runtime, so a deployment can override them without
+rebuilding.
 
 ## Memory tuning
 

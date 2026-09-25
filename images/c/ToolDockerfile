@@ -94,6 +94,14 @@ ENV USE_LOCAL_GIT=true
 
 WORKDIR /home/theia/applications/browser
 
+# Stamp the published image coordinates into the environment so the About
+# dialog can name the image this session is running. CI supplies both; a
+# hand-built image leaves them empty and the dialog then says "unknown".
+ARG APP_VERSION=""
+ARG IMAGE_NAME=""
+ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
+    EDUIDE_IMAGE_TAG=${APP_VERSION}
+
 # Launch the backend application via node
 ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
 

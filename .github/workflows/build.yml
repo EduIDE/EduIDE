@@ -53,6 +53,11 @@ jobs:
       # normalisation and publish `v1.2.0` instead of `1.2.0` - a tag no chart
       # can consume, since appVersion and the image tag must be one string.
       image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
+      build-args: |
+        IMAGE_NAME=eduide/eduide/base
+      # Bakes APP_VERSION=<derived tag> into the image, which the About dialog
+      # reads back so a running session can name the image it came from.
+      stamp-app-version: true
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
     secrets: inherit
 
@@ -96,6 +101,9 @@ jobs:
       docker-context: .
       build-args: |
         BASE_IDE_TAG=${{ needs.base.outputs.sha_tag }}
+        IMAGE_NAME=${{ matrix.image-name }}
+      # See the note on the base job.
+      stamp-app-version: true
       # Deliberately NOT passed on a release. See the note on the base job.
       image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}

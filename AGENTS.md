@@ -152,6 +152,9 @@ CI threads the base image's **immutable sha tag** into every language build
    (omit both for a `-templates` image; add `templates/` and `entrypoint.sh`)
 3. A service in `docker-compose.images.yml` on the next free port
 4. A matrix entry under the **`images`** job in `.github/workflows/build.yml`
+5. Keep the `EDUIDE_IMAGE_NAME` / `EDUIDE_IMAGE_TAG` stamp at the end of the
+   final stage - it is what the About dialog shows, and an image without it
+   reports its version as `unknown`
 
 Then add it to `appDefinitions.apps` in EduIDE-Helm's `eduide` chart, which is
 what actually offers it to students. Building an image deploys nothing:
@@ -165,4 +168,9 @@ environment offers any of them.
 - The `theia` user is uid 101 in every image.
 - Electron code is deleted during the base build; do not add to it.
 - Release tags are `vX.Y.Z`; the image tag is the same string without the `v`.
+- Every image stamps its own name and tag into `EDUIDE_IMAGE_NAME` /
+  `EDUIDE_IMAGE_TAG` at build time (`stamp-app-version: true` plus an
+  `IMAGE_NAME` build arg), and the About dialog reads them back through Theia's
+  `EnvVariablesServer`. That is how a session says which image it is running.
+  `docs/how-to-build-ide-variants.md`.
 - Workflows must pass `actionlint`.

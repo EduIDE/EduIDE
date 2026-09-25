@@ -139,3 +139,11 @@ COPY --from=prod-deps /home/theia/node_modules /home/theia/node_modules
 # Copy Oh My Zsh and zsh configuration (available to all variants via base-ide)
 COPY --from=zsh-setup /oh-my-zsh /home/theia/.oh-my-zsh
 COPY configs/zshrc /home/theia/.zshrc
+
+# Stamp the published image coordinates into the environment so the About
+# dialog can name the image this session is running. CI supplies both; a
+# hand-built image leaves them empty and the dialog then says "unknown".
+ARG APP_VERSION=""
+ARG IMAGE_NAME=""
+ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
+    EDUIDE_IMAGE_TAG=${APP_VERSION}

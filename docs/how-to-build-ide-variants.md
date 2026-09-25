@@ -59,7 +59,7 @@ This stage loads the base IDE image that all variants share.
 #### Phase 2: Plugin Image Stage
 
 ```dockerfile
-FROM node:22-bullseye AS plugin-image
+FROM node:22-trixie AS plugin-image
 ```
 
 A temporary stage to download and prepare language-specific plugins/extensions.

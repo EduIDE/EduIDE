@@ -1,5 +1,5 @@
 # Dependency installation stage to maximise caching
-FROM node:22-bullseye AS install-deps
+FROM node:22-trixie AS install-deps
 
 # Install build prerequisites only once and clean up afterwards
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -65,7 +65,7 @@ RUN rm -rf applications/electron \
     && find applications/browser/lib -type f \( -name '*.map' -o -name '*.map.gz' \) -delete
 
 # Production dependencies stage - install only runtime dependencies
-FROM node:22-bullseye-slim AS prod-deps
+FROM node:22-trixie-slim AS prod-deps
 
 WORKDIR /home/theia
 
@@ -113,7 +113,7 @@ RUN n=0; until rm -rf /oh-my-zsh \
     done
 
 # Final runtime stage
-FROM node:22-bullseye-slim AS base-ide
+FROM node:22-trixie-slim AS base-ide
 
 # Install only the libraries required at runtime
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \

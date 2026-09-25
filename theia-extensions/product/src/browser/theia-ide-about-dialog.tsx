@@ -32,6 +32,7 @@ export class TheiaIDEAboutDialog extends AboutDialog {
 
   protected imageName = "";
   protected imageTag = "";
+  protected imageRevision = "";
 
   constructor(
     @inject(AboutDialogProps) protected readonly props: AboutDialogProps
@@ -45,6 +46,7 @@ export class TheiaIDEAboutDialog extends AboutDialog {
     // image it came from. A hand-built image leaves these empty.
     this.imageName = (await this.envVariablesServer.getValue("EDUIDE_IMAGE_NAME"))?.value ?? "";
     this.imageTag = (await this.envVariablesServer.getValue("EDUIDE_IMAGE_TAG"))?.value ?? "";
+    this.imageRevision = (await this.envVariablesServer.getValue("EDUIDE_IMAGE_REVISION"))?.value ?? "";
     this.update();
   }
 
@@ -74,14 +76,25 @@ export class TheiaIDEAboutDialog extends AboutDialog {
   }
 
   protected renderImageVersion(): React.ReactNode {
-    const tag = this.imageTag || "unknown";
-    const image = this.imageName ? `${this.imageName}:${tag}` : tag;
+    let image = "unknown";
+    if (this.imageTag) {
+      image = this.imageName ? `${this.imageName}:${this.imageTag}` : this.imageTag;
+    }
+    // Two builds can share a tag - every push to main publishes `latest` - so
+    // the commit is what tells them apart. It is also the suffix of the
+    // immutable `<tag>-<revision>` tag the same build publishes.
+    const revision = this.imageRevision.substring(0, 7);
     return (
       <div className="gs-section">
         <h3 className="gs-section-header">Version</h3>
         <div>
           Container image: <code>{image}</code>
         </div>
+        {revision && (
+          <div>
+            Build revision: <code>{revision}</code>
+          </div>
+        )}
       </div>
     );
   }

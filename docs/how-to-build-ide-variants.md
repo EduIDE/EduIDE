@@ -90,7 +90,7 @@ The final runtime image that combines everything.
 - Optionally install shell enhancements (Oh My Zsh, plugins)
 - Copy project settings (including `.theia/settings.json`)
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
-- Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`), see [Image version stamp](#image-version-stamp)
+- Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
 - Define the entrypoint to launch Theia
 
 **Example from C variant (lines 66-69):**
@@ -295,8 +295,10 @@ Each `ToolDockerfile` ends its final stage with:
 ```dockerfile
 ARG APP_VERSION=""
 ARG IMAGE_NAME=""
+ARG IMAGE_REVISION=""
 ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
-    EDUIDE_IMAGE_TAG=${APP_VERSION}
+    EDUIDE_IMAGE_TAG=${APP_VERSION} \
+    EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
 ```
 
 `IMAGE_NAME` comes from the matrix entry in `.github/workflows/build.yml`, so it
@@ -307,15 +309,22 @@ or the release version with the leading `v` already stripped. That is the same
 string the image is tagged with, derived once in the shared workflow, so the
 value inside the image and the tag outside it cannot disagree.
 
+`IMAGE_REVISION` is `github.sha`. A tag on its own cannot always answer "is this
+the current build": every push to main publishes `latest`, so a container that
+has been running for a month reports the same tag as the image published an hour
+ago. The commit separates them, and its first seven characters are also the
+suffix of the immutable `<tag>-<short-sha>` tag the same build publishes, so the
+About dialog gives you something you can pin.
+
 Place the block as the last instruction before `ENTRYPOINT`. The tag changes on
 every branch and pull request, so an earlier position would invalidate the layer
 cache for everything below it.
 
 A hand-built image (`docker build` without `--build-arg APP_VERSION=...`, which
-includes every `docker-compose.images.yml` build) leaves both variables empty and
-the About dialog shows `unknown`. The frontend also just reads the two
-environment variables at runtime, so a deployment can override them without
-rebuilding.
+includes every `docker-compose.images.yml` build) leaves the variables empty; the
+About dialog then shows `unknown` and omits the revision line. The frontend just
+reads the environment at runtime, so a deployment can override the variables
+without rebuilding.
 
 ## Memory tuning
 

@@ -55,6 +55,7 @@ jobs:
       image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
       build-args: |
         IMAGE_NAME=eduide/eduide/base
+        IMAGE_REVISION=${{ github.sha }}
       # Bakes APP_VERSION=<derived tag> into the image, which the About dialog
       # reads back so a running session can name the image it came from.
       stamp-app-version: true
@@ -102,6 +103,7 @@ jobs:
       build-args: |
         BASE_IDE_TAG=${{ needs.base.outputs.sha_tag }}
         IMAGE_NAME=${{ matrix.image-name }}
+        IMAGE_REVISION=${{ github.sha }}
       # See the note on the base job.
       stamp-app-version: true
       # Deliberately NOT passed on a release. See the note on the base job.

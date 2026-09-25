@@ -112,12 +112,16 @@ RUN echo 'source $HOME/.cargo/env' >> /home/theia/.zshrc
 WORKDIR /home/theia/applications/browser
 
 # Stamp the published image coordinates into the environment so the About
-# dialog can name the image this session is running. CI supplies both; a
-# hand-built image leaves them empty and the dialog then says "unknown".
+# dialog can name the image this session is running. The revision is what
+# separates two builds that share a tag, such as successive `latest` ones.
+# CI supplies all three; a hand-built image leaves them empty and the dialog
+# then says "unknown".
 ARG APP_VERSION=""
 ARG IMAGE_NAME=""
+ARG IMAGE_REVISION=""
 ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
-    EDUIDE_IMAGE_TAG=${APP_VERSION}
+    EDUIDE_IMAGE_TAG=${APP_VERSION} \
+    EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
 
 # Launch the backend application via node
 ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]

@@ -314,7 +314,10 @@ the current build": every push to main publishes `latest`, so a container that
 has been running for a month reports the same tag as the image published an hour
 ago. The commit separates them, and its first seven characters are also the
 suffix of the immutable `<tag>-<short-sha>` tag the same build publishes, so the
-About dialog gives you something you can pin.
+About dialog gives you something you can pin. On a pull request `github.sha` is
+GitHub's ephemeral merge commit rather than a commit on the branch, so the
+revision will not resolve in `git log`. It still matches the published
+`pr-<N>-<short-sha>` tag, which is what it is there for.
 
 Place the block as the last instruction before `ENTRYPOINT`. The tag changes on
 every branch and pull request, so an earlier position would invalidate the layer

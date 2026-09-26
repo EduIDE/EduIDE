@@ -1,47 +1,31 @@
 {
   "private": true,
-  "name": "theia-ide-product-ext",
+  "name": "theia-ide-customization-ext",
   "version": "1.70.201",
-  "description": "Eclipse Theia IDE Product Branding",
+  "description": "EduIDE experience levels and per-element customization",
   "dependencies": {
-    "@theia/ai-core": "1.74.1",
-    "@theia/ai-mcp": "1.74.1",
     "@theia/core": "1.74.1",
-    "@theia/debug": "1.74.1",
     "@theia/editor": "1.74.1",
-    "@theia/getting-started": "1.74.1",
-    "@theia/monaco": "1.74.1",
-    "@theia/outline-view": "1.74.1",
-    "@theia/plugin-ext": "1.74.1",
+    "@theia/filesystem": "1.74.1",
     "@theia/task": "1.74.1",
-    "@theia/vsx-registry": "1.74.1",
+    "@theia/terminal": "1.74.1",
     "@theia/workspace": "1.74.1",
     "inversify": "^6.0.1",
-    "theia-ide-customization-ext": "1.70.201"
+    "jsonc-parser": "^3.3.1"
   },
   "devDependencies": {
     "rimraf": "^2.7.1",
-    "tslint": "^5.12.0",
     "typescript": "~5.9.3"
   },
   "theiaExtensions": [
     {
-      "frontend": "lib/browser/theia-ide-frontend-module",
-      "electronMain": "lib/electron-main/theia-ide-main-module"
+      "frontend": "lib/browser/customization-frontend-module"
     }
   ],
   "keywords": [
     "theia-extension"
   ],
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/eclipse-theia/theia-ide.git"
-  },
-  "bugs": {
-    "url": "https://github.com/eclipse-theia/theia-ide/issues"
-  },
-  "homepage": "https://github.com/eclipse-theia/theia-ide",
   "files": [
     "lib",
     "src"

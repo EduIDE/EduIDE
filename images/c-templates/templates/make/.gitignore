@@ -1,0 +1,3 @@
+# Build output from the Makefile's BIN_DIR. Artemis grades the source you
+# push, so keep it out of the repository.
+out/

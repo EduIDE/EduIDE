@@ -1,11 +1,19 @@
 # syntax=docker/dockerfile:1
+# TH-Mannheim Java 25 image (course "PR2").
+#
+# Resembles the course's documented dev container: Ubuntu 26.04, OpenJDK 25 and
+# Maven from apt, git, and the Java extension set (redhat.java, java-debug,
+# java-test, maven, java-dependency) plus Live Preview. Unlike the standard
+# EduIDE images this variant ships WITHOUT the EduIDE/Artemis extensions
+# (scorpio, artemis-extension, data-bridge), which are stripped from the base.
+
 # Load the base-ide image, only copy from here
 ARG BASE_IDE_TAG=latest
 ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
 FROM ${BASE_IMAGE} AS base-ide
 
 # Parallel stage: Install system dependencies (runs concurrently with plugin-image)
-FROM ubuntu:24.04 AS apt-deps
+FROM ubuntu:26.04 AS apt-deps
 
 # Create theia user and directories first (doesn't need apt)
 RUN useradd --system --create-home --user-group --uid 101 theia && \
@@ -14,12 +22,13 @@ RUN useradd --system --create-home --user-group --uid 101 theia && \
     chown -R theia:theia /home/theia && \
     chown -R theia:theia /home/project
 
-# Install required tools with BuildKit cache mounts
+# Install required tools with BuildKit cache mounts.
+# Course toolchain: git, OpenJDK 25, Maven. Plus EduIDE runtime essentials.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
-    git openssh-client bash zsh libsecret-1-0 openjdk-17-jdk-headless maven ca-certificates && \
+    git openssh-client bash zsh libsecret-1-0 openjdk-25-jdk maven ca-certificates && \
     apt-get autoremove -y
 
 # Parallel stage: Plugin download (runs concurrently with apt-deps)
@@ -32,10 +41,10 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Copy required configuration files
 COPY --from=base-ide /home/theia/package.json ./package.json.base
-COPY images/java-17/package.json.patch ./package.json.patch
+COPY images/thm-java-25/package.json.patch ./package.json.patch
 COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 
-# Merge the base package.json with the java-17-specific patch without dropping base exclusions.
+# Merge the base package.json with the thm-java-25 patch without dropping base exclusions.
 RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
 
@@ -48,15 +57,16 @@ COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
 
 # Install ONLY @theia/cli (needed for download:plugins command)
 # This is much faster than full yarn install since we already have prod node_modules
-RUN n=0; until yarn add -W @theia/cli@1.74.1 --network-timeout 1000000 --network-concurrency 3; do \
+RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
         n=$((n+1)); \
         if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
         echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
         sleep $((n*3)); \
     done
 
-# Download language-specific plugins
-RUN --mount=type=cache,id=theia-plugin-cache-java-17,target=/home/theia/.plugin-cache,sharing=locked \
+# Download language-specific plugins (prune-and-sync drops scorpio/data-bridge/
+# artemis-extension because they are no longer configured in the merged config)
+RUN --mount=type=cache,id=theia-plugin-cache-thm-java-25,target=/home/theia/.plugin-cache,sharing=locked \
     yarn download:plugins:smart
 
 # Final stage: Assemble the application
@@ -71,32 +81,34 @@ COPY --from=plugin-image /usr/local/lib/node_modules/ /usr/local/lib/node_module
 # Switch to Theia user
 USER theia
 ENV HOME=/home/theia
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
+ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-${TARGETARCH}
+# Avoid deprecated sun.misc.Unsafe memory-access warnings on Java 25 (per course config)
+ENV MAVEN_OPTS=--sun-misc-unsafe-memory-access=allow
 WORKDIR /home/theia
 
 # Copy application from the base image (includes prod node_modules)
 COPY --from=base-ide --chown=theia:theia /home/theia /home/theia
 
-# Gradle Remote Cache Setup + memory tuning
-# The /home/theia/jdk symlink gives gradle.properties an arch-independent
-# org.gradle.java.home so IDE-import and terminal builds share one daemon.
-RUN ln -s "${JAVA_HOME}" /home/theia/jdk && \
-    mkdir -p /home/theia/.gradle/init.d
-COPY --chown=theia:theia images/java-17/gradle/remote-cache.gradle /home/theia/.gradle/init.d/
-COPY --chown=theia:theia images/java-17/gradle/test-memory.gradle /home/theia/.gradle/init.d/
-COPY --chown=theia:theia images/java-17/gradle/gradle.properties /home/theia/.gradle/gradle.properties
-
-# Bake user-level (machine-scoped) Java LS memory settings. Must be user-level:
-# java.jdt.ls.vmargs is security-gated in workspace settings and /home/project
-# may be replaced by a mounted student volume.
-RUN mkdir -p /home/theia/.theia-ide
-COPY --chown=theia:theia images/java-17/theia/user-settings.json /home/theia/.theia-ide/settings.json
-
 # Copy additional plugins
 COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
 
-# Copy the project configuration files
-COPY --chown=theia:theia images/java-17/project /home/project
+# Safety net: guarantee the EduIDE/Artemis extensions are absent even if the
+# prune step ever falls back to keep-all mode.
+RUN rm -rf /home/theia/plugins/scorpio \
+           /home/theia/plugins/data-bridge \
+           /home/theia/plugins/artemis-extension
+
+# Ship IDE config as USER-LEVEL defaults (not in /home/project), so the workspace
+# stays empty and `git clone <url> .` works. settings.json goes to Theia's
+# resources/user defaults; keymaps.json is also seeded into the runtime config
+# folder (/home/theia/.theia-ide) where the KeymapsServer reliably reads it.
+RUN mkdir -p /home/theia/applications/browser/resources/user /home/theia/.theia-ide
+COPY --chown=theia:theia images/thm-java-25/user/settings.json /home/theia/applications/browser/resources/user/settings.json
+COPY --chown=theia:theia images/thm-java-25/user/keymaps.json  /home/theia/applications/browser/resources/user/keymaps.json
+COPY --chown=theia:theia images/thm-java-25/user/keymaps.json  /home/theia/.theia-ide/keymaps.json
+
+# Default git credential helper: cache in memory for 1h (no plaintext on disk)
+COPY --chown=theia:theia images/thm-java-25/gitconfig /home/theia/.gitconfig
 
 EXPOSE 3000
 
@@ -107,11 +119,6 @@ ENV SHELL=/bin/zsh \
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
 
-# Cap JVM/node heaps and glibc arena count for constrained student environments
-ENV MAVEN_OPTS="-XX:+UseSerialGC -Xmx256m -XX:MaxMetaspaceSize=192m" \
-    NODE_OPTIONS="--max-old-space-size=512" \
-    MALLOC_ARENA_MAX=2
-
 WORKDIR /home/theia/applications/browser
 
 # Launch the backend application via node
@@ -119,4 +126,3 @@ ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
 
 # Arguments passed to the application
 CMD [ "/home/project", "--hostname=0.0.0.0" ]
-

@@ -5,6 +5,7 @@
   "description": "EduIDE experience levels and per-element customization",
   "dependencies": {
     "@theia/core": "1.74.1",
+    "@theia/debug": "1.74.1",
     "@theia/editor": "1.74.1",
     "@theia/filesystem": "1.74.1",
     "@theia/task": "1.74.1",

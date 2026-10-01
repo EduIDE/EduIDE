@@ -169,6 +169,16 @@ export interface CustomizableElement {
     readonly menus?: readonly (readonly string[])[];
 
     /**
+     * Element that is only meaningful while a debug session is running, and
+     * stays off the screen otherwise.
+     *
+     * The student's own override still wins: switching it on in the Customize
+     * panel shows it whether or not a session is live, because a switch that
+     * visibly does nothing is worse than a view with nothing in it.
+     */
+    readonly requiresDebugSession?: boolean;
+
+    /**
      * Set when the catalogue lists an element the runtime does not enforce yet.
      * The Customize panel shows it, disabled, with this text as the reason, so
      * the panel stays a truthful picture of the catalogue.
@@ -205,7 +215,11 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'view.debugConsole', label: 'Debug Console', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'debug-console', area: 'bottom' }] },
     { id: 'view.outline', label: 'Outline', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'outline-view', area: 'right' }] },
     {
+        // It reads memory from the debug adapter, so with no session it can only
+        // draw column headers over an empty table — and upstream renders no
+        // empty state, so what a student meets is a blank panel.
         id: 'view.memoryInspector', label: 'Memory Inspector', group: 'views', defaults: EXPERT_ONLY,
+        requiresDebugSession: true,
         views: [{ id: 'memory-layout-widget', area: 'right' }]
     },
     { id: 'view.terminal', label: 'Shell terminal', group: 'views', defaults: ADVANCED_UP, userTerminals: true },

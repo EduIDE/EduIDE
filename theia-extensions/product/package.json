@@ -14,6 +14,7 @@
     "@theia/outline-view": "1.74.1",
     "@theia/plugin-ext": "1.74.1",
     "@theia/task": "1.74.1",
+    "@theia/terminal": "1.74.1",
     "@theia/vsx-registry": "1.74.1",
     "@theia/workspace": "1.74.1",
     "inversify": "^6.0.1",

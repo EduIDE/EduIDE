@@ -23,6 +23,7 @@ import { TaskConfiguration, TaskCustomization } from '@theia/task/lib/common/tas
 import { TERMINAL_WIDGET_FACTORY_ID } from '@theia/terminal/lib/browser/terminal-widget-impl';
 import { StatusBarImpl } from '@theia/core/lib/browser/status-bar';
 import { PreferenceScope, PreferenceService } from '@theia/core/lib/common/preferences';
+import { DebugSessionManager } from '@theia/debug/lib/browser/debug-session-manager';
 import { DeliveredConfigReader } from './delivered-config-reader';
 import {
     CustomizableElement,
@@ -73,6 +74,8 @@ export class CustomizationService implements FrontendApplicationContribution {
     protected readonly logger: ILogger;
     @inject(DeliveredConfigReader)
     protected readonly deliveredConfig: DeliveredConfigReader;
+    @inject(DebugSessionManager)
+    protected readonly debugSessions: DebugSessionManager;
 
     protected levelContextKey: ContextKey<string> | undefined;
 
@@ -92,6 +95,16 @@ export class CustomizationService implements FrontendApplicationContribution {
 
     @postConstruct()
     protected init(): void {
+        // A session starting or ending changes what `requiresDebugSession`
+        // elements resolve to, so the same sweep that follows a level change
+        // has to follow this too.
+        const onSessionChange = () => {
+            this.apply().catch(error =>
+                this.logger.warn('EduIDE customization: could not apply after a debug session change', error));
+        };
+        this.debugSessions.onDidCreateDebugSession(onSessionChange);
+        this.debugSessions.onDidDestroyDebugSession(onSessionChange);
+
         this.preferences.onPreferenceChanged(event => {
             if (event.preferenceName === CustomizationPreferences.LEVEL
                 || event.preferenceName === CustomizationPreferences.OVERRIDES) {
@@ -118,7 +131,15 @@ export class CustomizationService implements FrontendApplicationContribution {
             return true;
         }
         const override = this.overrides[elementId];
-        return typeof override === 'boolean' ? override : element.defaults[this.level];
+        if (typeof override === 'boolean') {
+            // An explicit choice is final, debug session or not. The promise
+            // that every element is switchable is worth more than tidiness.
+            return override;
+        }
+        if (element.requiresDebugSession && this.debugSessions.sessions.length === 0) {
+            return false;
+        }
+        return element.defaults[this.level];
     }
 
     /** Whether the element differs from the current level's preset. */
@@ -403,6 +424,14 @@ export class CustomizationService implements FrontendApplicationContribution {
 
     protected async showView(element: CustomizableElement, view: ManagedView): Promise<void> {
         if (this.matchingWidgets(view).length > 0) {
+            return;
+        }
+        if (element.requiresDebugSession) {
+            // Becoming available is the whole job here. Creating it ourselves
+            // produces a widget its own view contribution never set up — it
+            // attaches without a side-bar tab — so we stop at lifting the
+            // block and let the student open it the ordinary way, which hands
+            // the work to the contribution that knows how.
             return;
         }
         if (view.match === 'includes') {

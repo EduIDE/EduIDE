@@ -99,6 +99,24 @@ export const MAIN_MENU_BAR: readonly string[] = ['menubar'];
  */
 export const MENU_REFRESH_PATH: readonly string[] = ['menubar', '9_help', 'eduide-refresh'];
 
+/**
+ * The group inside View that lists every view you can open.
+ *
+ * Trimming the menu bar removes whole menus; it does not touch what is inside
+ * one, so View stayed a list of everything a level had just taken away — a
+ * back door, and a confusing one, since most of the entries open something a
+ * beginner has no use for. Entries here are removed alongside their view.
+ *
+ * The id of a registered menu action is its command id, so these paths end in
+ * the view's own toggle command.
+ */
+export const VIEW_VIEWS_MENU: readonly string[] = ['menubar', '4_view', '2_views'];
+
+/** Path of a View-menu entry for the view opened by `toggleCommandId`. */
+export function viewMenuEntry(toggleCommandId: string): string[] {
+    return [...VIEW_VIEWS_MENU, toggleCommandId];
+}
+
 export type ElementGroup =
     | 'views'
     | 'toolbar'
@@ -207,22 +225,35 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
         views: [{ id: 'artemis', area: 'left', match: 'includes' }, { id: 'scorpio', area: 'left', match: 'includes' }]
     },
     { id: 'view.problems', label: 'Problems', group: 'views', defaults: ON, views: [{ id: 'problems', area: 'bottom' }] },
-    { id: 'view.scm', label: 'Source Control', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'scm-view-container', area: 'left' }] },
+    {
+        id: 'view.scm', label: 'Source Control', group: 'views', defaults: ADVANCED_UP,
+        views: [{ id: 'scm-view-container', area: 'left' }], menus: [viewMenuEntry('scmView:toggle')]
+    },
     { id: 'view.testing', label: 'Testing', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'test-view-container', area: 'left' }] },
     { id: 'view.gradle', label: 'Gradle tasks', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'gradle', area: 'left', match: 'includes' }] },
     { id: 'view.output', label: 'Output', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'outputView', area: 'bottom' }] },
-    { id: 'view.debug', label: 'Run and Debug', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'debug', area: 'left' }] },
-    { id: 'view.debugConsole', label: 'Debug Console', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'debug-console', area: 'bottom' }] },
-    { id: 'view.outline', label: 'Outline', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'outline-view', area: 'right' }] },
+    { id: 'view.debug', label: 'Run and Debug', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'debug', area: 'left' }], menus: [viewMenuEntry('debug:toggle')] },
+    {
+        id: 'view.debugConsole', label: 'Debug Console', group: 'views', defaults: EXPERT_ONLY,
+        views: [{ id: 'debug-console', area: 'bottom' }], menus: [viewMenuEntry('debug:console:toggle')]
+    },
+    { id: 'view.outline', label: 'Outline', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'outline-view', area: 'right' }], menus: [viewMenuEntry('outlineView:toggle')] },
     {
         // It reads memory from the debug adapter, so with no session it can only
         // draw column headers over an empty table — and upstream renders no
         // empty state, so what a student meets is a blank panel.
         id: 'view.memoryInspector', label: 'Memory Inspector', group: 'views', defaults: EXPERT_ONLY,
         requiresDebugSession: true,
-        views: [{ id: 'memory-layout-widget', area: 'right' }]
+        views: [{ id: 'memory-layout-widget', area: 'right' }],
+        menus: [viewMenuEntry('memory-inspector-command')]
     },
     { id: 'view.terminal', label: 'Shell terminal', group: 'views', defaults: ADVANCED_UP, userTerminals: true },
+
+    // No side-bar tab of their own: they are opened from the View menu, so the
+    // menu entry is the whole surface and removing it removes the feature.
+    { id: 'view.callHierarchy', label: 'Call Hierarchy', group: 'views', defaults: ADVANCED_UP, menus: [viewMenuEntry('callhierarchy:toggle')] },
+    { id: 'view.typeHierarchy', label: 'Type Hierarchy', group: 'views', defaults: ADVANCED_UP, menus: [viewMenuEntry('typehierarchy:toggle')] },
+    { id: 'view.plugins', label: 'Plugins', group: 'views', defaults: EXPERT_ONLY, menus: [viewMenuEntry('pluginsView:toggle')] },
 
     // ── Editor toolbar ───────────────────────────────────────────────
     { id: 'toolbar.run', label: 'Run split button', group: 'toolbar', defaults: ON },

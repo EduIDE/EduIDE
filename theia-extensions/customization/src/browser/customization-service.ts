@@ -38,7 +38,6 @@ import {
     ELEMENTS_BY_ID,
     isAtLeast,
     isEduIdeLevel,
-    MAIN_MENU_BAR,
     ManagedView,
     MENU_REFRESH_PATH
 } from '../common/customization';
@@ -512,10 +511,6 @@ export class CustomizationService implements FrontendApplicationContribution {
     // ── Menu bar ─────────────────────────────────────────────────────
 
     protected applyMenus(): void {
-        const menubar = this.menus.getMenu([...MAIN_MENU_BAR]);
-        if (!menubar || !MutableCompoundMenuNode.is(menubar) || !CompoundMenuNode.is(menubar)) {
-            return;
-        }
         let changed = false;
         for (const element of ELEMENT_CATALOGUE) {
             if (element.pending || !element.menus) {
@@ -523,25 +518,50 @@ export class CustomizationService implements FrontendApplicationContribution {
             }
             const enabled = this.isEnabled(element.id);
             for (const path of element.menus) {
-                const id = path[path.length - 1];
-                const present = menubar.children.find(child => child.id === id);
-                if (enabled && !present) {
-                    const removed = this.removedMenus.get(id);
-                    if (removed) {
-                        menubar.addNode(removed);
-                        this.removedMenus.delete(id);
-                        changed = true;
-                    }
-                } else if (!enabled && present) {
-                    this.removedMenus.set(id, present);
-                    menubar.removeNode(present);
-                    changed = true;
-                }
+                changed = this.toggleMenuNode(path, enabled) || changed;
             }
         }
         if (changed) {
             this.refreshMenuBar();
         }
+    }
+
+    /**
+     * Takes one node out of its parent menu, or puts it back.
+     *
+     * The path is the node's own: everything but the last segment addresses the
+     * parent, the last segment is the node. That covers a whole menu hanging off
+     * the menu bar and a single entry inside one with the same code, which is
+     * what View needs — trimming the bar never reached inside a menu, so View
+     * went on listing every view the level had just taken away.
+     *
+     * Nodes are kept rather than discarded, because putting one back is how a
+     * level change upwards restores it.
+     */
+    protected toggleMenuNode(path: readonly string[], enabled: boolean): boolean {
+        const parentPath = path.slice(0, -1);
+        const id = path[path.length - 1];
+        const parent = this.menus.getMenu([...parentPath]);
+        if (!parent || !MutableCompoundMenuNode.is(parent) || !CompoundMenuNode.is(parent)) {
+            return false;
+        }
+        const key = `${parentPath.join('/')}/${id}`;
+        const present = parent.children.find(child => child.id === id);
+        if (enabled && !present) {
+            const removed = this.removedMenus.get(key);
+            if (!removed) {
+                return false;
+            }
+            parent.addNode(removed);
+            this.removedMenus.delete(key);
+            return true;
+        }
+        if (!enabled && present) {
+            this.removedMenus.set(key, present);
+            parent.removeNode(present);
+            return true;
+        }
+        return false;
     }
 
     /**

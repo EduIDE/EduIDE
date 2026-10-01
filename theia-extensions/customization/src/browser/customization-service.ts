@@ -380,6 +380,17 @@ export class CustomizationService implements FrontendApplicationContribution {
             if (element.pending || !element.views || this.isEnabled(element.id)) {
                 continue;
             }
+            if (element.requiresDebugSession) {
+                // Never reject this one's creation. MemoryLayoutWidget.init()
+                // kicks off an async doInit() it does not await, so the factory
+                // returns before the widget has built anything; Theia disposes
+                // the widget when we reject, but doInit() carries on and caches
+                // the inner dock panel against a widget that no longer exists.
+                // Every later open then inherits that orphan and comes up empty.
+                // Closing it after the fact disposes the pair together, which
+                // leaves the next open to build both from scratch.
+                continue;
+            }
             for (const view of element.views) {
                 if (view.match !== 'includes') {
                     this.blockedWidgetIds.add(view.id);

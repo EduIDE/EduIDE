@@ -91,6 +91,9 @@ export class CustomizationService implements FrontendApplicationContribution {
 
     protected applying = false;
     protected viewSweepTimer: ReturnType<typeof setTimeout> | undefined;
+    protected menuSweepTimer: ReturnType<typeof setTimeout> | undefined;
+    /** Set while we are the ones changing the menu model. */
+    protected refreshingMenus = false;
 
     @postConstruct()
     protected init(): void {
@@ -103,6 +106,19 @@ export class CustomizationService implements FrontendApplicationContribution {
         };
         this.debugSessions.onDidCreateDebugSession(onSessionChange);
         this.debugSessions.onDidDestroyDebugSession(onSessionChange);
+
+        // A plugin registers its View entry only once it has resolved, which is
+        // well after the first sweep, so an entry a level hides can appear
+        // afterwards and stay. Re-trim when the menu model changes — debounced,
+        // because each removal fires this too, and skipped while we are the ones
+        // changing it, or the refresh would feed itself.
+        this.menus.onDidChange(() => {
+            if (this.refreshingMenus) {
+                return;
+            }
+            clearTimeout(this.menuSweepTimer);
+            this.menuSweepTimer = setTimeout(() => this.applyMenus(), 200);
+        });
 
         this.preferences.onPreferenceChanged(event => {
             if (event.preferenceName === CustomizationPreferences.LEVEL
@@ -571,6 +587,7 @@ export class CustomizationService implements FrontendApplicationContribution {
      * public-API way to make the bar redraw after we moved nodes around.
      */
     protected refreshMenuBar(): void {
+        this.refreshingMenus = true;
         try {
             this.menus.registerMenuAction([...MENU_REFRESH_PATH], {
                 commandId: 'eduide.internal.menuRefresh',
@@ -578,6 +595,8 @@ export class CustomizationService implements FrontendApplicationContribution {
             }).dispose();
         } catch (error) {
             this.logger.warn('EduIDE customization: could not refresh the menu bar', error);
+        } finally {
+            this.refreshingMenus = false;
         }
     }
 

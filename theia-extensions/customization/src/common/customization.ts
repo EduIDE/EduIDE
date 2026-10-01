@@ -230,8 +230,19 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
         views: [{ id: 'scm-view-container', area: 'left' }], menus: [viewMenuEntry('scmView:toggle')]
     },
     { id: 'view.testing', label: 'Testing', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'test-view-container', area: 'left' }] },
-    { id: 'view.gradle', label: 'Gradle tasks', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'gradle', area: 'left', match: 'includes' }] },
-    { id: 'view.output', label: 'Output', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'outputView', area: 'bottom' }] },
+    {
+        // A plugin view container, so its View entry is registered only once the
+        // Gradle extension resolves — long after the first sweep. The id is the
+        // one plugin-view-registry builds: `workbench.view.extension.` plus the
+        // container the extension declares.
+        id: 'view.gradle', label: 'Gradle tasks', group: 'views', defaults: ADVANCED_UP,
+        views: [{ id: 'gradle', area: 'left', match: 'includes' }],
+        menus: [viewMenuEntry('plugin.view-container.workbench.view.extension.gradleContainerView.toggle')]
+    },
+    {
+        id: 'view.output', label: 'Output', group: 'views', defaults: ADVANCED_UP,
+        views: [{ id: 'outputView', area: 'bottom' }], menus: [viewMenuEntry('output:toggle')]
+    },
     { id: 'view.debug', label: 'Run and Debug', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'debug', area: 'left' }], menus: [viewMenuEntry('debug:toggle')] },
     {
         id: 'view.debugConsole', label: 'Debug Console', group: 'views', defaults: EXPERT_ONLY,

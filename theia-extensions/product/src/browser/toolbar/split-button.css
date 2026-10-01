@@ -64,3 +64,33 @@
 .split-button.disabled .action-item:hover {
   background-color: transparent;
 }
+
+/* The label a beginner gets beside the icon.
+   The button carries a codicon class, whose shorthand sets `font: 16px/1
+   codicon` on the element — so text inside it inherits the icon face, falls
+   back to whatever the browser picks for Latin glyphs, and sits on the
+   codicon's 1.0 line box rather than the text's. Both have to be set back
+   explicitly; the font is the menu bar's, so a labelled button reads as part
+   of the same chrome. */
+
+.split-button .main-button.labelled {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 100%;
+    padding: 0 7px;
+}
+
+.split-button .main-button.labelled::before {
+    flex: 0 0 auto;
+    line-height: 1;
+}
+
+.split-button .main-button.labelled .split-button-label {
+    font-family: var(--theia-ui-font-family);
+    font-size: var(--theia-ui-font-size1);
+    line-height: var(--theia-content-line-height);
+    margin-left: 5px;
+    white-space: nowrap;
+}

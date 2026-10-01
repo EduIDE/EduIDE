@@ -24,9 +24,11 @@ export class TaskToolbarContribution extends AbstractSplitButtonContribution<Tas
     protected readonly toolbarId = 'task-run-toolbar-button';
     protected readonly menuPath = TASK_RUN_TOOLBAR_MENU;
     protected readonly icon = 'play';
+    protected readonly buttonLabel = 'Run';
     protected readonly group = 'navigation';
     protected readonly priority = 0;
     protected readonly refreshDelayMs = TASK_REFRESH_DELAY_MS;
+    protected readonly elementId = 'toolbar.run';
 
     @postConstruct()
     protected init(): void {
@@ -48,7 +50,8 @@ export class TaskToolbarContribution extends AbstractSplitButtonContribution<Tas
 
     protected async fetchConfigurations(): Promise<TaskConfiguration[]> {
         const token = this.taskService.startUserAction();
-        return this.taskConfigurations.getTasks(token);
+        const tasks = await this.taskConfigurations.getTasks(token);
+        return tasks.filter(task => this.customization.isTaskAllowed(task));
     }
 
     protected async executeConfiguration(config: TaskConfiguration): Promise<void> {

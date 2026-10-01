@@ -1,0 +1,5 @@
+# Maven's build output. Artemis grades the source you push, and a student
+# handing in from the IDE stages whatever the working tree holds, so keeping
+# build artifacts out of the repository matters more here than in a local
+# checkout.
+target/

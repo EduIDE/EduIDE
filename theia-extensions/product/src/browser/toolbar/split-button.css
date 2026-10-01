@@ -64,3 +64,19 @@
 .split-button.disabled .action-item:hover {
   background-color: transparent;
 }
+
+/* The label a beginner gets beside the icon. The codicon is drawn by the
+   button's ::before, so the text needs the gap the pseudo-element does not
+   leave, and must not wrap when the toolbar is tight. */
+.split-button .main-button.labelled {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    padding: 0 6px 0 4px;
+}
+
+.split-button .main-button.labelled .split-button-label {
+    margin-left: 4px;
+    font-size: var(--theia-ui-font-size1);
+    white-space: nowrap;
+}

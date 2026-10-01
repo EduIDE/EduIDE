@@ -24,6 +24,7 @@ export class TaskToolbarContribution extends AbstractSplitButtonContribution<Tas
     protected readonly toolbarId = 'task-run-toolbar-button';
     protected readonly menuPath = TASK_RUN_TOOLBAR_MENU;
     protected readonly icon = 'play';
+    protected readonly buttonLabel = 'Run';
     protected readonly group = 'navigation';
     protected readonly priority = 0;
     protected readonly refreshDelayMs = TASK_REFRESH_DELAY_MS;

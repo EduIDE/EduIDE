@@ -20,6 +20,7 @@ export class DebugToolbarContribution extends AbstractSplitButtonContribution<De
     protected readonly toolbarId = 'task-debug-toolbar-button';
     protected readonly menuPath = DEBUG_TOOLBAR_MENU;
     protected readonly icon = 'bug';
+    protected readonly buttonLabel = 'Debug';
     protected readonly group = 'navigation';
     protected readonly priority = 1; // Right after the run button
     protected readonly refreshDelayMs = DEBUG_REFRESH_DELAY_MS;

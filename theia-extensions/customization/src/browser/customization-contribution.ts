@@ -10,12 +10,11 @@
 import { inject, injectable } from '@theia/core/shared/inversify';
 import { Command, CommandContribution, CommandRegistry } from '@theia/core/lib/common/command';
 import { MenuContribution, MenuModelRegistry, MenuPath } from '@theia/core/lib/common/menu';
-import { CommonMenus } from '@theia/core/lib/browser/common-frontend-contribution';
 import { ApplicationShell, FrontendApplicationContribution, WidgetManager } from '@theia/core/lib/browser';
 import { StatusBar, StatusBarAlignment } from '@theia/core/lib/browser/status-bar';
 import { QuickPickService, QuickPickItem, QuickPickSeparator } from '@theia/core/lib/common/quick-pick-service';
 import { nls } from '@theia/core/lib/common/nls';
-import { EduIdeLevel, EDU_IDE_LEVELS, isEduIdeLevel } from '../common/customization';
+import { EduIdeLevel, EDU_IDE_LEVELS, isEduIdeLevel, MAIN_MENU_BAR } from '../common/customization';
 import { CustomizationService } from './customization-service';
 import { CustomizeWidget } from './customize-widget';
 
@@ -37,12 +36,18 @@ export namespace CustomizationCommands {
 
 export namespace CustomizationMenus {
     /**
-     * View, above `Open View…`. The level decides which parts of the IDE are
-     * on screen, which is what the rest of this menu is about, and View is the
-     * one menu kept at every level — so the entry never moves or disappears as
-     * a student changes level. `0_eduide` sorts ahead of Theia's `0_primary`.
+     * A menu of its own, between Terminal and Help.
+     *
+     * It began under View, on the argument that the level decides what is on
+     * screen and View is kept at every level. Review disagreed: a student
+     * looking for the control that changes their IDE does not think of it as a
+     * view, and a menu they have to already know about is not discoverable.
+     * `8_eduide` sorts after Theia's `7_terminal` and before `9_help`, so it
+     * lands at the end of the bar without displacing anything.
      */
-    export const VIEW_EXPERIENCE: MenuPath = [...CommonMenus.VIEW, '0_eduide'];
+    export const EDUIDE: MenuPath = [...MAIN_MENU_BAR, '8_eduide'];
+    /** Level first, then the per-element panel. */
+    export const EDUIDE_LEVEL: MenuPath = [...EDUIDE, '1_level'];
 }
 
 const LEVEL_LABELS: Record<EduIdeLevel, string> = {
@@ -123,10 +128,16 @@ export class CustomizationContribution implements CommandContribution, MenuContr
     }
 
     registerMenus(menus: MenuModelRegistry): void {
-        menus.registerMenuAction(CustomizationMenus.VIEW_EXPERIENCE, {
+        menus.registerSubmenu(CustomizationMenus.EDUIDE, nls.localize('eduide/customization/menu', 'EduIDE'));
+        menus.registerMenuAction(CustomizationMenus.EDUIDE_LEVEL, {
             commandId: CustomizationCommands.EXPERIENCE_LEVEL.id,
-            label: nls.localize('eduide/customization/viewMenu', 'Experience Level…'),
+            label: nls.localize('eduide/customization/levelMenu', 'Experience Level…'),
             order: '0'
+        });
+        menus.registerMenuAction(CustomizationMenus.EDUIDE_LEVEL, {
+            commandId: CustomizationCommands.CUSTOMIZE.id,
+            label: nls.localize('eduide/customization/customizeMenu', 'Customize Individual Elements…'),
+            order: '1'
         });
     }
 

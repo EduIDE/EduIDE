@@ -50,6 +50,14 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
     protected abstract readonly menuPath: MenuPath;
     /** Codicon name for the main button icon, e.g. 'play' or 'debug-alt'. */
     protected abstract readonly icon: string;
+
+    /**
+     * Word shown beside the icon where the level asks for labelled buttons.
+     *
+     * A beginner has not learned that ▷ means run, and the toolbar is the one
+     * place the IDE cannot explain itself in a tooltip they will never hover.
+     */
+    protected abstract readonly buttonLabel: string;
     /** Toolbar group (typically 'navigation'). */
     protected abstract readonly group: string;
     /** Position within the toolbar group. Lower numbers appear first. */
@@ -167,6 +175,7 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
                 menuTooltip={this.getMenuTooltip()}
                 enabled={hasConfigs}
                 showMenu={hasConfigs && this.customization.offersConfigurationMenu()}
+                label={this.customization.labelsToolbarButtons() ? this.buttonLabel : undefined}
                 onRun={e => this.handleExecute(e)}
                 onShowMenu={e => this.handleShowMenu(e, widget)}
             />

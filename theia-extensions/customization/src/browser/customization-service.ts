@@ -138,6 +138,18 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     /**
+     * Whether toolbar buttons carry a word as well as an icon.
+     *
+     * Only at beginner. ▷ is learned, not obvious, and a student who has never
+     * used an IDE has no reason to read it as "run"; by advanced it is familiar
+     * and the word is just width. Here rather than in the toolbar so the
+     * button does not hardcode a level.
+     */
+    labelsToolbarButtons(): boolean {
+        return this.level === 'beginner';
+    }
+
+    /**
      * Whether a task may be offered by the Run button at the current level.
      *
      * The task set comes from the workspace — in the Artemis flow, from the

@@ -58,6 +58,18 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
      * place the IDE cannot explain itself in a tooltip they will never hover.
      */
     protected abstract readonly buttonLabel: string;
+
+    /**
+     * Whether this button offers a list of its configurations at all.
+     *
+     * Separate from the level rule below it: the level decides whether a
+     * chooser is appropriate for the student, this decides whether the button
+     * has anything worth choosing between. Debug says no — one launch
+     * configuration is the normal case for an exercise, and a chevron that
+     * opens a one-line menu is a second click to reach the thing the button
+     * already does.
+     */
+    protected readonly offersConfigurations: boolean = true;
     /** Toolbar group (typically 'navigation'). */
     protected abstract readonly group: string;
     /** Position within the toolbar group. Lower numbers appear first. */
@@ -174,7 +186,7 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
                 tooltip={this.getTooltip(configToRun, hasConfigs)}
                 menuTooltip={this.getMenuTooltip()}
                 enabled={hasConfigs}
-                showMenu={hasConfigs && this.customization.offersConfigurationMenu()}
+                showMenu={hasConfigs && this.offersConfigurations && this.customization.offersConfigurationMenu()}
                 label={this.customization.labelsToolbarButtons() ? this.buttonLabel : undefined}
                 onRun={e => this.handleExecute(e)}
                 onShowMenu={e => this.handleShowMenu(e, widget)}

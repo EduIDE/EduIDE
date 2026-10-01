@@ -32,22 +32,38 @@ export namespace CustomizationCommands {
         category: CATEGORY,
         label: 'Customize…'
     };
+    /** One per level, so the menu can list them and tick the active one. */
+    export function setLevel(level: EduIdeLevel): Command {
+        return {
+            id: `eduide.experienceLevel.${level}`,
+            category: CATEGORY,
+            label: `Experience Level: ${level[0].toUpperCase()}${level.slice(1)}`
+        };
+    }
 }
 
 export namespace CustomizationMenus {
     /**
-     * A menu of its own, between Terminal and Help.
+     * A menu of its own, named for what it does rather than for the product.
      *
-     * It began under View, on the argument that the level decides what is on
-     * screen and View is kept at every level. Review disagreed: a student
-     * looking for the control that changes their IDE does not think of it as a
-     * view, and a menu they have to already know about is not discoverable.
-     * `8_eduide` sorts after Theia's `7_terminal` and before `9_help`, so it
-     * lands at the end of the bar without displacing anything.
+     * It began under View, then briefly under an `EduIDE` menu. Both were a
+     * step too many: a student hunting for the control that changes their IDE
+     * does not think of it as a view, and does not know that "EduIDE" is where
+     * levels live. The menu bar entry now says `Experience Levels`, and opening
+     * it *is* the chooser — the three levels, ticked at the current one.
+     *
+     * A top-level entry cannot run a command on click: Theia builds the bar
+     * from Lumino, whose top-level items are always submenus. Listing the
+     * levels in the dropdown gets to the same place in the same click, and
+     * shows which one is active without opening anything.
+     *
+     * `8_eduide` sorts after Theia's `7_terminal` and before `9_help`.
      */
-    export const EDUIDE: MenuPath = [...MAIN_MENU_BAR, '8_eduide'];
-    /** Level first, then the per-element panel. */
-    export const EDUIDE_LEVEL: MenuPath = [...EDUIDE, '1_level'];
+    export const LEVELS: MenuPath = [...MAIN_MENU_BAR, '8_eduide'];
+    /** The levels themselves. */
+    export const LEVELS_CHOICES: MenuPath = [...LEVELS, '1_levels'];
+    /** Separated below them, because it is a different kind of thing. */
+    export const LEVELS_CUSTOMIZE: MenuPath = [...LEVELS, '2_customize'];
 }
 
 const LEVEL_LABELS: Record<EduIdeLevel, string> = {
@@ -125,19 +141,30 @@ export class CustomizationContribution implements CommandContribution, MenuContr
         commands.registerCommand(CustomizationCommands.CUSTOMIZE, {
             execute: () => this.openCustomizePanel()
         });
+        for (const level of EDU_IDE_LEVELS) {
+            commands.registerCommand(CustomizationCommands.setLevel(level), {
+                execute: () => this.customization.setLevel(level),
+                isToggled: () => this.customization.level === level
+            });
+        }
     }
 
     registerMenus(menus: MenuModelRegistry): void {
-        menus.registerSubmenu(CustomizationMenus.EDUIDE, nls.localize('eduide/customization/menu', 'EduIDE'));
-        menus.registerMenuAction(CustomizationMenus.EDUIDE_LEVEL, {
-            commandId: CustomizationCommands.EXPERIENCE_LEVEL.id,
-            label: nls.localize('eduide/customization/levelMenu', 'Experience Level…'),
-            order: '0'
+        menus.registerSubmenu(
+            CustomizationMenus.LEVELS,
+            nls.localize('eduide/customization/menu', 'Experience Levels')
+        );
+        EDU_IDE_LEVELS.forEach((level, index) => {
+            menus.registerMenuAction(CustomizationMenus.LEVELS_CHOICES, {
+                commandId: CustomizationCommands.setLevel(level).id,
+                label: LEVEL_LABELS[level],
+                order: String(index)
+            });
         });
-        menus.registerMenuAction(CustomizationMenus.EDUIDE_LEVEL, {
+        menus.registerMenuAction(CustomizationMenus.LEVELS_CUSTOMIZE, {
             commandId: CustomizationCommands.CUSTOMIZE.id,
             label: nls.localize('eduide/customization/customizeMenu', 'Customize Individual Elements…'),
-            order: '1'
+            order: '0'
         });
     }
 

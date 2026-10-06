@@ -61,6 +61,7 @@
     "@theia/getting-started": "1.74.1",
     "@theia/keymaps": "1.74.1",
     "@theia/markers": "1.74.1",
+    "@theia/memory-inspector": "1.74.1",
     "@theia/messages": "1.74.1",
     "@theia/metrics": "1.74.1",
     "@theia/mini-browser": "1.74.1",
@@ -88,6 +89,7 @@
     "fs-extra": "^9.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "theia-ide-customization-ext": "1.70.201",
     "theia-ide-product-ext": "1.70.201"
   },
   "devDependencies": {

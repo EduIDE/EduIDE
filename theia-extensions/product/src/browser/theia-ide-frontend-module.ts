@@ -22,6 +22,7 @@ import { TheiaIDEContribution, ViewsFilter, DisabledFeaturesContribution, Disabl
 import { TheiaIDEGettingStartedWidget } from './theia-ide-getting-started-widget';
 import { TaskToolbarContribution } from './toolbar/task-toolbar-contribution';
 import { DebugToolbarContribution } from './toolbar/debug-toolbar-contribution';
+import { RefactorToolbarContribution } from './toolbar/refactor-toolbar-contribution';
 import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 
 export default new ContainerModule((bind, _unbind, isBound, rebind) => {
@@ -65,4 +66,8 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     // Debug toolbar button
     bind(DebugToolbarContribution).toSelf().inSingletonScope();
     bind(TabBarToolbarContribution).toService(DebugToolbarContribution);
+
+    // Advanced refactoring buttons
+    bind(RefactorToolbarContribution).toSelf().inSingletonScope();
+    bind(TabBarToolbarContribution).toService(RefactorToolbarContribution);
 });

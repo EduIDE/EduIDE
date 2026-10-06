@@ -17,9 +17,6 @@ import { KeybindingContribution } from '@theia/core/lib/browser/keybinding';
 import { WidgetFactory, FrontendApplicationContribution, FrontendApplication, WidgetManager, OpenHandler } from '@theia/core/lib/browser';
 import { ContextKeyService } from '@theia/core/lib/browser/context-key-service';
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import { OutlineViewContribution } from '@theia/outline-view/lib/browser/outline-view-contribution';
-import { OutlineViewService } from '@theia/outline-view/lib/browser/outline-view-service';
-import { OutlineBreadcrumbsContribution } from '@theia/outline-view/lib/browser/outline-breadcrumbs-contribution';
 import { VSXExtensionsContribution } from '@theia/vsx-registry/lib/browser/vsx-extensions-contribution';
 import { AIActivationService, ENABLE_AI_CONTEXT_KEY } from '@theia/ai-core/lib/browser/ai-activation-service';
 import { PromptTemplateContribution } from '@theia/ai-core/lib/browser/prompttemplate-contribution';
@@ -45,7 +42,8 @@ export namespace TheiaIDECommands {
 }
 
 /**
- * Filter to remove unwanted view contributions (Outline, VSX Extensions marketplace) from the UI.
+ * Filter to remove view contributions EduIDE never wants at any level
+ * (the VSX Extensions marketplace and the AI surface) from the UI.
  * This uses Theia's official Contribution Filter API to prevent these widgets from being registered.
  *
  * Filter predicates return TRUE to KEEP a contribution, FALSE to REMOVE it.
@@ -53,9 +51,10 @@ export namespace TheiaIDECommands {
 @injectable()
 export class ViewsFilter implements FilterContribution {
     private static readonly FILTERED_CONTRIBUTIONS = new Set<Function>([
-        OutlineViewService,
-        OutlineViewContribution,
-        OutlineBreadcrumbsContribution,
+        // Outline is NOT filtered here. It is level-gated instead
+        // (`view.outline` in the customization catalogue), because the expert
+        // level is meant to be stock EduIDE and a contribution filter is
+        // evaluated once, at container assembly, so it cannot be switched back on.
         VSXExtensionsContribution,
         // AI feature surface pulled in transitively via @theia/plugin-ext since Theia 1.74.
         // EduIDE ships no AI providers or chat UI; remove the remaining AI commands,
@@ -68,7 +67,6 @@ export class ViewsFilter implements FilterContribution {
     ]);
 
     private static readonly FILTERED_WIDGET_IDS = new Set<string>([
-        'outline-view',
         'vsx-extensions-view-container',
         'ai-mcp-configuration-container-widget',
     ]);
@@ -102,7 +100,6 @@ export class ViewsFilter implements FilterContribution {
 @injectable()
 export class DisabledFeaturesContribution implements FrontendApplicationContribution {
     private static readonly DISABLED_WIDGET_IDS = new Set<string>([
-        'outline-view',
         'vsx-extensions-view-container',
         'ai-mcp-configuration-container-widget',
     ]);

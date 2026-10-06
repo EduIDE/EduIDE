@@ -2825,6 +2825,17 @@
     "@theia/workspace" "1.74.1"
     tslib "^2.8.1"
 
+"@theia/memory-inspector@1.74.1":
+  version "1.74.1"
+  resolved "https://registry.yarnpkg.com/@theia/memory-inspector/-/memory-inspector-1.74.1.tgz#edd11f992f3a71294b8322451426dd9d738d76da"
+  integrity sha512-YOWkMxSMWeuJn00HeLJ6eA/XjXqYnKU9fxPyNU6XlDdl1JGG7WA7ms5wt6TdjL7lKe4qqDcjl3Rr3Ll/cUFIyg==
+  dependencies:
+    "@theia/core" "1.74.1"
+    "@theia/debug" "1.74.1"
+    "@vscode/debugprotocol" "^1.68.0"
+    long "^4.0.0"
+    tslib "^2.8.1"
+
 "@theia/messages@1.74.1":
   version "1.74.1"
   resolved "https://registry.yarnpkg.com/@theia/messages/-/messages-1.74.1.tgz#cb69db5cedb15421fe1cbc9fe064138154579fbf"
@@ -10157,6 +10168,11 @@ loglevel@^1.6.0:
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.9.2.tgz#c2e028d6c757720107df4e64508530db6621ba08"
   integrity sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==
+
+long@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/long/-/long-4.0.0.tgz#9a7b71cfb7d361a194ea555241c92f7468d5bf28"
+  integrity sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
 
 long@^5.0.0, long@^5.3.2:
   version "5.3.2"

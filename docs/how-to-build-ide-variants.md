@@ -90,6 +90,7 @@ The final runtime image that combines everything.
 - Optionally install shell enhancements (Oh My Zsh, plugins)
 - Copy project settings (including `.theia/settings.json`)
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
+- Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
 - Define the entrypoint to launch Theia
 
 **Example from C variant (lines 66-69):**
@@ -281,6 +282,52 @@ Once added, your variant will be built automatically on:
 - Pushes to `master`
 - Releases
 - Manual workflow dispatch
+
+## Image version stamp
+
+Every published image carries its own coordinates, so a running session can say
+which image it came from. This is what the "Version" section of the About dialog
+shows, and it is the only way to tell a stale deployment from a current one from
+inside the IDE.
+
+Each `ToolDockerfile` ends its final stage with:
+
+```dockerfile
+ARG APP_VERSION=""
+ARG IMAGE_NAME=""
+ARG IMAGE_REVISION=""
+ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
+    EDUIDE_IMAGE_TAG=${APP_VERSION} \
+    EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
+```
+
+`IMAGE_NAME` comes from the matrix entry in `.github/workflows/build.yml`, so it
+cannot drift from the name the image is actually pushed under. `APP_VERSION` is
+supplied by the shared build workflow's `stamp-app-version: true` input, which
+appends the tag it derived for this build - `latest`, `pr-<N>`, `<branch-slug>`
+or the release version with the leading `v` already stripped. That is the same
+string the image is tagged with, derived once in the shared workflow, so the
+value inside the image and the tag outside it cannot disagree.
+
+`IMAGE_REVISION` is `github.sha`. A tag on its own cannot always answer "is this
+the current build": every push to main publishes `latest`, so a container that
+has been running for a month reports the same tag as the image published an hour
+ago. The commit separates them, and its first seven characters are also the
+suffix of the immutable `<tag>-<short-sha>` tag the same build publishes, so the
+About dialog gives you something you can pin. On a pull request `github.sha` is
+GitHub's ephemeral merge commit rather than a commit on the branch, so the
+revision will not resolve in `git log`. It still matches the published
+`pr-<N>-<short-sha>` tag, which is what it is there for.
+
+Place the block as the last instruction before `ENTRYPOINT`. The tag changes on
+every branch and pull request, so an earlier position would invalidate the layer
+cache for everything below it.
+
+A hand-built image (`docker build` without `--build-arg APP_VERSION=...`, which
+includes every `docker-compose.images.yml` build) leaves the variables empty; the
+About dialog then shows `unknown` and omits the revision line. The frontend just
+reads the environment at runtime, so a deployment can override the variables
+without rebuilding.
 
 ## Memory tuning
 

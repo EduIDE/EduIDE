@@ -132,4 +132,4 @@ ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
 ENTRYPOINT [ "/bin/bash", "/home/theia/entrypoint.sh" ]
 
 # Arguments passed to the application
-CMD [ "/home/project", "--hostname=0.0.0.0" ]
+CMD [ "/home/project", "--hostname=127.0.0.1" ]

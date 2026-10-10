@@ -44,6 +44,25 @@ built.
 
 ## Traps
 
+**The Theia backend has no auth of its own; it must never be reachable except
+through the authenticating proxy/gateway.** A direct TCP connection to the
+backend port (3000) is an unauthenticated session - file access, a terminal,
+task execution, the lot. In production the only thing allowed to reach it is
+the in-pod `oauth2-proxy` sidecar, which authenticates every request and
+forwards to `http://127.0.0.1:<port>` over the pod's shared loopback
+(EduIDE-Helm's `oauth2-proxy-config` ConfigMap). Because the proxy reaches the
+IDE over loopback, the published images bind the backend to `127.0.0.1`
+(`--hostname=127.0.0.1` in each `ToolDockerfile` `CMD`), **not** `0.0.0.0`. Do
+not widen that bind, and do not disable `warnOnPotentiallyInsecureHostPattern`
+in `applications/browser/package.json` - that warning is the signal that would
+surface an accidental `0.0.0.0` exposure. The pod network / NetworkPolicy must
+still ensure nothing but the proxy can reach port 3000 (handled in EduIDE-Helm);
+the loopback bind is defence in depth, not the only line.
+Local-only caveat: Docker port forwarding cannot reach a loopback-only bind, so
+`docker-compose.images.yml` overrides the hostname back to `0.0.0.0` per service
+for local testing. That override is for the host-only compose setup and must
+never be carried into k8s.
+
 **Theia >= 1.74 bundles AI code even though EduIDE ships no AI packages.**
 `@theia/plugin-ext` has a hard dependency on `@theia/ai-core` and
 `@theia/ai-mcp` (for the VS Code `lm` plugin API and MCP support), and

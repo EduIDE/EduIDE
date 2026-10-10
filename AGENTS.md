@@ -17,6 +17,7 @@ docker-compose.images.yml           how to build and run every image locally
 .github/workflows/build.yml         what CI publishes
 docs/how-to-build-ide-variants.md   the fuller walkthrough; more current than this file
 docs/base-image-lifecycle.md        which distro each image sits on, and when it expires
+.claude/skills/                     how to work the things that bite: build failures
 ```
 
 ## What is actually published

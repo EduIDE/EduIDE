@@ -8,7 +8,9 @@
  ********************************************************************************/
 
 import { inject, injectable } from '@theia/core/shared/inversify';
+import { Emitter, Event } from '@theia/core/lib/common/event';
 import { ILogger } from '@theia/core/lib/common/logger';
+import URI from '@theia/core/lib/common/uri';
 import { FileService } from '@theia/filesystem/lib/browser/file-service';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import * as jsoncparser from 'jsonc-parser';
@@ -30,6 +32,11 @@ import {
  *
  * Unknown keys are warned about individually. Silence would leave an
  * instructor watching a file they wrote do nothing, with nowhere to look.
+ *
+ * The file can arrive after the IDE has started. In the Artemis flow the
+ * repository is cloned by Scorpio, a VS Code extension, so the workspace is
+ * still empty when the frontend first lays itself out. {@link watch} reports
+ * the file appearing, so the exercise's level is not lost to that race.
  */
 @injectable()
 export class DeliveredConfigReader {
@@ -41,22 +48,59 @@ export class DeliveredConfigReader {
     @inject(ILogger)
     protected readonly logger: ILogger;
 
+    protected readonly onDidChangeEmitter = new Emitter<void>();
+    /** Fires when the file is created, changed or deleted, once {@link watch} has been called. */
+    readonly onDidChange: Event<void> = this.onDidChangeEmitter.event;
+    protected watching = false;
+
+    /**
+     * Starts reporting changes to the file. Call it before the first
+     * {@link read}: a file written between the two would otherwise be seen by
+     * neither.
+     *
+     * The workspace root is watched rather than the file, because neither the
+     * file nor its `.vscode` folder exists before the repository is cloned.
+     * Theia shares one watcher per path, and the explorer already watches the
+     * root, so this adds no second file system watch.
+     */
+    async watch(): Promise<void> {
+        if (this.watching) {
+            return;
+        }
+        const uri = await this.configUri();
+        if (!uri) {
+            return;
+        }
+        this.watching = true;
+        this.fileService.watch(uri.parent.parent, { recursive: true, excludes: ['**/.git/**'] });
+        this.fileService.onDidFilesChange(event => {
+            if (event.contains(uri)) {
+                this.onDidChangeEmitter.fire();
+            }
+        });
+    }
+
     /** The delivered configuration, or `undefined` when there is none to use. */
     async read(): Promise<DeliveredConfig | undefined> {
         const raw = await this.readRaw();
         return raw === undefined ? undefined : this.validate(raw);
     }
 
-    protected async readRaw(): Promise<unknown> {
+    /** Where the file is, or `undefined` without a workspace. */
+    protected async configUri(): Promise<URI | undefined> {
         await this.workspaceService.ready;
         // Single root: an Artemis exercise is one repository. In a multi-root
         // workspace the first root is the exercise and the rest are additions
         // the student made.
         const root = this.workspaceService.tryGetRoots()[0];
-        if (!root) {
+        return root && DELIVERED_CONFIG_SEGMENTS.reduce((current, segment) => current.resolve(segment), root.resource);
+    }
+
+    protected async readRaw(): Promise<unknown> {
+        const uri = await this.configUri();
+        if (!uri) {
             return undefined;
         }
-        const uri = DELIVERED_CONFIG_SEGMENTS.reduce((current, segment) => current.resolve(segment), root.resource);
         try {
             if (!await this.fileService.exists(uri)) {
                 return undefined;

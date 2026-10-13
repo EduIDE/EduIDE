@@ -48,6 +48,14 @@ The test is literal: `seedFromExercise()` writes the delivered value only when
 `inspectInScope(key, PreferenceScope.User)` is `undefined`, i.e. the student's
 own setting is empty. `level` and `overrides` are seeded independently.
 
+It runs when the frontend has laid itself out, and again whenever the file is
+created or changed afterwards. The second trigger is not optional: in the
+Artemis flow Scorpio clones the repository after the IDE has started, so on the
+first open the file usually is not there yet when the first read happens.
+Without it the exercise's level would only take effect after a reload. Running
+again is harmless, because the same test applies: once the student has a value
+of their own, nothing is written.
+
 So this file **cannot pin a student to a level**. There is deliberately no
 mechanism that can, and this one is the wrong place to add it: the file lives in
 the student's own clone, where they can edit or delete it, and it travels back
@@ -119,7 +127,7 @@ So the chain is:
 
 ```
 Artemis template  →  student's exercise repo  →  Scorpio clone into /home/project
-                  →  /home/project/.vscode/eduide.json  →  seeded on session start
+                  →  /home/project/.vscode/eduide.json  →  seeded when it appears
 ```
 
 **Rollout order does not matter.** An EduIDE without the reader sees an unknown

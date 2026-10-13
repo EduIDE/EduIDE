@@ -92,6 +92,7 @@ export class CustomizationService implements FrontendApplicationContribution {
     protected applying = false;
     protected viewSweepTimer: ReturnType<typeof setTimeout> | undefined;
     protected menuSweepTimer: ReturnType<typeof setTimeout> | undefined;
+    protected seedTimer: ReturnType<typeof setTimeout> | undefined;
     /** Set while we are the ones changing the menu model. */
     protected refreshingMenus = false;
 
@@ -310,8 +311,38 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     async onDidInitializeLayout(_app: FrontendApplication): Promise<void> {
+        // Watching starts before the first read, so a file that arrives in
+        // between is still seen.
+        await this.watchExerciseConfiguration();
         await this.seedFromExercise();
         await this.apply();
+    }
+
+    /**
+     * Seeds again whenever the exercise's file appears or changes.
+     *
+     * In the Artemis flow Scorpio clones the repository after the frontend has
+     * started, so on the first open the file is usually not there yet when
+     * `onDidInitializeLayout` reads it. Without this, the exercise's level
+     * would only take effect after a reload. Seeding again is safe: it never
+     * touches a level or overrides the student already has, so a level they
+     * chose, or one seeded earlier, stays theirs. The preference change it makes
+     * triggers {@link apply} on its own.
+     */
+    protected async watchExerciseConfiguration(): Promise<void> {
+        this.deliveredConfig.onDidChange(() => {
+            clearTimeout(this.seedTimer);
+            // A clone writes the whole repository at once; wait for it to settle.
+            this.seedTimer = setTimeout(() => {
+                this.seedFromExercise().catch(error =>
+                    this.logger.warn('EduIDE customization: could not apply the exercise configuration', error));
+            }, 300);
+        });
+        try {
+            await this.deliveredConfig.watch();
+        } catch (error) {
+            this.logger.warn('EduIDE customization: could not watch the exercise configuration', error);
+        }
     }
 
     // ── Seeding from the exercise ────────────────────────────────────

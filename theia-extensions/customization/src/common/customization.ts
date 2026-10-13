@@ -18,7 +18,7 @@ export type EduIdeLevel = 'beginner' | 'advanced' | 'expert';
 
 export const EDU_IDE_LEVELS: readonly EduIdeLevel[] = ['beginner', 'advanced', 'expert'];
 
-export const DEFAULT_LEVEL: EduIdeLevel = 'beginner';
+export const DEFAULT_LEVEL: EduIdeLevel = 'expert';
 
 export function isEduIdeLevel(value: unknown): value is EduIdeLevel {
     return typeof value === 'string' && (EDU_IDE_LEVELS as readonly string[]).includes(value);

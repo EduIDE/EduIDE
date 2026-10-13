@@ -114,7 +114,9 @@ An exercise may ship `.vscode/eduide.json`, next to its `launch.json` and
 
 It **seeds, it does not enforce**. The values apply only to a student who has
 no level of their own; the moment they pick one, the file stops having an
-opinion and stays quiet on every later start. Nothing here disables the quick
+opinion and stays quiet on every later start. The file is read on start and
+again whenever it appears or changes, because in the Artemis flow the repository
+is cloned only after the IDE is up. Nothing here disables the quick
 pick, and nothing here is a boundary — the file lives in the student's own
 clone, where they can edit it, and it travels back to Artemis on submit.
 

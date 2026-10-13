@@ -153,7 +153,7 @@ The default is one constant:
 
 ```ts
 // theia-extensions/customization/src/common/customization.ts:21
-export const DEFAULT_LEVEL: EduIdeLevel = 'beginner';
+export const DEFAULT_LEVEL: EduIdeLevel = 'expert';
 ```
 
 Everything else derives from it, so this is the only edit needed:

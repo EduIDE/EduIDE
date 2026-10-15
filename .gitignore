@@ -10,4 +10,6 @@
 *.log
 license-check-summary.txt*
 .context/
-.claude/
+# Local Claude state stays out; skills are shared, so they are tracked.
+.claude/*
+!.claude/skills/

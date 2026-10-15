@@ -1,3 +1,7 @@
+# NOTE: the published images bind the Theia backend to 127.0.0.1 (loopback only);
+# in production only the in-pod oauth2-proxy sidecar reaches it. Docker port
+# forwarding cannot reach a loopback-only bind, so for LOCAL testing each service
+# below overrides the hostname back to 0.0.0.0. Do not copy this override into k8s.
 services:
   base-ide:
     image: theia-base:local
@@ -20,6 +24,7 @@ services:
       - base-ide
     ports:
       - "3001:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   c-templates:
     image: theia-c-templates:local
@@ -34,6 +39,7 @@ services:
       - base-ide
     ports:
       - "3010:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   haskell:
     image: theia-haskell:local
@@ -48,6 +54,7 @@ services:
       - base-ide
     ports:
       - "3002:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-17:
     image: theia-java-17:local
@@ -62,6 +69,7 @@ services:
       - base-ide
     ports:
       - "3003:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-17-templates:
     image: theia-java-17-templates:local
@@ -76,6 +84,7 @@ services:
       - base-ide
     ports:
       - "3009:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-25:
     image: theia-java-25:local
@@ -90,6 +99,7 @@ services:
       - base-ide
     ports:
       - "3011:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-25-templates:
     image: theia-java-25-templates:local
@@ -104,6 +114,7 @@ services:
       - base-ide
     ports:
       - "3012:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   thm-java-25:
     image: theia-thm-java-25:local
@@ -132,6 +143,7 @@ services:
       - base-ide
     ports:
       - "3004:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   ocaml:
     image: theia-ocaml:local
@@ -146,6 +158,7 @@ services:
       - base-ide
     ports:
       - "3005:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   python:
     image: theia-python:local
@@ -160,6 +173,7 @@ services:
       - base-ide
     ports:
       - "3006:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   rust:
     image: theia-rust:local
@@ -174,6 +188,7 @@ services:
       - base-ide
     ports:
       - "3007:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   swift:
     image: theia-swift:local

@@ -19,7 +19,7 @@
   ],
   "dependencies": {
     "@theia/core": "1.74.1",
-    "@vscode/sudo-prompt": "9.3.1",
+    "@vscode/sudo-prompt": "9.3.2",
     "body-parser": "^1.17.2",
     "fs-extra": "^4.0.2"
   },

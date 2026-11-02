@@ -7,6 +7,7 @@ import { nodeOptions } from './gen-esbuild.node.mjs';
 import { copy } from 'esbuild-plugin-copy';
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 import esbuild from 'esbuild';
 
@@ -28,6 +29,37 @@ browserOptions.plugins.push(
                         html = html.replace('</head>', '  <link rel="icon" type="image/x-icon" href="./favicon.ico">\n</head>');
                         fs.writeFileSync(indexPath, html);
                     }
+                }
+            });
+        }
+    },
+    {
+        // Pre-compress the frontend assets. Theia's BackendApplication serves
+        // `<asset>.gz` with `Content-Encoding: gzip` when the file exists
+        // (serveGzipped in @theia/core), but the esbuild build emits none, so
+        // the ~30MB bundle.js was served raw. The extensions below match core's
+        // gzip-enabled routes; index.html is left raw (core does not gzip it).
+        name: 'gzip-frontend-assets',
+        setup(build) {
+            build.onEnd(() => {
+                if (watch) {
+                    // Dev/watch serves raw; only pre-gzip for the published image build.
+                    return;
+                }
+                const root = join(__dirname, 'lib', 'frontend');
+                const exts = new Set(['.js', '.css', '.map', '.wasm', '.svg']);
+                const walk = dir => {
+                    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                        const p = path.join(dir, entry.name);
+                        if (entry.isDirectory()) {
+                            walk(p);
+                        } else if (exts.has(path.extname(entry.name))) {
+                            fs.writeFileSync(`${p}.gz`, zlib.gzipSync(fs.readFileSync(p), { level: 9 }));
+                        }
+                    }
+                };
+                if (fs.existsSync(root)) {
+                    walk(root);
                 }
             });
         }

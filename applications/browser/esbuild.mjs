@@ -42,10 +42,6 @@ browserOptions.plugins.push(
         name: 'gzip-frontend-assets',
         setup(build) {
             build.onEnd(() => {
-                if (watch) {
-                    // Dev/watch serves raw; only pre-gzip for the published image build.
-                    return;
-                }
                 const root = join(__dirname, 'lib', 'frontend');
                 const exts = new Set(['.js', '.css', '.map', '.wasm', '.svg']);
                 const walk = dir => {
@@ -53,6 +49,11 @@ browserOptions.plugins.push(
                         const p = path.join(dir, entry.name);
                         if (entry.isDirectory()) {
                             walk(p);
+                        } else if (watch) {
+                            // Dev/watch serves raw, so a .gz left by an earlier build must not shadow it.
+                            if (entry.name.endsWith('.gz')) {
+                                fs.rmSync(p);
+                            }
                         } else if (exts.has(path.extname(entry.name))) {
                             fs.writeFileSync(`${p}.gz`, zlib.gzipSync(fs.readFileSync(p), { level: 9 }));
                         }

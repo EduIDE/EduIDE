@@ -21,13 +21,17 @@ docs/base-image-lifecycle.md        which distro each image sits on, and when it
 
 ## What is actually published
 
-Twelve images: `base`, plus eleven from the matrix in
+Ten images: `base`, plus nine from the matrix in
 `.github/workflows/build.yml` under the **`images`** job.
 
 ```
-c  c-templates  haskell  java-17  java-17-templates
-java-25  java-25-templates  javascript  ocaml  python  rust
+c  c-templates  java-17  java-17-templates  java-25
+java-25-templates  thm-java-25  javascript  python
 ```
+
+`haskell`, `ocaml` and `rust` still have their directories and compose services,
+so they build locally, but CI no longer publishes them. To bring one back, add
+its matrix entry again and a catalog entry in EduIDE-Helm.
 
 Do not hardcode that list anywhere. EduIDE-Helm's release train reads it from
 the matrix at run time, because a hand-kept copy went stale within days of
@@ -175,10 +179,8 @@ CI threads the base image's **immutable sha tag** into every language build
    stamp at the end of the final stage - it is what the About dialog shows, and
    an image without it reports its version as `unknown`
 
-Then add it to `appDefinitions.apps` in EduIDE-Helm's `eduide` chart, which is
-what actually offers it to students. Building an image deploys nothing:
-`haskell`, `java-25` and `java-25-templates` are all published today and no
-environment offers any of them.
+Then add it to EduIDE-Helm's `eduide` chart, which is what actually offers it
+to students. Building an image deploys nothing on its own.
 
 `docs/how-to-build-ide-variants.md` is the longer version and is current.
 

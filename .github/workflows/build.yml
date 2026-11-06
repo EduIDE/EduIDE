@@ -75,8 +75,6 @@ jobs:
             docker-file: images/c/ToolDockerfile
           - image-name: eduide/eduide/c-templates
             docker-file: images/c-templates/ToolDockerfile
-          - image-name: eduide/eduide/haskell
-            docker-file: images/haskell/ToolDockerfile
           - image-name: eduide/eduide/java-17
             docker-file: images/java-17/ToolDockerfile
           - image-name: eduide/eduide/java-17-templates
@@ -89,12 +87,8 @@ jobs:
             docker-file: images/thm-java-25/ToolDockerfile
           - image-name: eduide/eduide/javascript
             docker-file: images/javascript/ToolDockerfile
-          - image-name: eduide/eduide/ocaml
-            docker-file: images/ocaml/ToolDockerfile
           - image-name: eduide/eduide/python
             docker-file: images/python/ToolDockerfile
-          - image-name: eduide/eduide/rust
-            docker-file: images/rust/ToolDockerfile
     uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
     with:
       docker-file: ${{ matrix.docker-file }}

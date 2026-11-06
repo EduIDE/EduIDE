@@ -47,6 +47,12 @@ Remaining, deliberately not fixed: `decompress` 4.2.1 and `image-size` 0.5.5 (no
 
 `@theia/scanoss` drags basic-ftp, protobufjs, @grpc/grpc-js, and adm-zip into the shipped browser app. All are patched now, but removing the package entirely would shrink the attack surface; left as a separate product decision.
 
+## SCANOSS removal and remaining alerts (follow-up PR)
+
+- **`@theia/scanoss` removed** from the browser app. It sends hashes of code snippets to the external scanoss.com service, a data flow students do not need. This also drops `scanoss`, `stream-json` (three open advisories, fix only in 3.x), and the `**/scanoss/tar` and `**/scanoss/adm-zip` resolutions. The SCANOSS strings left in the bundles are Theia core translations and are inert.
+- **Scoped resolutions**: serialize-javascript ^7.1.3; basic-ftp ^6.2.1 under get-uri (get-uri only uses `Client` methods whose signatures are unchanged in 6.x); uuid ^11.1.1 under react-tooltip, trash, and devtools (all call only `v4()`); @tootallnate/once ^2.0.1 under http-proxy-agent and @vscode/proxy-agent (both call `once.default(socket, 'connect')` and ignore the resolved value, so the 2.x array result does not matter).
+- **Still open**: minimatch 9.x/10.x (the fix is 11.0.1, but 11 removes `makeRe`/`matchOne` and replaces the RegExp entries in `Minimatch.set` with a new matcher type, which breaks glob 10/11/13 and the other consumers), decompress and extract-zip (no patched release), deepmerge (no patched release).
+
 ## Verification
 
 - `PUPPETEER_SKIP_DOWNLOAD=true yarn install` - clean, lockfile regenerated.

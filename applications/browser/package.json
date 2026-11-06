@@ -73,7 +73,6 @@
     "@theia/plugin-ext-vscode": "1.74.1",
     "@theia/preferences": "1.74.1",
     "@theia/process": "1.74.1",
-    "@theia/scanoss": "1.74.1",
     "@theia/scm": "1.74.1",
     "@theia/search-in-workspace": "1.74.1",
     "@theia/task": "1.74.1",

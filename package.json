@@ -116,7 +116,7 @@
     "**/smol-toml": "^1.9.0",
     "**/qs": "^6.16.0",
     "**/external-editor/tmp": "^0.2.6",
-    "**/globule/minimatch": "^3.1.4",
+    "**/globule/minimatch": "^11.0.0",
     "**/yarn-install/cross-spawn": "^6.0.6"
   }
 }

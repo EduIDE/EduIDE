@@ -30,6 +30,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.2</version>
+                <configuration>
+                    <!-- Surefire forks its own JVM; MAVEN_OPTS does not apply to it -->
+                    <argLine>-Xmx256m</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

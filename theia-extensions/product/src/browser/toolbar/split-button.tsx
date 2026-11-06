@@ -15,6 +15,8 @@ export interface SplitButtonProps {
     enabled: boolean;
     /** Whether to show the chevron dropdown */
     showMenu: boolean;
+    /** Text beside the icon. Omitted leaves the button icon-only. */
+    label?: string;
     /** Called when the main button is clicked */
     onRun: (e: React.MouseEvent<HTMLElement>) => void;
     /** Called when the chevron is clicked */
@@ -32,8 +34,9 @@ export function SplitButton(props: SplitButtonProps): React.ReactElement {
     const mainButtonClasses = [
         codicon(props.icon),
         'action-item',
-        'main-button'
-    ].join(' ');
+        'main-button',
+        props.label ? 'labelled' : ''
+    ].filter(Boolean).join(' ');
 
     return (
         <div key={props.buttonKey} className={containerClasses}>
@@ -42,7 +45,9 @@ export function SplitButton(props: SplitButtonProps): React.ReactElement {
                 title={props.tooltip}
                 onClick={props.onRun}
                 disabled={!props.enabled}
-            />
+            >
+                {props.label && <span className='split-button-label'>{props.label}</span>}
+            </button>
 
             {props.showMenu && (
                 <button

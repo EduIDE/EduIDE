@@ -1,0 +1,198 @@
+/********************************************************************************
+ * Copyright (C) 2026 EduIDE
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ *
+ * SPDX-License-Identifier: MIT
+ ********************************************************************************/
+
+.eduide-customize {
+    overflow: auto;
+}
+
+.eduide-customize-body {
+    padding: 24px 32px 40px;
+    max-width: 1100px;
+}
+
+.eduide-customize-body h1 {
+    font-size: var(--theia-ui-font-size4);
+    font-weight: 600;
+    margin: 0 0 4px;
+}
+
+.eduide-customize-sub {
+    color: var(--theia-descriptionForeground);
+    margin: 0 0 20px;
+    max-width: 70ch;
+}
+
+.eduide-customize-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.eduide-customize-barlabel {
+    font-size: var(--theia-ui-font-size0);
+    letter-spacing: 0.09em;
+    color: var(--theia-descriptionForeground);
+    margin-right: 2px;
+}
+
+.eduide-customize-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--theia-dropdown-border);
+    border-radius: 14px;
+    background: transparent;
+    color: var(--theia-foreground);
+    cursor: pointer;
+}
+
+.eduide-customize-pill:hover {
+    background: var(--theia-list-hoverBackground);
+}
+
+.eduide-customize-pill.active {
+    background: var(--theia-button-background);
+    border-color: var(--theia-button-background);
+    color: var(--theia-button-foreground);
+}
+
+.eduide-customize-diff {
+    color: var(--theia-descriptionForeground);
+    font-size: var(--theia-ui-font-size1);
+    margin-left: 8px;
+}
+
+.eduide-customize-reset {
+    margin-left: auto;
+}
+
+.eduide-customize-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 0 44px;
+    align-items: start;
+}
+
+.eduide-customize-grouptitle {
+    font-size: var(--theia-ui-font-size0);
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--theia-descriptionForeground);
+    font-weight: 600;
+    margin: 18px 0 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--theia-editorGroup-border);
+}
+
+.eduide-customize-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 28px;
+}
+
+.eduide-customize-id {
+    font-family: var(--theia-code-font-family);
+    font-size: var(--theia-code-font-size);
+    color: var(--theia-textPreformat-foreground);
+    width: 220px;
+    flex: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eduide-customize-label {
+    color: var(--theia-descriptionForeground);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Switch ------------------------------------------------------------ */
+
+.eduide-customize-switch {
+    position: relative;
+    width: 28px;
+    height: 16px;
+    flex: none;
+    border-radius: 8px;
+    background: var(--theia-checkbox-border);
+    cursor: pointer;
+}
+
+.eduide-customize-switch.on {
+    background: var(--theia-button-background);
+}
+
+.eduide-customize-switch.pending {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.eduide-customize-switch input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: inherit;
+}
+
+.eduide-customize-switch input:focus-visible + .eduide-customize-knob {
+    outline: 1px solid var(--theia-focusBorder);
+    outline-offset: 2px;
+}
+
+.eduide-customize-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--theia-foreground);
+    pointer-events: none;
+    transition: left 80ms ease-out;
+}
+
+.eduide-customize-switch.on .eduide-customize-knob {
+    left: 14px;
+    background: var(--theia-button-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eduide-customize-knob {
+        transition: none;
+    }
+}
+
+/* Tags -------------------------------------------------------------- */
+
+.eduide-customize-tag {
+    font-size: var(--theia-ui-font-size0);
+    letter-spacing: 0.05em;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex: none;
+}
+
+.eduide-customize-tag.overridden {
+    background: var(--theia-editorWarning-foreground);
+    color: var(--theia-editor-background);
+}
+
+.eduide-customize-tag.pending {
+    background: var(--theia-editorGroup-border);
+    color: var(--theia-descriptionForeground);
+}

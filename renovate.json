@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["local>EduIDE/.github:renovate-config"],
+  "dockerfile": {
+    "description": "16 of the 18 Dockerfiles here are named ToolDockerfile or BaseDockerfile. Renovate's default patterns only match a basename that starts with Dockerfile or has it after a dot, so without this it would see 2 of 18. managerFilePatterns merges with the defaults rather than replacing them.",
+    "managerFilePatterns": ["/(^|/)[^/]*[Dd]ockerfile$/"]
+  },
+  "docker-compose": {
+    "description": "Every image in the compose files is :local or :latest - nothing for Renovate to update.",
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "description": "Student course scaffolding baked into the -templates images, not real dependencies of this repo.",
+      "matchFileNames": ["images/*-templates/templates/**"],
+      "enabled": false
+    }
+  ]
+}

@@ -48,7 +48,7 @@ RUN wget --tries=5 --waitretry=2 --timeout=30 -qO /tmp/maven.tar.gz \
     ln -s /opt/maven/bin/mvn /usr/local/bin/mvn
 
 # Parallel stage: Plugin download (runs concurrently with apt-deps)
-FROM node:22-bullseye AS plugin-image
+FROM node:22-trixie AS plugin-image
 
 WORKDIR /home/theia
 
@@ -73,7 +73,7 @@ COPY --from=base-ide /home/theia/node_modules /home/theia/node_modules
 
 # Install ONLY @theia/cli (needed for download:plugins command)
 # This is much faster than full yarn install since we already have prod node_modules
-RUN n=0; until yarn add -W @theia/cli@1.70.0 --network-timeout 1000000 --network-concurrency 3; do \
+RUN n=0; until yarn add -W @theia/cli@1.74.1 --network-timeout 1000000 --network-concurrency 3; do \
         n=$((n+1)); \
         if [ "$n" -ge 5 ]; then echo "yarn add @theia/cli failed after $n attempts" >&2; exit 1; fi; \
         echo "yarn add @theia/cli failed (attempt $n), retrying..."; \
@@ -102,9 +102,20 @@ WORKDIR /home/theia
 # Copy application from the base image (includes prod node_modules)
 COPY --from=base-ide --chown=theia:theia /home/theia /home/theia
 
-# Gradle Remote Cache Setup
-RUN mkdir -p /home/theia/.gradle/init.d
+# Gradle Remote Cache Setup + memory tuning
+# The /home/theia/jdk symlink gives gradle.properties an arch-independent
+# org.gradle.java.home so IDE-import and terminal builds share one daemon.
+RUN ln -s "${JAVA_HOME}" /home/theia/jdk && \
+    mkdir -p /home/theia/.gradle/init.d
 COPY --chown=theia:theia images/java-25/gradle/remote-cache.gradle /home/theia/.gradle/init.d/
+COPY --chown=theia:theia images/java-25/gradle/test-memory.gradle /home/theia/.gradle/init.d/
+COPY --chown=theia:theia images/java-25/gradle/gradle.properties /home/theia/.gradle/gradle.properties
+
+# Bake user-level (machine-scoped) Java LS memory settings. Must be user-level:
+# java.jdt.ls.vmargs is security-gated in workspace settings and /home/project
+# may be replaced by a mounted student volume.
+RUN mkdir -p /home/theia/.theia-ide
+COPY --chown=theia:theia images/java-25/theia/user-settings.json /home/theia/.theia-ide/settings.json
 
 # Copy additional plugins
 COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
@@ -121,10 +132,27 @@ ENV SHELL=/bin/zsh \
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
 
+# Cap JVM/node heaps and glibc arena count for constrained student environments
+ENV MAVEN_OPTS="-XX:+UseSerialGC -Xmx256m -XX:MaxMetaspaceSize=192m" \
+    NODE_OPTIONS="--max-old-space-size=512" \
+    MALLOC_ARENA_MAX=2
+
 WORKDIR /home/theia/applications/browser
+
+# Stamp the published image coordinates into the environment so the About
+# dialog can name the image this session is running. The revision is what
+# separates two builds that share a tag, such as successive `latest` ones.
+# CI supplies all three; a hand-built image leaves them empty and the dialog
+# then says "unknown".
+ARG APP_VERSION=""
+ARG IMAGE_NAME=""
+ARG IMAGE_REVISION=""
+ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
+    EDUIDE_IMAGE_TAG=${APP_VERSION} \
+    EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
 
 # Launch the backend application via node
 ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
 
 # Arguments passed to the application
-CMD [ "/home/project", "--hostname=0.0.0.0" ]
+CMD [ "/home/project", "--hostname=127.0.0.1" ]

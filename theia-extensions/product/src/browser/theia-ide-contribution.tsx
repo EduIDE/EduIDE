@@ -12,14 +12,18 @@ import { CommonMenus } from '@theia/core/lib/browser/common-frontend-contributio
 import { Command, CommandContribution, CommandRegistry } from '@theia/core/lib/common/command';
 import { MenuContribution, MenuModelRegistry, MenuPath } from '@theia/core/lib/common/menu';
 import { WindowService } from '@theia/core/lib/browser/window/window-service';
-import { ContributionFilterRegistry, FilterContribution } from '@theia/core/lib/common';
+import { ContributionFilterRegistry, FilterContribution, Emitter, Event } from '@theia/core/lib/common';
 import { KeybindingContribution } from '@theia/core/lib/browser/keybinding';
-import { WidgetFactory, FrontendApplicationContribution, FrontendApplication, WidgetManager } from '@theia/core/lib/browser';
+import { WidgetFactory, FrontendApplicationContribution, FrontendApplication, WidgetManager, OpenHandler } from '@theia/core/lib/browser';
+import { ContextKeyService } from '@theia/core/lib/browser/context-key-service';
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import { OutlineViewContribution } from '@theia/outline-view/lib/browser/outline-view-contribution';
-import { OutlineViewService } from '@theia/outline-view/lib/browser/outline-view-service';
-import { OutlineBreadcrumbsContribution } from '@theia/outline-view/lib/browser/outline-breadcrumbs-contribution';
 import { VSXExtensionsContribution } from '@theia/vsx-registry/lib/browser/vsx-extensions-contribution';
+import { AIActivationService, ENABLE_AI_CONTEXT_KEY } from '@theia/ai-core/lib/browser/ai-activation-service';
+import { PromptTemplateContribution } from '@theia/ai-core/lib/browser/prompttemplate-contribution';
+import { AiCoreCommandContribution } from '@theia/ai-core/lib/browser/ai-core-command-contribution';
+import { MCPConfigurationCommandContribution } from '@theia/ai-mcp/lib/browser/mcp-configuration-command-contribution';
+import { McpFrontendApplicationContribution } from '@theia/ai-mcp/lib/browser/mcp-frontend-application-contribution';
+import { InstallMcpUriHandler } from '@theia/ai-mcp/lib/browser/install-mcp-uri-handler';
 import { HostedPluginSupport } from '@theia/plugin-ext/lib/hosted/browser/hosted-plugin';
 import { MonacoThemingService } from '@theia/monaco/lib/browser/monaco-theming-service';
 import { eduIdeDarkThemeIncludes, eduIdeTheme } from './themes/eduide-theme';
@@ -38,7 +42,8 @@ export namespace TheiaIDECommands {
 }
 
 /**
- * Filter to remove unwanted view contributions (Outline, VSX Extensions marketplace) from the UI.
+ * Filter to remove view contributions EduIDE never wants at any level
+ * (the VSX Extensions marketplace and the AI surface) from the UI.
  * This uses Theia's official Contribution Filter API to prevent these widgets from being registered.
  *
  * Filter predicates return TRUE to KEEP a contribution, FALSE to REMOVE it.
@@ -46,15 +51,24 @@ export namespace TheiaIDECommands {
 @injectable()
 export class ViewsFilter implements FilterContribution {
     private static readonly FILTERED_CONTRIBUTIONS = new Set<Function>([
-        OutlineViewService,
-        OutlineViewContribution,
-        OutlineBreadcrumbsContribution,
+        // Outline is NOT filtered here. It is level-gated instead
+        // (`view.outline` in the customization catalogue), because the expert
+        // level is meant to be stock EduIDE and a contribution filter is
+        // evaluated once, at container assembly, so it cannot be switched back on.
         VSXExtensionsContribution,
+        // AI feature surface pulled in transitively via @theia/plugin-ext since Theia 1.74.
+        // EduIDE ships no AI providers or chat UI; remove the remaining AI commands,
+        // toolbar items, and MCP configuration entry points.
+        PromptTemplateContribution,
+        AiCoreCommandContribution,
+        MCPConfigurationCommandContribution,
+        McpFrontendApplicationContribution,
+        InstallMcpUriHandler,
     ]);
 
     private static readonly FILTERED_WIDGET_IDS = new Set<string>([
-        'outline-view',
         'vsx-extensions-view-container',
+        'ai-mcp-configuration-container-widget',
     ]);
 
     registerContributionFilters(registry: ContributionFilterRegistry): void {
@@ -66,6 +80,7 @@ export class ViewsFilter implements FilterContribution {
         registry.addFilters([KeybindingContribution], [filter]);
         registry.addFilters([FrontendApplicationContribution], [filter]);
         registry.addFilters([TabBarToolbarContribution], [filter]);
+        registry.addFilters([OpenHandler], [filter]);
 
         // Remove the actual widget factories/view containers
         registry.addFilters([WidgetFactory], [
@@ -85,8 +100,8 @@ export class ViewsFilter implements FilterContribution {
 @injectable()
 export class DisabledFeaturesContribution implements FrontendApplicationContribution {
     private static readonly DISABLED_WIDGET_IDS = new Set<string>([
-        'outline-view',
         'vsx-extensions-view-container',
+        'ai-mcp-configuration-container-widget',
     ]);
 
     constructor(
@@ -110,6 +125,36 @@ export class DisabledFeaturesContribution implements FrontendApplicationContribu
                 // Ignore - widget might not exist
             }
         }
+    }
+}
+
+/**
+ * Keeps Theia's AI features switched off. Since 1.74, @theia/plugin-ext depends on
+ * @theia/ai-core, whose default activation service marks AI as active. EduIDE does not
+ * ship any AI packages on purpose, so this service reports AI as inactive and sets the
+ * corresponding context key to false, hiding everything gated behind it.
+ */
+@injectable()
+export class DisabledAIActivationService implements AIActivationService, FrontendApplicationContribution {
+    isActive = false;
+    canRun = false;
+
+    protected readonly onDidChangeActiveStatusEmitter = new Emitter<boolean>();
+    protected readonly onDidChangeCanRunEmitter = new Emitter<boolean>();
+
+    get onDidChangeActiveStatus(): Event<boolean> {
+        return this.onDidChangeActiveStatusEmitter.event;
+    }
+
+    get onDidChangeCanRun(): Event<boolean> {
+        return this.onDidChangeCanRunEmitter.event;
+    }
+
+    @inject(ContextKeyService)
+    protected readonly contextKeyService: ContextKeyService;
+
+    initialize(): void {
+        this.contextKeyService.createKey(ENABLE_AI_CONTEXT_KEY, false);
     }
 }
 

@@ -41,9 +41,11 @@ Swap `java-17` for any of these:
 | | Image | | Image |
 | --- | --- | --- | --- |
 | Java 17 | `java-17` | Python | `python` |
-| Java 25 | `java-25` | Rust | `rust` |
-| C | `c` | OCaml | `ocaml` |
-| JavaScript | `javascript` | Haskell | `haskell` |
+| Java 25 | `java-25` | JavaScript | `javascript` |
+| C | `c` | | |
+
+`rust`, `ocaml` and `haskell` are no longer published; build them locally with
+`docker compose -f docker-compose.images.yml build <name>`.
 
 Three `-templates` variants (`java-17-templates`, `java-25-templates`,
 `c-templates`) ship a starter project and are what Artemis exercises usually

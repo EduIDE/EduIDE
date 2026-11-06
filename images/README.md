@@ -87,9 +87,13 @@ ENTRYPOINT ["node", "lib/backend/main.js"]
 CMD ["/home/project", "--hostname=127.0.0.1"]
 ```
 
+The backend has no authentication of its own, so it binds to loopback and only the authenticating proxy in the pod reaches it.
+Docker port forwarding cannot reach a loopback bind, so for local testing override the hostname with `--hostname=0.0.0.0` and publish the port on the host loopback only (`-p 127.0.0.1:3000:3000`), as `docker-compose.images.yml` does.
+Never carry that override into a deployment.
+
 ### 2. Customize Plugins and Configuration
 
-To add language-specific plugins or override Theia configuration, use a **patch-based approach** that merges your changes with the root `package.json`. This ensures you automatically inherit updates to the base configuration while only specifying your customizations.
+To add language-specific plugins or override Theia configuration, use a **patch-based approach** that merges your changes with the base image's `package.json` (the root `package.json` merged with `images/base-ide/package.json.patch`). This ensures you automatically inherit updates to the base configuration while only specifying your customizations.
 
 #### Creating a Package Patch File
 
@@ -113,10 +117,10 @@ Note: You don't need to patch `scripts`, `devDependencies`, or other fields that
 
 #### Merging the Patch in Your Dockerfile
 
-Use `scripts/merge-package-json.js` to merge the root `package.json` with your patch file:
+Use `scripts/merge-package-json.js` to merge the base image's `package.json` with your patch file:
 
 ```dockerfile
-COPY package.json ./package.json.base
+COPY --from=base-ide /home/theia/package.json ./package.json.base
 COPY my-python-ide/package.json.patch ./package.json.patch
 COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json
@@ -201,11 +205,11 @@ Similar to VSC, Theia IDE also supports to set configuration values using a `set
 
 ## Choosing the correct plugins
 
-Plugins are an easy way to add functionality to the basic features of VSC or the minimal `base-ide` image. To configure the download step of the `plugin-image` (currently incorporated in the `ToolDockerfile`), you may change the `theiaPlugins` object of the `package.json.patch` inside of your image's folder (`/images/<name>/package.json.patch`). Why don´t you start finding appropriate plugins [here](https://open-vsx.org/)?
+Plugins are an easy way to add functionality to the basic features of VSC or the minimal `base-ide` image. To configure the download step of the `plugin-image` (currently incorporated in the `ToolDockerfile`), you may change the `theiaPlugins` object of the `package.json.patch` inside of your image's folder (`/images/<name>/package.json.patch`). A `-templates` image has no patch of its own and inherits the plugins of its language image, so edit the language image's patch (which affects both), or the template's `ToolDockerfile` for a template-only extension. Why don´t you start finding appropriate plugins [here](https://open-vsx.org/)?
 
 ### Configuring Theia's VSC built-ins
 
-Theia offers a large built-in plugin bundling all those (82) functions and languages that VSC offers out of the box (<https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix>). As your image most likely will not require all those features, you can remove sub-plugins by adding their `id` to the list of `theiaPluginsExcludeIds` of the `package.json`. You can find the list of all excluded plugins in `/images/base-ide/package.json.patch`.
+Theia offers a large built-in plugin bundling all those (82) functions and languages that VSC offers out of the box (<https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix>). As your image most likely will not require all those features, you can remove sub-plugins by adding their `id` to the list of `theiaPluginsExcludeIds` of your image's `package.json.patch`. You can find the list of all excluded plugins in `/images/base-ide/package.json.patch`.
 
 ## Testing blueprints locally
 

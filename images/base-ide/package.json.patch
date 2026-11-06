@@ -3,8 +3,8 @@
     "vscjava.vscode-java-pack": null,
     "vscjava.vscode-java-dependency": null,
     "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
-    "data-bridge": "https://github.com/eduide/eduide-data-bridge/releases/download/v0.0.16/data-bridge-0.0.16.vsix",
-    "scorpio": "https://github.com/EduIDE/scorpio/releases/download/v2.1.0/artemis-scorpio-2.1.0.vsix",
+    "data-bridge": "https://github.com/eduide/eduide-data-bridge/releases/download/v0.0.17/data-bridge-0.0.17.vsix",
+    "scorpio": "https://open-vsx.org/api/aet-tum/artemis-scorpio/2.1.1/file/aet-tum.artemis-scorpio-2.1.1.vsix",
     "theia-cloud-monitor": "https://github.com/EduIDE/EduIDE-Cloud/releases/download/v1.2.1/theia-cloud-monitor-1.2.1.vsix",
     "artemis-extension": "https://open-vsx.org/api/aet-tum/iris-thaumantias/1.2.6/file/aet-tum.iris-thaumantias-1.2.6.vsix"
   },

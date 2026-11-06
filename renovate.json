@@ -9,6 +9,20 @@
     "description": "Every image in the compose files is :local or :latest - nothing for Renovate to update.",
     "enabled": false
   },
+  "customManagers": [
+    {
+      "description": "Scorpio is pinned by a full Open VSX URL in the base image's plugin list, which no built-in manager reads. Its GitHub release tags (v2.1.1) match its Open VSX versions (2.1.1), and the version appears twice in the URL.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/base-ide/package\\.json\\.patch$/"],
+      "matchStrings": [
+        "https://open-vsx\\.org/api/aet-tum/artemis-scorpio/(?<currentValue>\\d+\\.\\d+\\.\\d+)/file/aet-tum\\.artemis-scorpio-\\d+\\.\\d+\\.\\d+\\.vsix"
+      ],
+      "depNameTemplate": "EduIDE/scorpio",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "autoReplaceStringTemplate": "https://open-vsx.org/api/aet-tum/artemis-scorpio/{{{newValue}}}/file/aet-tum.artemis-scorpio-{{{newValue}}}.vsix"
+    }
+  ],
   "packageRules": [
     {
       "description": "Student course scaffolding baked into the -templates images, not real dependencies of this repo.",

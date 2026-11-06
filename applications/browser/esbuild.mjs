@@ -44,23 +44,27 @@ browserOptions.plugins.push(
             build.onEnd(() => {
                 const root = join(__dirname, 'lib', 'frontend');
                 const exts = new Set(['.js', '.css', '.map', '.wasm', '.svg']);
-                const walk = dir => {
+                const walk = (dir, visit) => {
                     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
                         const p = path.join(dir, entry.name);
                         if (entry.isDirectory()) {
-                            walk(p);
-                        } else if (watch) {
-                            // Dev/watch serves raw, so a .gz left by an earlier build must not shadow it.
-                            if (entry.name.endsWith('.gz')) {
-                                fs.rmSync(p);
-                            }
-                        } else if (exts.has(path.extname(entry.name))) {
-                            fs.writeFileSync(`${p}.gz`, zlib.gzipSync(fs.readFileSync(p), { level: 9 }));
+                            walk(p, visit);
+                        } else {
+                            visit(p, entry.name);
                         }
                     }
                 };
                 if (fs.existsSync(root)) {
-                    walk(root);
+                    // A .gz left by an earlier build would shadow a raw asset in watch mode,
+                    // or outlive its removed asset otherwise, so clear them all first.
+                    walk(root, (p, name) => name.endsWith('.gz') && fs.rmSync(p));
+                    if (!watch) {
+                        walk(root, (p, name) => {
+                            if (exts.has(path.extname(name))) {
+                                fs.writeFileSync(`${p}.gz`, zlib.gzipSync(fs.readFileSync(p), { level: 9 }));
+                            }
+                        });
+                    }
                 }
             });
         }

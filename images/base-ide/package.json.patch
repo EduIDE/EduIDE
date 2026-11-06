@@ -6,7 +6,7 @@
     "data-bridge": "https://github.com/eduide/eduide-data-bridge/releases/download/v0.0.16/data-bridge-0.0.16.vsix",
     "scorpio": "https://github.com/EduIDE/scorpio/releases/download/v2.1.0/artemis-scorpio-2.1.0.vsix",
     "theia-cloud-monitor": "https://github.com/EduIDE/EduIDE-Cloud/releases/download/v1.2.1/theia-cloud-monitor-1.2.1.vsix",
-    "artemis-extension": "https://open-vsx.org/api/aet-tum/iris-thaumantias/1.2.0/file/aet-tum.iris-thaumantias-1.2.0.vsix"
+    "artemis-extension": "https://open-vsx.org/api/aet-tum/iris-thaumantias/1.2.6/file/aet-tum.iris-thaumantias-1.2.6.vsix"
   },
   "theiaPluginsExcludeIds": [
     "ms-vscode.js-debug-companion",

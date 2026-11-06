@@ -24,7 +24,7 @@ Language-specific images extend the base by copying the built Theia application 
 - Add language-specific VS Code extensions
 - Configure the environment for the target language
 
-Only the `base-ide` image is published to the GitHub Container Registry at `ghcr.io/eclipse-theia/theia-ide/base-ide`. The language folders in this directory demonstrate how to extend the base image for browser deployments and are not published artefacts.
+CI publishes the base image as `ghcr.io/eduide/eduide/base` and every image in the `images` job matrix of `.github/workflows/build.yml` as `ghcr.io/eduide/eduide/<name>`. That matrix is the source of truth for what is published. Some directories here (for example `haskell`, `ocaml`, `rust` and `swift`) still build locally through `docker-compose.images.yml`, but CI does not publish them.
 
 ## Example Images
 
@@ -52,7 +52,7 @@ To create your own language-specific IDE image, follow this pattern:
 ### 1. Create a Dockerfile
 
 ```dockerfile
-ARG BASE_IMAGE=ghcr.io/eclipse-theia/theia-ide/base-ide:latest
+ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:latest
 
 # Copy the prebuilt browser application and configuration
 FROM ${BASE_IMAGE} AS base-ide
@@ -84,7 +84,7 @@ USER theia
 WORKDIR /home/theia/applications/browser
 EXPOSE 3000
 ENTRYPOINT ["node", "lib/backend/main.js"]
-CMD ["/home/project", "--hostname=0.0.0.0"]
+CMD ["/home/project", "--hostname=127.0.0.1"]
 ```
 
 ### 2. Customize Plugins and Configuration
@@ -109,30 +109,21 @@ To add language-specific plugins or override Theia configuration, use a **patch-
 }
 ```
 
-Note: You don't need to patch `scripts`, `devDependencies`, or other fields that work fine from the root `package.json`—only specify what needs to change for your language variant.
+Note: You don't need to patch `scripts`, `devDependencies`, or other fields that work fine from the root `package.json` - only specify what needs to change for your language variant.
 
-#### Merging with jq in Your Dockerfile
+#### Merging the Patch in Your Dockerfile
 
-Use `jq` to merge the root `package.json` with your patch file:
+Use `scripts/merge-package-json.js` to merge the root `package.json` with your patch file:
 
 ```dockerfile
-# Install jq for JSON merging
-RUN apt-get update && apt-get install -y --no-install-recommends jq && rm -rf /var/lib/apt/lists/*
-
-# Copy base and patch files
 COPY package.json ./package.json.base
 COPY my-python-ide/package.json.patch ./package.json.patch
-
-# Merge the base package.json with your patch using jq
-RUN jq -s '.[0] + .[1]' package.json.base package.json.patch > package.json
+COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
+RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json
 ```
 
-The `jq -s '.[0] + .[1]'` command performs a merge where:
-
-- `.[0]` is the root `package.json`
-- `.[1]` is your patch file
-- Fields in the patch override those in the base
-- Arrays in the patch replace (not append to) arrays in the base
+Fields in the patch override those in the base, and `theiaPluginsExcludeIds` is unioned with the base list instead of replaced, so a patch that adds exclusions keeps the base image's ones.
+`images/java-17/ToolDockerfile` shows the full pattern.
 
 #### Benefits of the Patch Approach
 
@@ -141,7 +132,7 @@ The `jq -s '.[0] + .[1]'` command performs a merge where:
 - **Minimal maintenance**: Only update patches when plugins or exclusions change
 - **Clear intent**: Patches clearly show what differs from the base configuration
 
-See the existing image directories (`base-ide/`, `java-17/`, `c/`, `javascript/`) for complete examples of this pattern in practice.
+See the existing image directories (`base-ide/`, `java-17/`, `javascript/`) for complete examples of this pattern in practice.
 
 ## Choosing Plugins
 
@@ -167,27 +158,24 @@ To exclude unnecessary built-ins (reducing image size), add their IDs to `theiaP
 }
 ```
 
-See `images/base-ide/package.json` for the default exclusion list.
+See `images/base-ide/package.json.patch` for the default exclusion list.
 
 ## EduIDE Images
 
 We use Theia to provide students with programming environments tailored to their course`s needs. Instructors can choose a fitting Theia Blueprint (=Theia IDE Image) in Artemis. This repository contains the build tooling for creating those images.
 
-Matching Artemis' programming environments, the following images are available:
+CI publishes the following images to `ghcr.io/eduide/eduide/<name>`.
+The `images` job matrix in `.github/workflows/build.yml` is the source of truth, so check it before relying on this table.
 
-| Name      | Available | Language & Auto-Complete |
-|-----------|:---------:|:----------------:|
-| Java 17   | ✔️         |         ✔️        |
-| Kotlin    | ✔️         |         ✔️        |
-| Python    | ✔️         |         ✔️        |
-| C         | ✔️         |         ✔️        |
-| Haskell   | ✔️         |        ❌        |
-| VHDL      | ❌        |        ❌        |
-| Assembler | ❌        |        ❌        |
-| Swift     | ✔️         |        ✔️         |
-| Ocaml     | ✔️         |        ✔️         |
-| Javascript| ✔️         |        ✔️         |
-| Rust      | ✔️         |        ✔️         |
+| Name | Contents |
+|------|----------|
+| `base` | the Theia application and the plugin set every other image inherits |
+| `c` | GCC toolchain and C/C++ extensions |
+| `java-17`, `java-25` | JDK, Maven and the Java language server |
+| `thm-java-25` | Java 25 variant for the TH Mannheim PR2 course |
+| `javascript` | Node.js, TypeScript, ESLint and Prettier |
+| `python` | Python and the Python extension |
+| `c-templates`, `java-17-templates`, `java-25-templates` | the language image plus course templates copied into `/home/project` at startup |
 
 ## Structure of Images
 
@@ -207,17 +195,17 @@ Our used Theia IDE Images are built in 3 steps
 
 For overwriting default Theia configuration files, a simple directory can be created inside the image's location. Using a `COPY` instruction in the Dockerfile, all contents will overwrite existing files in the image.
 
-For example, for the image `images/base-ide/`, there is a `package.json`. Using `COPY images/base-ide/ .` in the Dockerfile will replace the default `package.json` of Theia. Creating more files in sub-directories (`images/base-ide/test/test.json`) will also overwrite existing files recursively.
+For example, `COPY images/base-ide/ .` in the Dockerfile copies everything in `images/base-ide/` over the repository root. Creating more files in sub-directories (`images/base-ide/test/test.json`) will also overwrite existing files recursively.
 
 Similar to VSC, Theia IDE also supports to set configuration values using a `settings.json`. The `images/base-ide/project` folder will be mounted at `/home/project` inside the final image and, thus, will load the configuration values during startup.
 
 ## Choosing the correct plugins
 
-Plugins are an easy way to add functionality to the basic features of VSC or the minimal `base-ide` image. To configure the download step of the `plugin-image` (currently incorporated in the `ToolDockerfile`), you may change the `theiaPlugins` array of the `package.json` inside of your image's folder (`/images/<name>/package.json`). Why don´t you start finding appropriate plugins [here](https://open-vsx.org/)?
+Plugins are an easy way to add functionality to the basic features of VSC or the minimal `base-ide` image. To configure the download step of the `plugin-image` (currently incorporated in the `ToolDockerfile`), you may change the `theiaPlugins` object of the `package.json.patch` inside of your image's folder (`/images/<name>/package.json.patch`). Why don´t you start finding appropriate plugins [here](https://open-vsx.org/)?
 
 ### Configuring Theia's VSC built-ins
 
-Theia offers a large built-in plugin bundling all those (82) functions and languages that VSC offers out of the box (<https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix>). As your image most likely will not require all those features, you can remove sub-plugins by adding their `id` to the list of `theiaPluginsExcludeIds` of the `package.json`. You can find the list of all excluded plugins in the `/images/base-ide/package.json`.
+Theia offers a large built-in plugin bundling all those (82) functions and languages that VSC offers out of the box (<https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix>). As your image most likely will not require all those features, you can remove sub-plugins by adding their `id` to the list of `theiaPluginsExcludeIds` of the `package.json`. You can find the list of all excluded plugins in `/images/base-ide/package.json.patch`.
 
 ## Testing blueprints locally
 

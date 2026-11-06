@@ -136,15 +136,15 @@ no longer produced. Nothing builds them.
 but is in no build matrix, so it is never published. The root README lists it as
 available, which is wrong.
 
-`images/README.md` and `PUBLISHING.md` are largely upstream Eclipse Theia text:
-they document a `jq`-based merge nothing uses, an `images/base-ide/package.json`
-that does not exist, publishing to `ghcr.io/eclipse-theia/…`, and a Kotlin image
-with no directory. Treat them as debt, not as a source of truth.
+`images/README.md` still carries upstream Eclipse Theia text in its tutorial
+half (the three-stage "ide-image / plugin-image / tool-image" description is
+older than the current Dockerfiles). Its image table and publishing paragraph
+match the build matrix, but the matrix stays the source of truth.
 
-`.github/workflows/scorpio_auto_update.yml` is dead on two counts: it targets
-`images/base-ide/package.json`, which does not exist, and greps for the
-`tum-aet/artemis-scorpio` namespace while the real pin in
-`images/base-ide/package.json.patch` uses `aet-tum/artemis-scorpio`.
+The scorpio pin in `images/base-ide/package.json.patch` is bumped by Renovate
+(a regex `customManager` in `renovate.json` reading `EduIDE/scorpio` GitHub
+releases). It replaced `scorpio_auto_update.yml`, which edited a file that does
+not exist, so do not bring a dispatch-driven updater back.
 
 `lerna.json` says `1.70.200` and `package.json` says `1.70.201`. Both track
 upstream Theia. Pick deliberately if you touch either.

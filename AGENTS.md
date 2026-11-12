@@ -26,7 +26,7 @@ Ten images: `base`, plus nine from the matrix in
 
 ```
 c  c-templates  java-17  java-17-templates  java-25
-java-25-templates  thm-java-25  javascript  python
+java-25-templates  thm-java-25  javascript  bonn-javascript  python
 ```
 
 `haskell`, `ocaml` and `rust` still have their directories and compose services,

@@ -145,6 +145,21 @@ services:
       - "3004:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
+  bonn-javascript:
+    image: theia-bonn-javascript:local
+    build:
+      context: .
+      dockerfile: images/bonn-javascript/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base:local
+      additional_contexts:
+        base-ide: "service:base-ide"
+    depends_on:
+      - base-ide
+    ports:
+      - "3014:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
   ocaml:
     image: theia-ocaml:local
     build:

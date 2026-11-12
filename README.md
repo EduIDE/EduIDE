@@ -53,6 +53,8 @@ use. All images are published to `ghcr.io/eduide/eduide/<name>`.
 
 A course-specific variant, `thm-java-25`, mirrors the TH-Mannheim PR2 course
 setup: OpenJDK 25 and Maven, without the Artemis/EduIDE extensions.
+`bonn-javascript` is the `javascript` image for Uni Bonn, likewise without the
+Artemis/EduIDE extensions and with git credentials cached for 3 hours only.
 
 ## Documentation
 

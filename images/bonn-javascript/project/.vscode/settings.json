@@ -1,0 +1,62 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "files.exclude": {
+        "**/.theia": true,
+        "persisted": true,
+        "lost+found": true
+    },
+    "workbench.colorTheme": "edu-ide-theme-dark",
+    /**
+     * JavaScript Essentials Config
+     */
+     "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "prettier.singleQuote": true,
+    "prettier.semi": true,
+    "editor.codeActionsOnSave": {
+        "source.addMissingImports": "always"
+    },
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "javascript.format.enable": true,
+    "javascript.format.semicolons": "insert",
+    "javascript.preferences.quoteStyle": "single",
+    "eslint.enable": true,
+    "eslint.codeAction.showDocumentation": {
+        "enable": true
+    },
+    "eslint.codeAction.disableRuleComment": {
+        "enable": true,
+        "location": "sameLine"
+    },
+    "npm-intellisense.importES6": true,
+    "npm-intellisense.importQuotes": "'",
+    "npm-intellisense.importLinebreak": ";\r\n",
+    "npm-intellisense.importDeclarationType": "const",
+    /**
+     * The following line is for the specific configuration of the
+     * Path-Intellisense extension over Javascript
+     */
+    "javascript.suggest.paths": false,
+    "path-intellisense.showHiddenFiles": true,
+    "formattingToggle.affects": [
+		"editor.formatOnPaste",
+		"editor.formatOnType"
+	]
+}

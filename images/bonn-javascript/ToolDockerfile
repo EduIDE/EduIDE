@@ -10,7 +10,7 @@ ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
 FROM ${BASE_IMAGE} AS base-ide
 
 # Parallel stage: Install system dependencies (runs concurrently with plugin-image)
-FROM ubuntu:24.04 AS apt-deps
+FROM ubuntu:26.04 AS apt-deps
 
 WORKDIR /home/theia
 

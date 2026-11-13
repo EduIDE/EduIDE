@@ -21,6 +21,7 @@ import { CustomizeWidget } from './customize-widget';
 import { StartupFileContribution } from './startup-file-contribution';
 import { bindCustomizationPreferences } from './customization-preferences';
 import { bindLevelAwareStatusBar } from './level-aware-status-bar';
+import { SessionActivityContribution } from './session-activity-contribution';
 
 export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     bindCustomizationPreferences(bind);
@@ -41,6 +42,11 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
 
     bind(StartupFileContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(StartupFileContribution);
+
+    bind(SessionActivityContribution).toSelf().inSingletonScope();
+    [CommandContribution, FrontendApplicationContribution].forEach(serviceIdentifier =>
+        bind(serviceIdentifier).toService(SessionActivityContribution)
+    );
 
     bind(CustomizeWidget).toSelf();
     bind(WidgetFactory).toDynamicValue(context => ({

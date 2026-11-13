@@ -62,6 +62,8 @@ else
     check "git credential cache set" "git config --global --get credential.helper | grep -qx 'cache --timeout=10800'"
 fi
 
+check "project settings present" "test -f /home/project/.vscode/settings.json"
+
 # --- 3. toolchain -----------------------------------------------------------
 check "session user is uid 101, group theia gid 101" "[ \"\$(id -u)\" = 101 ] && [ \"\$(id -g)\" = 101 ] && [ \"\$(id -gn)\" = theia ]"
 check "mini-browser host pattern set" "[ \"\$THEIA_MINI_BROWSER_HOST_PATTERN\" = '{{uuid}}.webview.{{hostname}}' ]"
@@ -100,6 +102,9 @@ case "$lang" in
         check "rustfmt" "rustfmt --version"
         check "clippy" "cargo clippy --version"
         check "rust-analyzer" "rust-analyzer --version"
+        check "rust-src (std sources for go-to-definition)" "test -d \"\$(rustc --print sysroot)/lib/rustlib/src\""
+        check "plugin rust-analyzer is the replaced binary" "cmp /home/theia/.cargo/bin/rust-analyzer /home/theia/plugins/rust-analyzer/extension/server/rust-analyzer"
+        check "CodeLLDB adapter runs" "/home/theia/plugins/vadimcn.vscode-lldb/extension/adapter/codelldb --help"
         check "rust toolchain is pinned" "rustc --version | grep -q \"^rustc $(sed -n 's/^ARG RUST_VERSION=//p' "$(dirname "$0")/../images/rust/ToolDockerfile")\""
         check "plugin rust-analyzer present" "test -d /home/theia/plugins/rust-analyzer"
         check "plugin vadimcn.vscode-lldb present" "test -d /home/theia/plugins/vadimcn.vscode-lldb"
@@ -145,7 +150,7 @@ const raw = fs.readFileSync(process.argv[1] + "/.vscode/tasks.json", "utf8").rep
 const tasks = JSON.parse(raw).tasks || [];
 const kind = t => (t.group && t.group.kind) || t.group;
 const test = tasks.find(t => kind(t) === "test");
-const build = tasks.find(t => kind(t) === "build" && t.group.isDefault);
+const build = tasks.find(t => kind(t) === "build" && t.group.isDefault && !t.isBackground);
 if (test) console.log("test " + test.command);
 else if (build) console.log("build " + build.command);'
 

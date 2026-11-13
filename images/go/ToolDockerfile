@@ -24,12 +24,16 @@ RUN useradd --system --create-home --user-group --uid 101 theia && \
     chown -R theia:theia /home/project
 
 # Parallel stage: Go toolchain and tools (runs concurrently with the others).
-# Go comes from the go.dev tarball, verified against the published checksum.
+# Go comes from the go.dev tarball, verified against a pinned checksum.
 # gopls, dlv and staticcheck are built with that Go and pinned.
 FROM ubuntu:26.04 AS go-toolchain
 
 # renovate: datasource=golang-version depName=go versioning=semver
 ARG GO_VERSION=1.27.4
+# sha256 of the two tarballs above (https://go.dev/dl/). Renovate bumps only
+# GO_VERSION: update these with it, the build fails on a mismatch.
+ARG GO_SHA256_AMD64=7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840
+ARG GO_SHA256_ARM64=3392582988a273a87ab5043ee1b2c9c17a2c3c00580bf9326c47a2e0aaaeac92
 # renovate: datasource=go depName=golang.org/x/tools/gopls
 ARG GOPLS_VERSION=v0.24.0
 # renovate: datasource=go depName=github.com/go-delve/delve
@@ -43,8 +47,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get -o Acquire::Retries=5 install -y --no-install-recommends curl ca-certificates gcc libc6-dev git
 
 RUN arch="$(dpkg --print-architecture)" && \
+    if [ "$arch" = arm64 ]; then sha="${GO_SHA256_ARM64}"; else sha="${GO_SHA256_AMD64}"; fi && \
     curl -fsSL --retry 5 --retry-all-errors -o go.tgz "https://dl.google.com/go/go${GO_VERSION}.linux-${arch}.tar.gz" && \
-    echo "$(curl -fsSL --retry 5 "https://dl.google.com/go/go${GO_VERSION}.linux-${arch}.tar.gz.sha256")  go.tgz" | sha256sum -c - && \
+    echo "${sha}  go.tgz" | sha256sum -c - && \
     tar -C /usr/local -xzf go.tgz && \
     rm go.tgz
 
@@ -72,6 +77,10 @@ COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 # Merge the base package.json with the go-specific patch without dropping base exclusions.
 RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
+
+# Fail early if the patch nulled or dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh --package-json package.json
 
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
 COPY --from=base-ide /home/theia/scripts /home/theia/scripts
@@ -125,7 +134,7 @@ ENV USE_LOCAL_GIT=true
 # Go toolchain (GOTOOLCHAIN=local: never download another toolchain, sessions may be offline)
 COPY --from=go-toolchain /usr/local/go /usr/local/go
 COPY --from=go-toolchain /go-tools/ /usr/local/bin/
-ENV PATH=/usr/local/go/bin:$PATH \
+ENV PATH=/usr/local/go/bin:/home/theia/go/bin:$PATH \
     GOTOOLCHAIN=local \
     GOPATH=/home/theia/go
 

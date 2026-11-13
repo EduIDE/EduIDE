@@ -21,7 +21,7 @@
         {
             "label": "Test",
             "type": "shell",
-            "command": "node --test --import /usr/local/lib/node_modules/tsx/dist/loader.mjs",
+            "command": "tsx --test \"test/**/*.test.ts\"",
             "group": "test",
             "options": { "cwd": "${workspaceFolder}" },
             "presentation": { "reveal": "always", "panel": "shared" }

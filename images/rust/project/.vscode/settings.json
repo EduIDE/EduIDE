@@ -6,5 +6,8 @@
         "lost+found": true
     },
     "workbench.colorTheme": "edu-ide-theme-dark",
-    "telemetry.telemetryLevel": "off"
+    "telemetry.telemetryLevel": "off",
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    }
 }

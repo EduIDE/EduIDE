@@ -10,11 +10,15 @@
 import { inject, injectable } from '@theia/core/shared/inversify';
 import { FrontendApplicationContribution } from '@theia/core/lib/browser';
 import { StatusBar, StatusBarAlignment } from '@theia/core/lib/browser/status-bar';
+import { WorkspaceService } from '@theia/workspace/lib/browser';
 import { ILogger } from '@theia/core/lib/common/logger';
 import { nls } from '@theia/core/lib/common/nls';
 import { WORKSPACE_MODE_STATUS_ID } from '../common/customization';
+import { retryWithDelays } from '../common/retry';
 import { WorkspaceMode, WorkspaceModeService } from '../common/workspace-mode';
 import { CustomizationService } from './customization-service';
+
+const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000];
 
 /**
  * Tells the student whether their files outlive the session.
@@ -29,6 +33,8 @@ export class WorkspaceModeContribution implements FrontendApplicationContributio
     protected readonly workspaceMode: WorkspaceModeService;
     @inject(CustomizationService)
     protected readonly customization: CustomizationService;
+    @inject(WorkspaceService)
+    protected readonly workspaceService: WorkspaceService;
     @inject(StatusBar)
     protected readonly statusBar: StatusBar;
     @inject(ILogger)
@@ -38,10 +44,25 @@ export class WorkspaceModeContribution implements FrontendApplicationContributio
 
     onStart(): void {
         this.customization.onDidChange(() => this.update());
-        this.workspaceMode.getMode().then(mode => {
-            this.mode = mode;
+        this.workspaceService.onWorkspaceChanged(() => this.refresh());
+        this.workspaceService.ready.then(() => this.refresh());
+    }
+
+    /** The connection to the server may not be up yet, so a failure is tried again. */
+    protected async refresh(): Promise<void> {
+        const root = this.workspaceService.tryGetRoots()[0];
+        if (!root) {
+            this.mode = 'unknown';
             this.update();
-        }).catch(error => this.logger.warn('EduIDE customization: could not read the workspace mode', error));
+            return;
+        }
+        try {
+            this.mode = await retryWithDelays(() => this.workspaceMode.getMode(root.resource.toString()), RETRY_DELAYS_MS);
+        } catch (error) {
+            this.logger.warn('EduIDE customization: could not read the workspace mode', error);
+            this.mode = 'unknown';
+        }
+        this.update();
     }
 
     protected update(): void {

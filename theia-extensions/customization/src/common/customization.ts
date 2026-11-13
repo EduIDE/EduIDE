@@ -322,11 +322,11 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
         preferences: {
             on: {
                 'java.saveActions.organizeImports': true,
-                'editor.codeActionsOnSave': { 'source.organizeImports': 'explicit' }
+                'editor.codeActionsOnSave': { 'source.organizeImports': true }
             },
             off: {
                 'java.saveActions.organizeImports': false,
-                'editor.codeActionsOnSave': { 'source.organizeImports': 'never' }
+                'editor.codeActionsOnSave': { 'source.organizeImports': false }
             }
         }
     },
@@ -413,6 +413,7 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     {
         // `off` is the stock mode, so Expert stays untouched.
         id: 'diag.typeCheck', label: 'Python type checking', group: 'diagnostics', defaults: ADVANCED_ONLY,
+        pending: 'no image ships Pyright or Pylance, which provide the setting',
         preferences: { on: { 'python.analysis.typeCheckingMode': 'basic' }, off: { 'python.analysis.typeCheckingMode': 'off' } }
     },
     {

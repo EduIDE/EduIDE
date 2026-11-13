@@ -20,5 +20,6 @@ export const WORKSPACE_MODE_PATH = '/services/eduide/workspace-mode';
 export const WorkspaceModeService = Symbol('WorkspaceModeService');
 
 export interface WorkspaceModeService {
-    getMode(): Promise<WorkspaceMode>;
+    /** `rootUri` is the workspace root the IDE has open. */
+    getMode(rootUri: string): Promise<WorkspaceMode>;
 }

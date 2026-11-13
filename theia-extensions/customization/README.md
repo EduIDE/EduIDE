@@ -100,7 +100,8 @@ switches that do nothing:
 - `diag.checkstyleLive` — needs a Checkstyle ruleset in the image, which is an
   image change rather than IDE code
 - `diag.sonar` — held until the per-session memory budget is measured
-- `view.livePreview` — Live Preview contributes no view to show or hide
+- `diag.typeCheck` - no image ships Pyright or Pylance, which provide the setting
+- `view.livePreview` - Live Preview contributes no view to show or hide
 - `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
 
 ## What an exercise can ask for
@@ -172,6 +173,15 @@ correctly too. A failed stat means "cannot tell": no entry is shown rather than
 a guess. The check resolves symlinks first, so a symlinked root is compared with
 the parent of its target.
 
+The root is the one the IDE has open, sent to the server by the browser. It is
+compared with `/` rather than with its parent, so a subfolder of a mounted volume
+(the operator's `/home/project/persisted` default, say) counts as saved too. If
+the server cannot be reached the request is retried with backoff.
+
+A local `yarn start` shows "Temporary workspace" wherever the checkout is on the
+same device as `/` (it does on the macOS machine this was checked on); a
+checkout on its own volume shows "Saved workspace".
+
 The element only hides or shows the entry; the text is not a setting.
 
 ## Settings per language
@@ -185,7 +195,6 @@ harmless. Keys were checked against the published manifests on open-vsx:
 | redhat.java | 1.59.2026111308 | `java.saveActions.organizeImports`, `java.referencesCodeLens.enabled`, `java.inlayHints.parameterNames.enabled` |
 | rust-lang.rust-analyzer | 0.4.3117 | `rust-analyzer.lens.references.{adt,enumVariant,method,trait}.enable`, `rust-analyzer.lens.{run,debug}.enable`, `rust-analyzer.check.command` |
 | golang.go | 0.58.0 | `go.enableCodeLens` (an object, so written whole as `{ runtest }`) |
-| ms-pyright.pyright | 1.1.402 | `python.analysis.typeCheckingMode` (ms-python.python 2026.4.0 does not contribute it; Pylance does, which is not on open-vsx) |
 | streetsidesoftware.code-spell-checker | 4.10.0 | `cSpell.diagnosticLevel` |
 | usernamehw.errorlens | 3.30.0 | `errorLens.enabledDiagnosticLevels` |
 | charliermarsh.ruff | 2026.96.0 | `ruff.lint.enable` |
@@ -197,6 +206,10 @@ belong to the TypeScript language features built into Theia, and
 rather than `[python]`, `[typescript]` and `[go]` blocks: a language-scoped key
 is only understood once the language is registered, which is after the
 preferences are applied.
+
+`diag.typeCheck` writes `python.analysis.typeCheckingMode`, which ms-python.python
+2026.4.0 does not contribute: it belongs to Pylance (not on open-vsx) or Pyright
+(ms-pyright.pyright 1.1.402). No image ships either, so the element is pending.
 
 `diag.lint` covers ruff and ESLint. Go has no switch for it (`go.lintTool` has no
 "none" value), so staticcheck is not part of the element.
@@ -234,6 +247,10 @@ task. Three rules decide, in order:
 
 Against the templates (the ones planned for the Python, JavaScript, Rust and Go
 images follow the same rules) that gives:
+
+Only the Java and C templates exist today; python, node, web, cargo and go are
+planned (see the image editions plan) and listed here so their tasks land at the
+right level once they ship.
 
 | Template | Beginner | Advanced adds |
 |---|---|---|

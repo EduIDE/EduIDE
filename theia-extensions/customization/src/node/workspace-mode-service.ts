@@ -7,24 +7,20 @@
  * SPDX-License-Identifier: MIT
  ********************************************************************************/
 
-import { inject, injectable } from '@theia/core/shared/inversify';
+import { injectable } from '@theia/core/shared/inversify';
+import { URI } from '@theia/core/lib/common/uri';
 import { FileUri } from '@theia/core/lib/common/file-uri';
-import { WorkspaceServer } from '@theia/workspace/lib/common/workspace-protocol';
 import { WorkspaceMode, WorkspaceModeService } from '../common/workspace-mode';
-import { isMountPoint } from './mount-check';
+import { isOnSeparateVolume } from './mount-check';
 
 @injectable()
 export class WorkspaceModeServiceImpl implements WorkspaceModeService {
 
-    @inject(WorkspaceServer)
-    protected readonly workspaceServer: WorkspaceServer;
-
-    async getMode(): Promise<WorkspaceMode> {
-        const uri = await this.workspaceServer.getMostRecentlyUsedWorkspace();
-        if (!uri) {
+    async getMode(rootUri: string): Promise<WorkspaceMode> {
+        if (new URI(rootUri).scheme !== 'file') {
             return 'unknown';
         }
-        const mounted = await isMountPoint(FileUri.fsPath(uri));
+        const mounted = await isOnSeparateVolume(FileUri.fsPath(rootUri));
         if (mounted === undefined) {
             return 'unknown';
         }

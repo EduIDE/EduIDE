@@ -9,7 +9,10 @@
 
 import { test } from 'node:test';
 import * as assert from 'node:assert';
-import { isMountPoint, MountCheckFs } from './mount-check';
+import { isOnSeparateVolume, MountCheckFs } from './mount-check';
+
+import * as os from 'os';
+import * as fs from 'fs';
 
 function fakeFs(devices: Record<string, number>, links: Record<string, string> = {}): MountCheckFs {
     return {
@@ -23,19 +26,33 @@ function fakeFs(devices: Record<string, number>, links: Record<string, string> =
     };
 }
 
-test('a directory on another device than its parent is a mount point', async () => {
-    assert.strictEqual(await isMountPoint('/home/project', fakeFs({ '/home/project': 2, '/home': 1 })), true);
+test('a directory on another device than the root is on a separate volume', async () => {
+    assert.strictEqual(await isOnSeparateVolume('/home/project', fakeFs({ '/home/project': 2, '/': 1, '/home': 1 })), true);
 });
 
-test('a directory on the same device as its parent is not', async () => {
-    assert.strictEqual(await isMountPoint('/home/project', fakeFs({ '/home/project': 1, '/home': 1 })), false);
+test('a subfolder of a mounted volume counts too, though its parent shares the volume', async () => {
+    const devices = { '/home/project/persisted': 2, '/home/project': 2, '/': 1 };
+    assert.strictEqual(await isOnSeparateVolume('/home/project/persisted', fakeFs(devices)), true);
 });
 
-test('a symlinked root is compared with the parent of its target', async () => {
-    const fs = fakeFs({ '/data/ws': 2, '/data': 1, '/home': 2 }, { '/home/project': '/data/ws' });
-    assert.strictEqual(await isMountPoint('/home/project', fs), true);
+test('a directory on the root device is not', async () => {
+    assert.strictEqual(await isOnSeparateVolume('/home/project', fakeFs({ '/home/project': 1, '/': 1 })), false);
+});
+
+test('a symlink is followed to where the files are', async () => {
+    const devices = { '/data/ws': 2, '/': 1, '/home/project': 1 };
+    assert.strictEqual(await isOnSeparateVolume('/home/project', fakeFs(devices, { '/home/project': '/data/ws' })), true);
 });
 
 test('a failed stat is unknown, not "no mount"', async () => {
-    assert.strictEqual(await isMountPoint('/home/project', fakeFs({ '/home': 1 })), undefined);
+    assert.strictEqual(await isOnSeparateVolume('/home/project', fakeFs({ '/': 1 })), undefined);
+});
+
+test('on the real file system: the root is never separate, a missing path is unknown', async () => {
+    assert.strictEqual(await isOnSeparateVolume('/'), false);
+    assert.strictEqual(await isOnSeparateVolume(`${os.tmpdir()}/eduide-does-not-exist-${process.pid}`), undefined);
+    // Whether the temp dir is its own mount depends on the machine, so only
+    // the agreement with a direct stat is asserted.
+    const expected = fs.statSync(fs.realpathSync(os.tmpdir())).dev !== fs.statSync('/').dev;
+    assert.strictEqual(await isOnSeparateVolume(os.tmpdir()), expected);
 });

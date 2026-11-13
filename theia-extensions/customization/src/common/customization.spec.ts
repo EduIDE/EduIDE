@@ -63,6 +63,7 @@ test('type checking and clippy start at Advanced and fall back to the stock valu
     assert.deepStrictEqual(defaults('diag.typeCheck'), ['advanced']);
     assert.strictEqual(ELEMENTS_BY_ID.get('diag.typeCheck')?.preferences?.on?.['python.analysis.typeCheckingMode'], 'basic');
     assert.strictEqual(ELEMENTS_BY_ID.get('diag.typeCheck')?.preferences?.off?.['python.analysis.typeCheckingMode'], 'off');
+    assert.ok(ELEMENTS_BY_ID.get('diag.typeCheck')?.pending, 'no image ships a reader for it yet');
     assert.deepStrictEqual(defaults('diag.clippy'), ['advanced']);
     assert.strictEqual(ELEMENTS_BY_ID.get('diag.clippy')?.preferences?.on?.['rust-analyzer.check.command'], 'clippy');
     assert.strictEqual(ELEMENTS_BY_ID.get('diag.clippy')?.preferences?.off?.['rust-analyzer.check.command'], 'check');

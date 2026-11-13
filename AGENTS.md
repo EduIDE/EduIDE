@@ -49,14 +49,17 @@ prunes `plugins/` against `package.json` and would delete it otherwise. The
 Artemis pin is `ARTEMIS_EXTENSION_URL` in `images/base-artemis/Dockerfile`.
 A `ToolDockerfile` must stay edition-agnostic: no Artemis, no git config.
 
-Every `ToolDockerfile` ends with `scripts/check-required-plugins.sh`, which
-fails the build if `theia-cloud-monitor`, `scorpio` or `data-bridge` is missing
-(a language patch can null any base plugin). CI then runs
+Every `ToolDockerfile` runs `scripts/check-required-plugins.sh` twice: in the
+plugin stage right after the `package.json` merge (fails if `theiaPlugins`
+lacks or nulls `theia-cloud-monitor`, `scorpio` or `data-bridge`; this is the
+check that can fail, because the final stage merges plugin folders instead of
+replacing them) and at the end on the finished `plugins/` folder. CI then runs
 `scripts/smoke-test-image.sh` on every image, including each template's Test
-task under `--network none`.
+task (default build task if it has none) under `--network none`. Templates
+marked `needsNetwork` (Maven, Gradle, Bazel) run with network.
 
 **Templates** live in `images/<lang>/templates/<id>/` with a `template.json`
-(`label`, `description`, `order`), are copied to `/home/theia/templates/<id>/`,
+(`label`, `description`, `order`, optional `needsNetwork`), are copied to `/home/theia/templates/<id>/`,
 and are applied by Scorpio, not by an entrypoint. The only entrypoint left is
 `images/c/entrypoint.sh`, which writes the Bazel remote cache config from
 runtime env. Renovate leaves `images/*/templates/**` alone.

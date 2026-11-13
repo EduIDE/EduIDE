@@ -39,6 +39,10 @@ COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
 
+# Fail early if the patch nulled or dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh --package-json package.json
+
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
 COPY --from=base-ide /home/theia/scripts /home/theia/scripts
 COPY --from=base-ide /home/theia/configs /home/theia/configs

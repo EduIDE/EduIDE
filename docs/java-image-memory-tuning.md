@@ -1,6 +1,6 @@
 # Java image memory tuning
 
-The Java images (`java-17`, `java-17-templates`, `java-25`, `java-25-templates`) cap every resident JVM and node process so that many student environments can run per host. Without this tuning, a hello-world environment settles above 2GB: two JDT language server JVMs (redhat.java 1.56 defaults to `-Xmx2G`), up to three Gradle daemons (512MB each, 3h idle timeout, unable to share because they run on different JVMs), and uncapped node processes.
+The Java images (`java-17-standalone`, `java-17-artemis`, `java-25-standalone`, `java-25-artemis`) cap every resident JVM and node process so that many student environments can run per host. Without this tuning, a hello-world environment settles above 2GB: two JDT language server JVMs (redhat.java 1.56 defaults to `-Xmx2G`), up to three Gradle daemons (512MB each, 3h idle timeout, unable to share because they run on different JVMs), and uncapped node processes.
 
 ## Where each knob lives
 
@@ -13,7 +13,7 @@ The Java images (`java-17`, `java-17-templates`, `java-25`, `java-25-templates`)
 | Surefire test JVM heap cap | `templates/maven/pom.xml` (`argLine`) | Maven test forks (Surefire does not inherit `MAVEN_OPTS`) |
 | Debuggee heap cap | `templates/*/.vscode/launch.json` (`vmArgs`) | The student's app under debug |
 
-Each Java version directory carries its own copy of the three tuning files (same pattern as `remote-cache.gradle`); the `*-templates` Dockerfiles reuse their version's copies. Keep the copies in sync unless a version deliberately diverges.
+Each Java version directory carries its own copy of the three tuning files (same pattern as `remote-cache.gradle`); the templates in `images/java-*/templates` are copied into the same image. Keep the copies in sync unless a version deliberately diverges.
 
 ## The one-daemon invariant
 

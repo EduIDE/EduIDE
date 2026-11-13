@@ -159,7 +159,13 @@ jobs:
   # template's Test task offline. Also publishes the image's template list.
   smoke:
     needs: [base, images]
-    if: ${{ needs.images.result == 'success' }}
+    # Not gated on needs.images.result == 'success': a reusable-workflow matrix
+    # exposes no per-entry result, so that would skip every smoke test when one
+    # image fails. A missing image fails its own smoke job at the pull instead.
+    if: ${{ !cancelled() && needs.base.result == 'success' }}
+    permissions:
+      contents: read
+      packages: read
     name: smoke ${{ matrix.language }}-${{ matrix.edition }}
     runs-on: ubuntu-latest
     strategy:

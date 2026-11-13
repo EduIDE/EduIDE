@@ -57,6 +57,10 @@ const patch=JSON.parse(fs.readFileSync('package.json.patch')); \
 fs.writeFileSync('package.json', JSON.stringify(deepMerge(base,patch), null, 2));" && \
     rm package.json.base package.json.patch
 
+# Fail early if the patch nulled or dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh --package-json package.json
+
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
 COPY --from=base-ide /home/theia/scripts /home/theia/scripts
 COPY --from=base-ide /home/theia/configs /home/theia/configs
@@ -100,7 +104,9 @@ COPY --chown=theia:theia images/c/project /home/project
 COPY --chown=theia:theia images/c/templates /home/theia/templates
 
 # Pre-download the pinned Bazel version into bazelisk's cache so the first
-# in-IDE build does not require a network round-trip.
+# in-IDE build does not require a network round-trip for Bazel itself. The
+# template's module dependencies (rules_cc) still come from bcr.bazel.build;
+# a prefetched repository cache was not enough for an offline `bazel run`.
 RUN cd /home/theia/templates/bazel && bazel version
 
 EXPOSE 3000

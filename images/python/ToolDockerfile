@@ -56,6 +56,16 @@ COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
 
+# Fail early if the patch nulled or dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh --package-json package.json
+
+# Open VSX ships ruff and debugpy per platform; the patch pins linux-x64, swap in the
+# build for the architecture this image is made for.
+ARG TARGETARCH
+RUN arch="linux-$( [ "${TARGETARCH}" = arm64 ] && echo arm64 || echo x64 )" && \
+    sed -i "s#/linux-x64/#/${arch}/#g; s#@linux-x64\.vsix#@${arch}.vsix#g" package.json
+
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
 COPY --from=base-ide /home/theia/scripts /home/theia/scripts
 COPY --from=base-ide /home/theia/configs /home/theia/configs

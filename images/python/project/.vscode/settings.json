@@ -6,6 +6,8 @@
         "lost+found": true
     },
     "cSpell.language": "en,de",
+    "ruff.path": ["/usr/local/bin/ruff"],
+    "ruff.importStrategy": "fromEnvironment",
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
     },

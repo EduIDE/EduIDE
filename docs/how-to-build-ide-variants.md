@@ -34,7 +34,7 @@ FROM ${BASE_IMAGE} AS base-ide
 |---|---|---|
 | `base` | `images/base-ide/BaseDockerfile` | Theia, Scorpio, data bridge, `theia-cloud-monitor`; no Artemis extension |
 | `base-standalone` | `images/base-standalone/Dockerfile` | git credential cache, `cache --timeout=10800` |
-| `base-artemis` | `images/base-artemis/Dockerfile` | `artemis-extension`, in `plugins/` and in `package.json` `theiaPlugins` (the language images' plugin sync prunes everything not listed there) |
+| `base-artemis` | `images/base-artemis/Dockerfile` | `artemis-extension`, in `plugins/` and in `package.json` `theiaPlugins` (keeps the two consistent; the folder would survive in the language images anyway, their final stage merges plugin folders) |
 
 Never put edition specifics into a `ToolDockerfile`. The published names are `<lang>-standalone` and `<lang>-artemis`.
 
@@ -103,7 +103,7 @@ The final runtime image that combines everything.
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
 - Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
 - Copy `images/<lang>/templates` to `/home/theia/templates`
-- Run `scripts/check-required-plugins.sh` last: it fails the build if a patch nulled `theia-cloud-monitor`, `scorpio` or `data-bridge`
+- Run `scripts/check-required-plugins.sh` right after the `package.json` merge (it fails if the patch nulled or dropped `theia-cloud-monitor`, `scorpio` or `data-bridge`) and again at the end on the finished `plugins/`
 - Start `node .../main.js` directly as the entrypoint (the C image keeps a small `entrypoint.sh` that only writes the Bazel remote cache config)
 
 **Example from C variant (lines 66-69):**
@@ -114,7 +114,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 ```
 
-This installs C/C++ development tools. Adapt this for your language's requirements. Every language image also carries `git`, `openssh-client`, `curl`, `ca-certificates`, `bash`, `zsh`, `less`, `nano` and `unzip`. Tools that do not come from apt are pinned with an `ARG <NAME>_VERSION` preceded by a `# renovate: datasource=... depName=...` comment; a regex manager in `renovate.json` proposes the bumps.
+This installs C/C++ development tools. Adapt this for your language's requirements. Every language image also carries `git`, `openssh-client`, `curl`, `ca-certificates`, `bash`, `zsh`, `less`, `nano` and `unzip`. The Python image picks the `linux-x64` or `linux-arm64` build of the Ruff and debugpy extensions from `TARGETARCH` (the patch names x64, the Dockerfile rewrites it) and points `ruff.path` at the pinned `/usr/local/bin/ruff`. Tools that do not come from apt are pinned with an `ARG <NAME>_VERSION` preceded by a `# renovate: datasource=... depName=...` comment; a regex manager in `renovate.json` proposes the bumps.
 
 ### 4. Create package.json.patch
 
@@ -233,9 +233,9 @@ Templates live in `images/<lang>/templates/<id>/`; the folder name is the id. Ea
 { "label": "Maven", "description": "Java project built with Maven, JUnit 5", "order": 1 }
 ```
 
-A folder without one is ignored. The image copies them to `/home/theia/templates/<id>/`; Scorpio copies the one named in `TEMPLATE` into an empty workspace.
+Optional field `"needsNetwork": true` marks a template whose tasks download on first use (Maven plugins, the Gradle distribution). The smoke test runs every other template under `--network none`. Maven, Gradle and Bazel (rules_cc from the Bazel registry) carry it. A folder without `template.json` is ignored. The image copies them to `/home/theia/templates/<id>/`; Scorpio copies the one named in `TEMPLATE` into an empty workspace.
 
-Rules: the template runs offline with the toolchain in the image, has one small program and one passing test, and has `.vscode/tasks.json` with Run (default build task), Build where the language has one, and a Test task (`"group": "test"`), plus `launch.json`, `settings.json`, `.gitignore`, neutral names and no university branding. The smoke test runs the Test task of every template; a template without one is skipped.
+Rules: the template runs offline with the toolchain in the image, has one small program and one passing test, and has `.vscode/tasks.json` with Run (default build task), Build where the language has one, and a Test task (`"group": "test"`), plus `launch.json`, `settings.json`, `.gitignore`, neutral names and no university branding. The smoke test runs the Test task of every template; a template without one runs its default build task (Run) instead.
 
 **Adding a template:**
 
@@ -274,7 +274,7 @@ Once you've created all the necessary files:
    scripts/smoke-test-image.sh eduide-c-standalone:local standalone
    ```
 
-   It checks that the IDE answers on :3000, that the required extensions are present (the Artemis extension only in the artemis edition), that the credential cache is set only in standalone, that the toolchain runs, and that every template's Test task passes with `--network none`. It also writes `templates-<image>.json`. The real Artemis flow (autoclone, Iris) is not covered; check it by hand on staging.
+   It checks that the IDE answers on :3000, that the required extensions are present (the Artemis extension only in the artemis edition), that the credential cache is set only in standalone, that the toolchain runs, and that every template's Test task (or default build task) passes with `--network none`, except templates marked `needsNetwork`. It also writes `templates-<image>.json`. The real Artemis flow (autoclone, Iris) is not covered; check it by hand on staging.
 
 ## Integrating into the Build Process
 
@@ -376,7 +376,7 @@ USER theia
 
 Tag the result with the EduIDE version (`2.0.0`), with a `-N` suffix for changes that are only yours (`2.0.0-1`), and let Renovate bump `EDUIDE_VERSION`. Reference it in the Helm values with a full path and tag, since the chart prefixes `imageRegistry` to any image without a tag.
 
-[EduIDE/EduIDE-image-mannheim](https://github.com/EduIDE/EduIDE-image-mannheim) is the reference example (Mannheim's Maven from apt, Live Preview, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
+`EduIDE/EduIDE-image-mannheim` (planned, the repository does not exist yet) will be the reference example (Mannheim's Maven from apt, Live Preview, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
 
 ## Memory tuning
 

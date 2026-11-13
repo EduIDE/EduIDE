@@ -14,6 +14,11 @@
       "description": "Student course scaffolding baked into the language images as project templates, not real dependencies of this repo.",
       "matchFileNames": ["images/*/templates/**"],
       "enabled": false
+    },
+    {
+      "description": "Node stays on 22 in the images; @types/node must match it.",
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<23"
     }
   ],
   "customManagers": [

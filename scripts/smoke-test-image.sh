@@ -6,7 +6,7 @@
 # Checks that the IDE answers on :3000, that the required extensions are present
 # (the Artemis extension only in the artemis edition), that the git credential
 # cache is set only in standalone, that the language toolchain runs, and that
-# every project template passes its Test task without network access.
+# every project template passes its Test task (or, without one, its default build task) without network access, unless its template.json says "needsNetwork": true.
 # It also writes the image's template list to templates-<image>.json in
 # $SMOKE_OUT_DIR (default: the current directory); CI uploads it as an artifact.
 # Not covered: the real Artemis flow (autoclone, Iris), checked by hand on staging.
@@ -110,22 +110,33 @@ out.sort((a, b) => a.order - b.order);
 console.log(JSON.stringify(out, null, 2));'
 mkdir -p "$out_dir"
 templates_json="$out_dir/templates-${name}.json"
-docker run --rm --entrypoint node "$image" -e "$list_js" > "$templates_json" || fail "cannot list templates"
-pass "template list written to $templates_json"
+if docker run --rm --entrypoint node "$image" -e "$list_js" > "$templates_json"; then
+    pass "template list written to $templates_json"
+else
+    fail "cannot list templates"
+    echo "[]" > "$templates_json"
+fi
 
-# Prints the shell command of the task in group "test", or nothing.
+# Prints "test <command>" for the task in group "test"; without one,
+# "build <command>" for the default build task (Run), or nothing.
 test_cmd_js='
 const fs = require("fs");
 const raw = fs.readFileSync(process.argv[1] + "/.vscode/tasks.json", "utf8").replace(/^\s*\/\/.*$/gm, "");
-const task = (JSON.parse(raw).tasks || []).find(t => t.group === "test" || (t.group && t.group.kind === "test"));
-if (task) console.log(task.command);'
+const tasks = JSON.parse(raw).tasks || [];
+const kind = t => (t.group && t.group.kind) || t.group;
+const test = tasks.find(t => kind(t) === "test");
+const build = tasks.find(t => kind(t) === "build" && t.group.isDefault);
+if (test) console.log("test " + test.command);
+else if (build) console.log("build " + build.command);'
 
-ids="$(node -e 'for (const t of JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))) console.log(t.id + ":" + t.needsNetwork)' "$templates_json")"
+# The host needs no node: the image's own node reads the list from stdin.
+ids="$(docker run -i --rm --entrypoint node "$image" -e 'for (const t of JSON.parse(require("fs").readFileSync(0, "utf8"))) console.log(t.id + ":" + t.needsNetwork)' < "$templates_json")"
+
 for entry in $ids; do
     id="${entry%%:*}"
     # --network none: a template must run with the toolchain in the image alone.
     # Exception: "needsNetwork": true in template.json (Maven and Gradle fetch
-    # their plugins and distribution on first use; the images do not prefetch).
+    # their plugins and distribution on first use; the images do not prefetch them).
     net=none
     if [ "${entry##*:}" = true ]; then net=bridge; note "template $id needs network (needsNetwork in template.json)"; fi
     # The copy goes into an empty directory, like Scorpio does it.
@@ -138,16 +149,20 @@ for entry in $ids; do
         cmd="$(node -e "$2" "$work")"
         if [ -z "$cmd" ]; then echo "SKIP"; exit 0; fi
         cd "$work"
-        echo "RUN $cmd"
-        sh -c "$cmd"
+        echo "RUN ${cmd%% *} ${cmd#* }"
+        sh -c "${cmd#* }"
     ' sh "$id" "$test_cmd_js" 2>&1)"
     rc=$?
     if echo "$result" | grep -qx 'SKIP'; then
-        note "template $id has no test task, skipped"
+        note "template $id has neither a test task nor a default build task, skipped"
     elif [ "$rc" -eq 0 ]; then
-        pass "template $id: $(echo "$result" | grep -m1 '^RUN ')"
+        run_line="$(echo "$result" | grep -m1 '^RUN ')"
+        case "$run_line" in
+            "RUN build "*) note "template $id has no test task, ran the default build task instead" ;;
+        esac
+        pass "template $id: $run_line"
     else
-        fail "template $id: Test task failed"
+        fail "template $id: task failed"
         echo "$result" | tail -30
     fi
 done

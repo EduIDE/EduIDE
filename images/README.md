@@ -27,7 +27,7 @@ base
      '- <lang>-artemis
 ```
 
-They are separate Dockerfiles only because the shared build workflow has no `target` input. `base-artemis` must also list the extension in `package.json`, otherwise the language images' plugin sync deletes it.
+They are separate Dockerfiles only because the shared build workflow has no `target` input. `base-artemis` also lists the extension in `package.json` so the base image's `package.json` and `plugins/` stay consistent. The folder would survive in a language image without that entry: the final stage copies the base's `/home/theia` first and the plugin stage's `plugins/` over it, a merge, so the plugin stage's pruning never removes what the base brought.
 
 ### Stage 3: Language-Specific Images
 
@@ -35,7 +35,7 @@ Language-specific images extend the base by copying the built Theia application 
 
 - Copy the complete Theia application from the edition image (`BASE_IMAGE`), so one edition-agnostic `ToolDockerfile` is built twice: `<lang>-standalone` and `<lang>-artemis`
 - Run on `ubuntu:26.04` and copy project templates from `images/<lang>/templates/<id>/` (each with a `template.json`) to `/home/theia/templates/`
-- End with `scripts/check-required-plugins.sh`, which fails the build if a required extension is missing
+- Run `scripts/check-required-plugins.sh` after the `package.json` merge and again at the end; it fails the build if a patch removed `theia-cloud-monitor`, `scorpio` or `data-bridge`
 - Install language compilers, runtimes, and tools (e.g., Java JDK, Python, gcc)
 - Add language-specific VS Code extensions
 - Configure the environment for the target language

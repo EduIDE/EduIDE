@@ -57,7 +57,7 @@ Both carry Scorpio and the data bridge, the same toolchain and the same template
 There are no per-university images any more. A university with its own needs
 builds its own image `FROM` an edition image, see
 [Building an IDE variant](docs/how-to-build-ide-variants.md); the
-[Mannheim image](https://github.com/EduIDE/EduIDE-image-mannheim) is the example.
+planned Mannheim image (`EduIDE/EduIDE-image-mannheim`, not created yet) will be the example.
 
 ## Documentation
 

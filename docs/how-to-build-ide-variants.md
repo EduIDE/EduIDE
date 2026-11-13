@@ -227,7 +227,7 @@ images/c/
 
 ## Pinning toolchains
 
-A toolchain that does not come from apt is pinned with an `ARG <NAME>_VERSION=...` in the `ToolDockerfile`, with a `# renovate: datasource=... depName=...` comment on the line above (`RUST_VERSION`, `GO_VERSION`, `GOPLS_VERSION`, `DELVE_VERSION`, `STATICCHECK_VERSION`, `RUFF_VERSION`, ...). The regex manager in `renovate.json` picks those up, so a bump is a one-line pull request. The Go tarball is verified against the checksum go.dev publishes next to it.
+A toolchain that does not come from apt is pinned with an `ARG <NAME>_VERSION=...` in the `ToolDockerfile`, with a `# renovate: datasource=... depName=...` comment on the line above (`RUST_VERSION`, `GO_VERSION`, `GOPLS_VERSION`, `DELVE_VERSION`, `STATICCHECK_VERSION`, `RUFF_VERSION`, ...). The regex manager in `renovate.json` picks those up, so a bump is a one-line pull request. The Go tarball is verified against `GO_SHA256_AMD64` and `GO_SHA256_ARM64`; Renovate bumps only `GO_VERSION`, so update the checksums with it (the build fails on a mismatch).
 
 ## Project templates
 
@@ -246,7 +246,7 @@ Rules: the template runs offline with the toolchain in the image, has one small 
 | `java-17`, `java-25` | `maven`, `gradle` | needs network (`needsNetwork`) |
 | `c` | `make`, `bazel` | none (Run, Build, Valgrind) |
 | `python` | `python` | `pytest` |
-| `javascript` | `node`, `web` | `node --test` with the global `tsx` loader (`web` has none) |
+| `javascript` | `node`, `web` | `tsx --test` (`web` has none and its default task is a watcher, so the smoke test skips it) |
 | `rust` | `cargo` | `cargo test` |
 | `go` | `go` | `go test ./...` |
 

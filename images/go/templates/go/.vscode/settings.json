@@ -5,11 +5,6 @@
         "persisted": true,
         "lost+found": true
     },
-    "[go]": {
-        "editor.defaultFormatter": "golang.go",
-        "editor.insertSpaces": false
-    },
-    "go.lintTool": "staticcheck",
     "workbench.colorTheme": "edu-ide-theme-dark",
     "telemetry.telemetryLevel": "off"
 }

@@ -6,7 +6,7 @@
             "request": "launch",
             "name": "Debug App",
             "program": "${workspaceFolder}/src/index.ts",
-            "runtimeArgs": ["--import", "/usr/local/lib/node_modules/tsx/dist/loader.mjs"],
+            "runtimeExecutable": "tsx",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "skipFiles": ["<node_internals>/**"]

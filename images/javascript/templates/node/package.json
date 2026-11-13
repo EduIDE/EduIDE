@@ -1,0 +1,11 @@
+{
+    "name": "example",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "tsx src/index.ts",
+        "build": "tsc",
+        "test": "node --test --import /usr/local/lib/node_modules/tsx/dist/loader.mjs"
+    }
+}

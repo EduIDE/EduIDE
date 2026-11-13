@@ -225,6 +225,10 @@ images/c/
         └── settings.json   # IDE configuration (file exclusions, telemetry)
 ```
 
+## Pinning toolchains
+
+A toolchain that does not come from apt is pinned with an `ARG <NAME>_VERSION=...` in the `ToolDockerfile`, with a `# renovate: datasource=... depName=...` comment on the line above (`RUST_VERSION`, `GO_VERSION`, `GOPLS_VERSION`, `DELVE_VERSION`, `STATICCHECK_VERSION`, `RUFF_VERSION`, ...). The regex manager in `renovate.json` picks those up, so a bump is a one-line pull request. The Go tarball is verified against the checksum go.dev publishes next to it.
+
 ## Project templates
 
 Templates live in `images/<lang>/templates/<id>/`; the folder name is the id. Each has a `template.json`:
@@ -236,6 +240,17 @@ Templates live in `images/<lang>/templates/<id>/`; the folder name is the id. Ea
 Optional field `"needsNetwork": true` marks a template whose tasks download on first use (Maven plugins, the Gradle distribution). The smoke test runs every other template under `--network none`. Maven, Gradle and Bazel (rules_cc from the Bazel registry) carry it. A folder without `template.json` is ignored. The image copies them to `/home/theia/templates/<id>/`; Scorpio copies the one named in `TEMPLATE` into an empty workspace.
 
 Rules: the template runs offline with the toolchain in the image, has one small program and one passing test, and has `.vscode/tasks.json` with Run (default build task), Build where the language has one, and a Test task (`"group": "test"`), plus `launch.json`, `settings.json`, `.gitignore`, neutral names and no university branding. The smoke test runs the Test task of every template; a template without one runs its default build task (Run) instead.
+
+| Image | Template ids | Offline Test task |
+|---|---|---|
+| `java-17`, `java-25` | `maven`, `gradle` | needs network (`needsNetwork`) |
+| `c` | `make`, `bazel` | none (Run, Build, Valgrind) |
+| `python` | `python` | `pytest` |
+| `javascript` | `node`, `web` | `node --test` with the global `tsx` loader (`web` has none) |
+| `rust` | `cargo` | `cargo test` |
+| `go` | `go` | `go test ./...` |
+
+Which tasks a student sees at which level follows the task rules in `theia-extensions/customization/README.md` ("Run configurations"): the default build task and the test task are beginner work, everything else needs advanced. A task that has no group (Lint, Clippy, Vet, Valgrind) says so with `"eduide": { "minLevel": "advanced" }`.
 
 **Adding a template:**
 

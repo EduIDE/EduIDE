@@ -181,12 +181,17 @@ task. Three rules decide, in order:
    the default build task and test tasks are beginner work, anything else needs
    advanced. A task with no group at all is treated as advanced.
 
-Against the four shipped templates that gives:
+Against the shipped templates that gives:
 
 | Template | Beginner | Advanced |
 |---|---|---|
 | java-17 gradle, maven | Run, Test | Run, Build, Test |
-| c make, bazel | Run | Run, Build |
+| c make, bazel | Run | Run, Build, Valgrind |
+| python | Run, Test | Run, Test, Lint |
+| node | Run, Test | Run, Build, Test |
+| web | Start | Start, Build |
+| rust cargo | Run, Test | Run, Build, Test, Clippy |
+| go | Run, Test | Run, Build, Test, Vet |
 
 which is what the concept asks for, without a single task label hardcoded
 anywhere.

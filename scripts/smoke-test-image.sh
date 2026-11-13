@@ -94,6 +94,24 @@ case "$lang" in
         check "codelldb adapter runs" "/home/theia/plugins/vadimcn.vscode-lldb/extension/adapter/codelldb --help"
         check "no sudo" "! command -v sudo"
         ;;
+    rust)
+        check "rustc" "rustc --version"
+        check "cargo" "cargo --version"
+        check "rustfmt" "rustfmt --version"
+        check "clippy" "cargo clippy --version"
+        check "rust-analyzer" "rust-analyzer --version"
+        check "rust toolchain is pinned" "rustc --version | grep -q \"^rustc $(sed -n 's/^ARG RUST_VERSION=//p' "$(dirname "$0")/../images/rust/ToolDockerfile")\""
+        check "plugin rust-analyzer present" "test -d /home/theia/plugins/rust-analyzer"
+        check "plugin vadimcn.vscode-lldb present" "test -d /home/theia/plugins/vadimcn.vscode-lldb"
+        ;;
+    go)
+        check "go" "go version"
+        check "go toolchain is pinned" "go version | grep -q \"go$(sed -n 's/^ARG GO_VERSION=//p' "$(dirname "$0")/../images/go/ToolDockerfile") \""
+        check "gopls" "gopls version"
+        check "dlv" "dlv version"
+        check "staticcheck" "staticcheck -version"
+        check "plugin golang.go present" "test -d /home/theia/plugins/golang.go"
+        ;;
     *) fail "unknown language '$lang' derived from image name '$name'" ;;
 esac
 

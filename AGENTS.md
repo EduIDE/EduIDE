@@ -24,13 +24,13 @@ docs/base-image-lifecycle.md        which distro each image sits on, and when it
 
 ## What is actually published
 
-`base`, `base-standalone` and `base-artemis`, plus ten language images from the
+`base`, `base-standalone` and `base-artemis`, plus fourteen language images from the
 matrix in `.github/workflows/build.yml` under the **`images`** job: each of
-`java-17`, `java-25`, `python`, `javascript` and `c`, built twice from the same
+`java-17`, `java-25`, `python`, `javascript`, `c`, `rust` and `go`, built twice from the same
 `ToolDockerfile`, once as `<lang>-standalone` (on `base-standalone`) and once
 as `<lang>-artemis` (on `base-artemis`).
 
-`haskell`, `ocaml` and `rust` still have their directories and compose services,
+`haskell` and `ocaml` still have their directories and compose services,
 so they build locally, but CI no longer publishes them. To bring one back, add
 its matrix entries again and a catalog entry in EduIDE-Helm.
 

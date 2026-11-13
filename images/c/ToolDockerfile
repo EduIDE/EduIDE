@@ -61,6 +61,11 @@ fs.writeFileSync('package.json', JSON.stringify(deepMerge(base,patch), null, 2))
 RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
     sh /tmp/check-required-plugins.sh --package-json package.json
 
+# CodeLLDB ships one vsix per architecture; the patch names x64, swap in the
+# build for the architecture this image is made for.
+ARG TARGETARCH
+RUN sed -i "s#codelldb-linux-x64\.vsix#codelldb-linux-$( [ "${TARGETARCH}" = arm64 ] && echo arm64 || echo x64 ).vsix#" package.json
+
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
 COPY --from=base-ide /home/theia/scripts /home/theia/scripts
 COPY --from=base-ide /home/theia/configs /home/theia/configs

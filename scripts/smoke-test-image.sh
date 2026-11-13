@@ -90,6 +90,7 @@ case "$lang" in
     c)
         for cmd in gcc clang clangd gdb make valgrind cmake clang-format; do check "$cmd" "$cmd --version"; done
         check "bazel" "cd /home/theia/templates/bazel && bazel version"
+        check "codelldb adapter runs" "/home/theia/plugins/vadimcn.vscode-lldb/extension/adapter/codelldb --help"
         check "no sudo" "! command -v sudo"
         ;;
     *) fail "unknown language '$lang' derived from image name '$name'" ;;

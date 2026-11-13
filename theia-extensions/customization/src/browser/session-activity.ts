@@ -33,6 +33,11 @@ export class ActivityThrottle {
         this.lastReport = now;
         return true;
     }
+
+    /** Forgets the last report, so the next input reports again. For reports that failed. */
+    release(): void {
+        this.lastReport = Number.NEGATIVE_INFINITY;
+    }
 }
 
 /**

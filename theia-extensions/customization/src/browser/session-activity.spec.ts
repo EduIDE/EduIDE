@@ -19,6 +19,15 @@ test('the first input is reported, the rest of the minute is not', () => {
     assert.equal(throttle.shouldReport(61_000), true);
 });
 
+test('after a failed report the next input reports again', () => {
+    const throttle = new ActivityThrottle(60_000);
+    assert.equal(throttle.shouldReport(1_000), true);
+    // While a report is in flight, further input does not start another one.
+    assert.equal(throttle.shouldReport(2_000), false);
+    throttle.release();
+    assert.equal(throttle.shouldReport(3_000), true);
+});
+
 test('the warning prefix blinks on and off', () => {
     const on = toggleWarningTitle('Main.java - EduIDE');
     assert.equal(on, WARNING_TITLE_PREFIX + 'Main.java - EduIDE');

@@ -45,9 +45,9 @@ export class SessionActivityContribution implements FrontendApplicationContribut
 
     protected onInput(): void {
         this.stopWarning();
-        if (this.throttle.shouldReport(Date.now())) {
-            // Fails while the monitor is still starting or when it is not installed; the next input retries.
-            this.commands.executeCommand(ACTIVITY_REPORT_COMMAND, 'browser input').catch(() => undefined);
+        // The monitor registers its command once the plugin host is up; images without it never do.
+        if (this.commands.getCommand(ACTIVITY_REPORT_COMMAND) && this.throttle.shouldReport(Date.now())) {
+            this.commands.executeCommand(ACTIVITY_REPORT_COMMAND, 'browser input').catch(() => this.throttle.release());
         }
     }
 

@@ -6,16 +6,29 @@ FROM ${BASE_IMAGE} AS base-ide
 
 # Parallel stage: Install system dependencies (runs concurrently with plugin-image)
 # Adapted from https://github.com/ls1intum/artemis-c-docker/blob/main/Dockerfile
-FROM ubuntu:24.04 AS apt-deps
+FROM ubuntu:26.04 AS apt-deps
 
 WORKDIR /home/theia
+
+ARG TARGETARCH
+# Bazelisk version (the launcher). The actual Bazel version is pinned per-project
+# via templates/bazel/.bazelversion.
+# renovate: datasource=github-releases depName=bazelbuild/bazelisk
+ARG BAZELISK_VERSION=v1.30.0
 
 # Install all system dependencies with BuildKit cache mounts (including adduser)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
-    adduser findutils bzip2 e2fsprogs sudo bash zsh gcc clang clangd git gdb make ca-certificates
+    adduser findutils bzip2 e2fsprogs bash zsh gcc clang clangd clang-format git gdb make valgrind cmake \
+    openssh-client curl less nano unzip zip python3 ca-certificates
+
+# Install Bazelisk as `bazel` (resolves/downloads the Bazel version in .bazelversion)
+RUN curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 120 -fsSL \
+    -o /usr/local/bin/bazel \
+    "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-${TARGETARCH}" && \
+    chmod +x /usr/local/bin/bazel
 
 # Create theia user and directories (after adduser is installed)
 RUN useradd --system --create-home --user-group --uid 101 theia && \
@@ -83,6 +96,13 @@ COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plu
 # Copy project settings (includes .vscode/settings.json with file exclusions)
 COPY --chown=theia:theia images/c/project /home/project
 
+# Project templates, picked by Scorpio via TEMPLATE and copied into an empty workspace
+COPY --chown=theia:theia images/c/templates /home/theia/templates
+
+# Pre-download the pinned Bazel version into bazelisk's cache so the first
+# in-IDE build does not require a network round-trip.
+RUN cd /home/theia/templates/bazel && bazel version
+
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
@@ -106,8 +126,14 @@ ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
     EDUIDE_IMAGE_TAG=${APP_VERSION} \
     EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
 
-# Launch the backend application via node
-ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
+# Fail the build if a language patch dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh /home/theia/plugins
+
+# The only thing the entrypoint still does is write the Bazel remote cache
+# config, which depends on env injected at runtime. It then starts Theia.
+COPY --chown=theia:theia images/c/entrypoint.sh /home/theia/entrypoint.sh
+ENTRYPOINT [ "/bin/bash", "/home/theia/entrypoint.sh" ]
 
 # Arguments passed to the application
 CMD [ "/home/project", "--hostname=127.0.0.1" ]

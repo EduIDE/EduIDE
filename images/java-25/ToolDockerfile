@@ -9,7 +9,7 @@ ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
 FROM ${BASE_IMAGE} AS base-ide
 
 # Parallel stage: Install system dependencies (runs concurrently with plugin-image)
-FROM ubuntu:24.04 AS apt-deps
+FROM ubuntu:26.04 AS apt-deps
 
 # Create theia user and directories first (doesn't need apt)
 RUN useradd --system --create-home --user-group --uid 101 theia && \
@@ -24,12 +24,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
-    git openssh-client bash zsh libsecret-1-0 ca-certificates gnupg wget && \
+    git openssh-client curl less nano unzip bash zsh libsecret-1-0 ca-certificates gnupg wget && \
     install -m 0755 -d /etc/apt/keyrings && \
     wget --tries=5 --waitretry=2 --timeout=30 -qO- https://packages.adoptium.net/artifactory/api/gpg/key/public \
     | gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg && \
     chmod a+r /etc/apt/keyrings/adoptium.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb noble main" \
+    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb resolute main" \
     > /etc/apt/sources.list.d/adoptium.list && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
@@ -123,6 +123,15 @@ COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plu
 # Copy the project configuration files
 COPY --chown=theia:theia images/java-25/project /home/project
 
+# Project templates, picked by Scorpio via TEMPLATE and copied into an empty workspace
+COPY --chown=theia:theia images/java-25/templates /home/theia/templates
+# Download the Gradle wrapper jar (binary - not checked into repo)
+RUN curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 60 -fsSL \
+    "https://github.com/gradle/gradle/raw/v9.4.1/gradle/wrapper/gradle-wrapper.jar" \
+    -o /home/theia/templates/gradle/gradle/wrapper/gradle-wrapper.jar && \
+    echo "55243ef57851f12b070ad14f7f5bb8302daceeebc5bce5ece5fa6edb23e1145c  /home/theia/templates/gradle/gradle/wrapper/gradle-wrapper.jar" \
+    | sha256sum -c -
+
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
@@ -150,6 +159,10 @@ ARG IMAGE_REVISION=""
 ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
     EDUIDE_IMAGE_TAG=${APP_VERSION} \
     EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
+
+# Fail the build if a language patch dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh /home/theia/plugins
 
 # Launch the backend application via node
 ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]

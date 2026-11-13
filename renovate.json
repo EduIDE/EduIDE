@@ -11,9 +11,19 @@
   },
   "packageRules": [
     {
-      "description": "Student course scaffolding baked into the -templates images, not real dependencies of this repo.",
-      "matchFileNames": ["images/*-templates/templates/**"],
+      "description": "Student course scaffolding baked into the language images as project templates, not real dependencies of this repo.",
+      "matchFileNames": ["images/*/templates/**"],
       "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Tool versions pinned as ARG NAME_VERSION in a ToolDockerfile, annotated with a '# renovate: datasource=... depName=...' comment on the line above. The shared preset only matches files named Dockerfile, so it misses ours.",
+      "managerFilePatterns": ["/(^|/)[^/]*Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>\\S+?)(?: versioning=(?<versioning>\\S+?))?\\s+ARG \\w+?_VERSION=(?<currentValue>\\S+)\\s"
+      ]
     }
   ]
 }

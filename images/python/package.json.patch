@@ -1,11 +1,12 @@
 {
   "theiaPlugins": {
     "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
-    "ms-python": "https://open-vsx.org/api/ms-python/python/2024.4.1/file/ms-python.python-2024.4.1.vsix"
+    "ms-python": "https://open-vsx.org/api/ms-python/python/2026.4.0/file/ms-python.python-2026.4.0.vsix",
+    "ms-python.debugpy": "https://open-vsx.org/api/ms-python/debugpy/linux-x64/2026.6.0/file/ms-python.debugpy-2026.6.0@linux-x64.vsix",
+    "charliermarsh.ruff": "https://open-vsx.org/api/charliermarsh/ruff/linux-x64/2026.96.0/file/charliermarsh.ruff-2026.96.0@linux-x64.vsix"
   },
   "theiaPluginsExcludeIds": [
     "ms-python.vscode-pylance",
-    "ms-python.debugpy",
     "ms-vscode.js-debug-companion",
     "VisualStudioExptTeam.vscodeintellicode",
     "vscode.builtin-notebook-renderers",

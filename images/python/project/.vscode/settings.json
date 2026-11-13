@@ -5,6 +5,10 @@
         "persisted": true,
         "lost+found": true
     },
+    "cSpell.language": "en,de",
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
     "workbench.colorTheme": "edu-ide-theme-dark",
     "telemetry.telemetryLevel": "off"
 }

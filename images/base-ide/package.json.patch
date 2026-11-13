@@ -6,7 +6,10 @@
     "data-bridge": "https://github.com/eduide/eduide-data-bridge/releases/download/v0.0.17/data-bridge-0.0.17.vsix",
     "scorpio": "https://open-vsx.org/api/aet-tum/artemis-scorpio/2.1.1/file/aet-tum.artemis-scorpio-2.1.1.vsix",
     "theia-cloud-monitor": "https://github.com/EduIDE/EduIDE-Cloud/releases/download/v1.2.2/theia-cloud-monitor-1.2.2.vsix",
-    "artemis-extension": "https://open-vsx.org/api/aet-tum/iris-thaumantias/1.2.6/file/aet-tum.iris-thaumantias-1.2.6.vsix"
+    "streetsidesoftware.code-spell-checker": "https://open-vsx.org/api/streetsidesoftware/code-spell-checker/4.10.0/file/streetsidesoftware.code-spell-checker-4.10.0.vsix",
+    "streetsidesoftware.code-spell-checker-german": "https://open-vsx.org/api/streetsidesoftware/code-spell-checker-german/3.0.2/file/streetsidesoftware.code-spell-checker-german-3.0.2.vsix",
+    "usernamehw.errorlens": "https://open-vsx.org/api/usernamehw/errorlens/3.28.0/file/usernamehw.errorlens-3.28.0.vsix",
+    "EditorConfig.EditorConfig": "https://open-vsx.org/api/EditorConfig/EditorConfig/0.18.2/file/EditorConfig.EditorConfig-0.18.2.vsix"
   },
   "theiaPluginsExcludeIds": [
     "ms-vscode.js-debug-companion",

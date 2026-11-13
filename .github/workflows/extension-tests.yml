@@ -1,0 +1,25 @@
+# Runs the unit tests of the Theia extensions (theia-extensions/*) on pull
+# requests. Nothing else runs them: build.yml only builds images.
+# `yarn test` is lerna's `run test`, so a package without a test script is skipped.
+
+name: Extension tests
+
+on:
+  pull_request:
+    paths: ["theia-extensions/**", "package.json", "yarn.lock", ".github/workflows/extension-tests.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile --ignore-scripts
+      - run: yarn test

@@ -138,6 +138,18 @@ jobs:
           - image-name: eduide/eduide/c-artemis
             docker-file: images/c/ToolDockerfile
             edition: artemis
+          - image-name: eduide/eduide/rust-standalone
+            docker-file: images/rust/ToolDockerfile
+            edition: standalone
+          - image-name: eduide/eduide/rust-artemis
+            docker-file: images/rust/ToolDockerfile
+            edition: artemis
+          - image-name: eduide/eduide/go-standalone
+            docker-file: images/go/ToolDockerfile
+            edition: standalone
+          - image-name: eduide/eduide/go-artemis
+            docker-file: images/go/ToolDockerfile
+            edition: artemis
     uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
     with:
       docker-file: ${{ matrix.docker-file }}
@@ -171,7 +183,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [java-17, java-25, python, javascript, c]
+        language: [java-17, java-25, python, javascript, c, rust, go]
         edition: [standalone, artemis]
     steps:
       - uses: actions/checkout@v4

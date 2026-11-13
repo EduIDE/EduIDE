@@ -1,0 +1,14 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "files.exclude": {
+        "**/.theia": true,
+        "target": true,
+        "persisted": true,
+        "lost+found": true
+    },
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    },
+    "workbench.colorTheme": "edu-ide-theme-dark",
+    "telemetry.telemetryLevel": "off"
+}

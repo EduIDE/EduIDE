@@ -5,7 +5,7 @@ ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
 FROM ${BASE_IMAGE} AS base-ide
 
 # Parallel stage: Install system dependencies (runs concurrently with plugin-image)
-FROM ubuntu:24.04 AS apt-deps
+FROM ubuntu:26.04 AS apt-deps
 
 WORKDIR /home/theia
 
@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
-    curl adduser build-essential bash zsh git ca-certificates
+    adduser build-essential bash zsh git openssh-client curl less nano unzip ca-certificates
 
 # Create theia user and directories (after adduser is installed)
 RUN useradd --system --create-home --user-group --uid 101 theia && \
@@ -34,9 +34,10 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 # Copy required configuration files
 COPY --from=base-ide /home/theia/package.json ./package.json.base
 COPY images/rust/package.json.patch ./package.json.patch
+COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 
-# Merge the base package.json with the rust-specific patch using Node.js
-RUN node -e "const fs=require('fs'); const deepMerge=(t,s)=>{const o={...t}; for(const k in s){o[k]=s[k]!==null&&typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]?deepMerge(t[k],s[k]):s[k]} return o}; const base=JSON.parse(fs.readFileSync('package.json.base')); const patch=JSON.parse(fs.readFileSync('package.json.patch')); fs.writeFileSync('package.json', JSON.stringify(deepMerge(base,patch), null, 2));" && \
+# Merge the base package.json with the rust-specific patch without dropping base exclusions.
+RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
 
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
@@ -76,6 +77,9 @@ COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plu
 # Copy project settings (includes .vscode/settings.json with file exclusions)
 COPY --chown=theia:theia images/rust/project /home/project
 
+# Project templates, picked by Scorpio via TEMPLATE and copied into an empty workspace
+COPY --chown=theia:theia images/rust/templates /home/theia/templates
+
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
@@ -88,15 +92,18 @@ ENV USE_LOCAL_GIT=true
 # Switch to Theia user
 USER theia
 
-# Install Rust with minimal profile and cleanup
+# Install the pinned Rust toolchain with the minimal profile plus the components
+# a course needs offline (rustfmt, clippy, rust-analyzer), then clean up.
 # Replace bundled rust-analyzer server with rustup version to ensure
 # proc-macro API version compatibility with the Rust toolchain
+# renovate: datasource=github-tags depName=rust-lang/rust versioning=semver
+ARG RUST_VERSION=1.100.0
 RUN curl --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 300 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs --output rust.sh \
     && chmod +x rust.sh \
-    && ./rust.sh -y --profile minimal \
+    && ./rust.sh -y --profile minimal --default-toolchain "${RUST_VERSION}" \
     && rm rust.sh \
     && . "$HOME/.cargo/env" \
-    && rustup component add rust-analyzer \
+    && rustup component add rustfmt clippy rust-analyzer \
     && cp /home/theia/.cargo/bin/rust-analyzer /home/theia/plugins/rust-analyzer/extension/server/rust-analyzer \
     && rm -rf $HOME/.cargo/registry \
     && rm -rf $HOME/.cargo/git \
@@ -122,6 +129,10 @@ ARG IMAGE_REVISION=""
 ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
     EDUIDE_IMAGE_TAG=${APP_VERSION} \
     EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
+
+# Fail the build if a language patch dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh /home/theia/plugins
 
 # Launch the backend application via node
 ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]

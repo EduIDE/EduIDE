@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run",
+            "type": "shell",
+            "command": "python -m example.main",
+            "group": { "kind": "build", "isDefault": true },
+            "options": { "cwd": "${workspaceFolder}", "env": { "PYTHONPATH": "src" } },
+            "presentation": { "reveal": "always", "panel": "shared" }
+        },
+        {
+            "label": "Test",
+            "type": "shell",
+            "command": "pytest",
+            "group": "test",
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" }
+        },
+        {
+            "label": "Lint",
+            "type": "shell",
+            "command": "ruff check",
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "eduide": { "minLevel": "advanced" }
+        }
+    ]
+}

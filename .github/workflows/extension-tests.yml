@@ -1,6 +1,7 @@
 # Runs the unit tests of the Theia extensions (theia-extensions/*) on pull
 # requests. Nothing else runs them: build.yml only builds images.
-# `yarn test` is lerna's `run test`, so a package without a test script is skipped.
+# Scoped to the extensions: the root `yarn test` also runs the electron app tests,
+# which need a display. A package without a test script is skipped.
 
 name: Extension tests
 
@@ -22,4 +23,4 @@ jobs:
           node-version: 22
           cache: yarn
       - run: yarn install --frozen-lockfile --ignore-scripts
-      - run: yarn test
+      - run: yarn lerna run test --scope 'theia-ide-*-ext'

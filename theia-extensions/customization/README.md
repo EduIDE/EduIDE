@@ -16,7 +16,7 @@ Java 17 + Gradle, the same file open at each level.
 | Beginner | Advanced | Expert |
 |---|---|---|
 | ![Beginner](../../docs/images/customization/level-beginner.png) | ![Advanced](../../docs/images/customization/level-advanced.png) | ![Expert](../../docs/images/customization/level-expert.png) |
-| Explorer, Search, Artemis. One Run button. Four menus. | Source control, tests, the build tool, the refactoring toolbar. Still no debugger. | Stock EduIDE: the debugger, Outline, Memory Inspector, the full task list. |
+| Explorer, Search, Artemis (Artemis sessions only). One Run button. Four menus. | Source control, tests, the build tool, the refactoring toolbar. Still no debugger. | Stock EduIDE: the debugger, Outline, Memory Inspector, the full task list. |
 
 The picker, and the panel its last row opens:
 

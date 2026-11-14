@@ -23,4 +23,6 @@ jobs:
           node-version: 22
           cache: yarn
       - run: yarn install --frozen-lockfile --ignore-scripts
+      # The tests run on the compiled output in lib/, so build first.
+      - run: yarn lerna run build --scope 'theia-ide-*-ext'
       - run: yarn lerna run test --scope 'theia-ide-*-ext'

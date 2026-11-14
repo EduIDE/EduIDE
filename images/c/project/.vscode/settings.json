@@ -7,4 +7,11 @@
     },
     "workbench.colorTheme": "edu-ide-theme-dark",
     "telemetry.telemetryLevel": "off",
+    "cSpell.language": "en,de",
+    "[c]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    },
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    },
 }

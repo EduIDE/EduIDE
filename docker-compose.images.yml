@@ -11,35 +11,30 @@ services:
     ports:
       - "3000:3000"
 
-  c:
-    image: theia-c:local
-    build:
-      context: .
-      dockerfile: images/c/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3001:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
-  c-templates:
-    image: theia-c-templates:local
+  base-standalone:
+    image: theia-base-standalone:local
     build:
       context: .
-      dockerfile: images/c-templates/ToolDockerfile
+      dockerfile: images/base-standalone/Dockerfile
       args:
         BASE_IMAGE: theia-base:local
       additional_contexts:
         base-ide: "service:base-ide"
     depends_on:
       - base-ide
-    ports:
-      - "3010:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  base-artemis:
+    image: theia-base-artemis:local
+    build:
+      context: .
+      dockerfile: images/base-artemis/Dockerfile
+      args:
+        BASE_IMAGE: theia-base:local
+      additional_contexts:
+        base-ide: "service:base-ide"
+    depends_on:
+      - base-ide
 
   haskell:
     image: theia-haskell:local
@@ -56,94 +51,6 @@ services:
       - "3002:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
-  java-17:
-    image: theia-java-17:local
-    build:
-      context: .
-      dockerfile: images/java-17/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3003:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-  java-17-templates:
-    image: theia-java-17-templates:local
-    build:
-      context: .
-      dockerfile: images/java-17-templates/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3009:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-  java-25:
-    image: theia-java-25:local
-    build:
-      context: .
-      dockerfile: images/java-25/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3011:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-  java-25-templates:
-    image: theia-java-25-templates:local
-    build:
-      context: .
-      dockerfile: images/java-25-templates/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3012:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-  thm-java-25:
-    image: theia-thm-java-25:local
-    build:
-      context: .
-      dockerfile: images/thm-java-25/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3013:3000"
-
-  javascript:
-    image: theia-javascript:local
-    build:
-      context: .
-      dockerfile: images/javascript/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3004:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   ocaml:
     image: theia-ocaml:local
@@ -160,35 +67,6 @@ services:
       - "3005:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
-  python:
-    image: theia-python:local
-    build:
-      context: .
-      dockerfile: images/python/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3006:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-  rust:
-    image: theia-rust:local
-    build:
-      context: .
-      dockerfile: images/rust/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3007:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   swift:
     image: theia-swift:local
@@ -203,3 +81,213 @@ services:
       - base-ide
     ports:
       - "3008:3000"
+
+  c-standalone:
+    image: theia-c-standalone:local
+    build:
+      context: .
+      dockerfile: images/c/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3101:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  c-artemis:
+    image: theia-c-artemis:local
+    build:
+      context: .
+      dockerfile: images/c/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3102:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  java-17-standalone:
+    image: theia-java-17-standalone:local
+    build:
+      context: .
+      dockerfile: images/java-17/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3103:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  java-17-artemis:
+    image: theia-java-17-artemis:local
+    build:
+      context: .
+      dockerfile: images/java-17/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3104:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  java-25-standalone:
+    image: theia-java-25-standalone:local
+    build:
+      context: .
+      dockerfile: images/java-25/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3105:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  java-25-artemis:
+    image: theia-java-25-artemis:local
+    build:
+      context: .
+      dockerfile: images/java-25/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3106:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  javascript-standalone:
+    image: theia-javascript-standalone:local
+    build:
+      context: .
+      dockerfile: images/javascript/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3107:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  javascript-artemis:
+    image: theia-javascript-artemis:local
+    build:
+      context: .
+      dockerfile: images/javascript/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3108:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  python-standalone:
+    image: theia-python-standalone:local
+    build:
+      context: .
+      dockerfile: images/python/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3109:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  python-artemis:
+    image: theia-python-artemis:local
+    build:
+      context: .
+      dockerfile: images/python/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3110:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  rust-standalone:
+    image: theia-rust-standalone:local
+    build:
+      context: .
+      dockerfile: images/rust/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3111:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  rust-artemis:
+    image: theia-rust-artemis:local
+    build:
+      context: .
+      dockerfile: images/rust/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3112:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  go-standalone:
+    image: theia-go-standalone:local
+    build:
+      context: .
+      dockerfile: images/go/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3113:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  go-artemis:
+    image: theia-go-artemis:local
+    build:
+      context: .
+      dockerfile: images/go/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3114:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]

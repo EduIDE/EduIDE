@@ -1,0 +1,8 @@
+# Python build and test output. Artemis grades the source you push, so keep
+# caches and virtual environments out of the repository.
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/

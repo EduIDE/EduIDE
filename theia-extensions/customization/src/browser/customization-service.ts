@@ -42,6 +42,7 @@ import {
     ManagedView,
     MENU_REFRESH_PATH
 } from '../common/customization';
+import { ApplyQueue, applyOnce } from '../common/apply-queue';
 import { planPreferenceWrites } from '../common/preference-writes';
 import { hideParts, restoreParts } from '../common/part-visibility';
 
@@ -92,7 +93,6 @@ export class CustomizationService implements FrontendApplicationContribution {
     /** Fires whenever the level or any override changes. */
     readonly onDidChange: Event<void> = this.onDidChangeEmitter.event;
 
-    protected applying = false;
     protected viewSweepTimer: ReturnType<typeof setTimeout> | undefined;
     protected menuSweepTimer: ReturnType<typeof setTimeout> | undefined;
     protected seedTimer: ReturnType<typeof setTimeout> | undefined;
@@ -127,7 +127,8 @@ export class CustomizationService implements FrontendApplicationContribution {
         this.preferences.onPreferenceChanged(event => {
             if (event.preferenceName === CustomizationPreferences.LEVEL
                 || event.preferenceName === CustomizationPreferences.OVERRIDES) {
-                this.apply();
+                this.apply().catch(error =>
+                    this.logger.warn('EduIDE customization: could not apply the level', error));
             }
         });
     }
@@ -390,23 +391,21 @@ export class CustomizationService implements FrontendApplicationContribution {
     // ── Applying ─────────────────────────────────────────────────────
 
     async apply(): Promise<void> {
-        if (this.applying) {
-            return;
-        }
-        this.applying = true;
-        try {
+        await this.applyQueue.request();
+    }
+
+    protected readonly applyQueue = new ApplyQueue(() => applyOnce({
+        showLevel: async () => {
             this.levelContextKey?.set(this.level);
             this.refreshBlockedWidgetIds();
-            await this.applyPreferences();
             await this.applyViews();
             await this.applyTerminals();
             this.applyStatusBarItems();
             this.applyMenus();
-        } finally {
-            this.applying = false;
-        }
-        this.onDidChangeEmitter.fire();
-    }
+        },
+        notify: () => this.onDidChangeEmitter.fire(),
+        writePreferences: () => this.applyPreferences()
+    }));
 
     protected refreshBlockedWidgetIds(): void {
         this.blockedWidgetIds.clear();

@@ -12,7 +12,7 @@ import '../../src/browser/style/index.css';
 import { ContainerModule } from '@theia/core/shared/inversify';
 import { CommandContribution } from '@theia/core/lib/common/command';
 import { MenuContribution } from '@theia/core/lib/common/menu';
-import { FrontendApplicationContribution, WidgetFactory } from '@theia/core/lib/browser';
+import { FrontendApplicationContribution, ServiceConnectionProvider, WidgetFactory } from '@theia/core/lib/browser';
 import { StatusBar } from '@theia/core/lib/browser/status-bar';
 import { CustomizationService } from './customization-service';
 import { DeliveredConfigReader } from './delivered-config-reader';
@@ -21,6 +21,9 @@ import { CustomizeWidget } from './customize-widget';
 import { StartupFileContribution } from './startup-file-contribution';
 import { bindCustomizationPreferences } from './customization-preferences';
 import { bindLevelAwareStatusBar } from './level-aware-status-bar';
+import { WorkspaceModeContribution } from './workspace-mode-contribution';
+import { WORKSPACE_MODE_PATH, WorkspaceModeService } from '../common/workspace-mode';
+import { SessionActivityContribution } from './session-activity-contribution';
 
 export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     bindCustomizationPreferences(bind);
@@ -39,8 +42,19 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
         bind(serviceIdentifier).toService(CustomizationContribution)
     );
 
+    bind(WorkspaceModeService).toDynamicValue(context =>
+        ServiceConnectionProvider.createLocalProxy<WorkspaceModeService>(context.container, WORKSPACE_MODE_PATH)
+    ).inSingletonScope();
+    bind(WorkspaceModeContribution).toSelf().inSingletonScope();
+    bind(FrontendApplicationContribution).toService(WorkspaceModeContribution);
+
     bind(StartupFileContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(StartupFileContribution);
+
+    bind(SessionActivityContribution).toSelf().inSingletonScope();
+    [CommandContribution, FrontendApplicationContribution].forEach(serviceIdentifier =>
+        bind(serviceIdentifier).toService(SessionActivityContribution)
+    );
 
     bind(CustomizeWidget).toSelf();
     bind(WidgetFactory).toDynamicValue(context => ({

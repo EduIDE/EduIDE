@@ -37,6 +37,9 @@ script referenced in the pull request if they need refreshing.
 | `src/browser/customize-widget.tsx` | The Customize panel, rendered straight from the catalogue |
 | `src/browser/startup-file-contribution.ts` | Opens the exercise file on start while `startup.openFile` is on |
 | `src/browser/customization-preferences.ts` | `eduide.level` and `eduide.overrides` |
+| `src/browser/workspace-mode-contribution.ts` | The "Saved workspace" / "Temporary workspace" status bar entry |
+| `src/node/workspace-mode-service.ts`, `src/node/mount-check.ts` | The server-side mount check behind it, served over JSON-RPC at `/services/eduide/workspace-mode` |
+| `src/browser/session-activity-contribution.ts` | Reports browser input to the session monitor and flags the tab before an inactivity timeout (see below) |
 
 ## Opening the menu
 
@@ -98,6 +101,7 @@ switches that do nothing:
 - `diag.checkstyleLive` — needs a Checkstyle ruleset in the image, which is an
   image change rather than IDE code
 - `diag.sonar` — held until the per-session memory budget is measured
+- `diag.typeCheck` - no image ships Pyright or Pylance, which provide the setting
 - `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
 
 ## What an exercise can ask for
@@ -153,6 +157,65 @@ not rebinding Theia's `StatusBar` — `bindStatusBar` binds `StatusBar` with
 `.to(StatusBarImpl)` rather than `toService`, so intercepting it cleanly is not
 as simple as it looks.
 
+## Saved or temporary workspace
+
+`status.workspaceMode` is on at every level. The entry reads **Saved workspace**
+or **Temporary workspace** (warning colour), so a student knows before closing
+the tab whether their files survive.
+
+The answer is a mount check, run on the server side of the extension because
+the browser cannot stat the container's disk: the workspace root (the most
+recently used workspace, `/home/project` in the images) is a mount point when
+its `st_dev` differs from its parent's. A persistent session mounts its volume
+there, an ephemeral or prewarmed one has none, so no launch parameter or
+environment variable is involved, and a local `docker run` is answered
+correctly too. A failed stat means "cannot tell": no entry is shown rather than
+a guess. The check resolves symlinks first, so a symlinked root is compared with
+the parent of its target.
+
+The root is the one the IDE has open, sent to the server by the browser. It is
+compared with `/` rather than with its parent, so a subfolder of a mounted volume
+(the operator's `/home/project/persisted` default, say) counts as saved too. If
+the server cannot be reached the request is retried with backoff.
+
+A local `yarn start` shows "Temporary workspace" wherever the checkout is on the
+same device as `/` (it does on the macOS machine this was checked on); a
+checkout on its own volume shows "Saved workspace".
+
+The element only hides or shows the entry; the text is not a setting.
+
+## Settings per language
+
+The catalogue is written for every language the images ship. One element can
+write the keys of several extensions, and a key whose extension is absent is
+harmless. Keys were checked against the published manifests on open-vsx:
+
+| Extension | Version | Keys used |
+|---|---|---|
+| redhat.java | 1.59.2026111308 | `java.saveActions.organizeImports`, `java.referencesCodeLens.enabled`, `java.inlayHints.parameterNames.enabled` |
+| rust-lang.rust-analyzer | 0.4.3117 | `rust-analyzer.lens.references.{adt,enumVariant,method,trait}.enable`, `rust-analyzer.lens.{run,debug}.enable`, `rust-analyzer.check.command` |
+| golang.go | 0.58.0 | `go.enableCodeLens` (an object, so written whole as `{ runtest }`) |
+| streetsidesoftware.code-spell-checker | 4.10.0 | `cSpell.diagnosticLevel` |
+| usernamehw.errorlens | 3.30.0 | `errorLens.enabledDiagnosticLevels` |
+| charliermarsh.ruff | 2026.96.0 | `ruff.lint.enable` |
+| dbaeumer.vscode-eslint | 3.0.34 | `eslint.enable` |
+
+`typescript.referencesCodeLens.enabled` and `javascript.referencesCodeLens.enabled`
+belong to the TypeScript language features built into Theia, and
+`editor.codeActionsOnSave` is Monaco's. Organize imports uses the generic key
+rather than `[python]`, `[typescript]` and `[go]` blocks: a language-scoped key
+is only understood once the language is registered, which is after the
+preferences are applied.
+
+`diag.typeCheck` writes `python.analysis.typeCheckingMode`, which ms-python.python
+2026.4.0 does not contribute: it belongs to Pylance (not on open-vsx) or Pyright
+(ms-pyright.pyright 1.1.402). No image ships either, so the element is pending.
+
+`diag.lint` covers ruff and ESLint. Go has no switch for it (`go.lintTool` has no
+"none" value), so staticcheck is not part of the element.
+`view.maven` hides the `mavenProjects` view inside the Explorer; it has no View
+menu entry.
+
 ## Run configurations
 
 The Run button's configurations are **not ours**. `TaskToolbarContribution` reads
@@ -183,7 +246,7 @@ task. Three rules decide, in order:
 
 Against the shipped templates that gives:
 
-| Template | Beginner | Advanced |
+| Template | Beginner | Advanced adds |
 |---|---|---|
 | java-17 gradle, maven | Run, Test | Run, Build, Test |
 | c make, bazel | Run | Run, Build, Valgrind |
@@ -195,3 +258,15 @@ Against the shipped templates that gives:
 
 which is what the concept asks for, without a single task label hardcoded
 anywhere.
+
+## Session activity
+
+The session monitor (`theia-cloud-monitor`, from EduIDE-Cloud) only sees VS Code API events.
+Typing in the terminal, clicking in the explorer or moving the mouse did not count as activity, so a student could be timed out while working.
+`SessionActivityContribution` listens for keyboard, pointer and wheel input anywhere in the tab and calls the monitor's `theia.cloud.monitor.activity.report` command, at most once a minute.
+Scrolling inside a webview, such as the Artemis problem statement, stays invisible: iframe events do not reach the tab.
+
+When the monitor shows its "Are you still here?" dialog, it executes `eduide.session.timeoutWarning`.
+This extension registers that command and blinks `⚠ Session ends soon` in the tab title until the next input, so a student watching a lecture in another tab notices it.
+
+`yarn test` in this folder runs `src/browser/session-activity.spec.ts` with Node's test runner after `yarn build`.

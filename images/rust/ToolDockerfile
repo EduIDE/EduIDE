@@ -9,19 +9,22 @@ FROM ubuntu:26.04 AS apt-deps
 
 WORKDIR /home/theia
 
+# Create the theia user and directories before apt installs anything: with
+# the group at gid 101 first, openssh-client's _ssh group lands elsewhere
+# instead of taking 101 (which made the session run as gid _ssh).
+RUN groupadd --system --gid 101 theia && \
+    useradd --system --create-home --gid 101 --uid 101 theia && \
+    chmod g+rw /home && \
+    mkdir -p /home/project && \
+    chown -R theia:theia /home/theia && \
+    chown -R theia:theia /home/project
+
 # Install all system dependencies with BuildKit cache mounts (including adduser)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
     adduser build-essential bash zsh git openssh-client curl less nano unzip ca-certificates
-
-# Create theia user and directories (after adduser is installed)
-RUN useradd --system --create-home --user-group --uid 101 theia && \
-    chmod g+rw /home && \
-    mkdir -p /home/project && \
-    chown -R theia:theia /home/theia && \
-    chown -R theia:theia /home/project
 
 # Parallel stage: Plugin download (runs concurrently with apt-deps)
 FROM node:22-trixie AS plugin-image
@@ -93,8 +96,12 @@ COPY --chown=theia:theia images/rust/templates /home/theia/templates
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
+# The HTML preview (mini-browser) needs its own origin per preview. Reuse the webview
+# host family, which the gateway already routes and certifies; the default
+# {{uuid}}.mini-browser.{{hostname}} has no route. ENV is not inherited from the base image.
 ENV SHELL=/bin/zsh \
-    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
+    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins \
+    THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"
 
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true

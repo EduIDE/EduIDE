@@ -1,1 +1,1 @@
-{ "label": "Web", "description": "TypeScript in the browser, compiled with tsc and served with Live Preview", "order": 2 }
+{ "label": "Web", "description": "TypeScript in the browser, compiled with tsc and shown with the built-in preview", "order": 2 }

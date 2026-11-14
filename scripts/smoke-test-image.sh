@@ -63,6 +63,7 @@ else
 fi
 
 # --- 3. toolchain -----------------------------------------------------------
+check "session user is uid 101, group theia gid 101" "[ \"\$(id -u)\" = 101 ] && [ \"\$(id -g)\" = 101 ] && [ \"\$(id -gn)\" = theia ]"
 check "ubuntu 26.04" "grep -q 'VERSION_ID=\"26.04\"' /etc/os-release"
 for cmd in git ssh curl bash zsh less nano unzip; do
     check "common tool $cmd" "command -v $cmd"

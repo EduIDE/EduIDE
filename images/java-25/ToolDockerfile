@@ -12,7 +12,8 @@ FROM ${BASE_IMAGE} AS base-ide
 FROM ubuntu:26.04 AS apt-deps
 
 # Create theia user and directories first (doesn't need apt)
-RUN useradd --system --create-home --user-group --uid 101 theia && \
+RUN groupadd --system --gid 101 theia && \
+    useradd --system --create-home --gid 101 --uid 101 theia && \
     chmod g+rw /home && \
     mkdir -p /home/project && \
     chown -R theia:theia /home/theia && \

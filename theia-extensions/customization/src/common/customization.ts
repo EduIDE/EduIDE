@@ -224,7 +224,7 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'view.explorer', label: 'Explorer', group: 'views', defaults: ON, views: [{ id: 'explorer-view-container', area: 'left' }] },
     { id: 'view.search', label: 'Search', group: 'views', defaults: ON, views: [{ id: 'search-view-container', area: 'left' }] },
     {
-        id: 'view.artemis', label: 'Artemis', group: 'views', defaults: ON,
+        id: 'view.artemis', label: 'Artemis (Artemis sessions only)', group: 'views', defaults: ON,
         views: [{ id: 'artemis', area: 'left', match: 'includes' }]
     },
     { id: 'view.problems', label: 'Problems', group: 'views', defaults: ON, views: [{ id: 'problems', area: 'bottom' }] },

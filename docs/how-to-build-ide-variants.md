@@ -395,7 +395,7 @@ USER theia
 
 Tag the result with the EduIDE version (`2.0.0`), with a `-N` suffix for changes that are only yours (`2.0.0-1`), and let Renovate bump `EDUIDE_VERSION`. Reference it in the Helm values with a full path and tag, since the chart prefixes `imageRegistry` to any image without a tag.
 
-`EduIDE/EduIDE-image-mannheim` (planned, the repository does not exist yet) will be the reference example (Mannheim's Maven from apt, Live Preview, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
+`EduIDE/EduIDE-image-mannheim` (planned, the repository does not exist yet) will be the reference example (Mannheim's Maven from apt, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
 
 ## Memory tuning
 

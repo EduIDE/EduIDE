@@ -15,6 +15,5 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "workbench.colorTheme": "edu-ide-theme-dark",
-    "telemetry.telemetryLevel": "off",
-    "livePreview.portNumber": 5500
+    "telemetry.telemetryLevel": "off"
 }

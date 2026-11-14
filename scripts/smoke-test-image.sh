@@ -89,6 +89,10 @@ case "$lang" in
         check "tsc" "tsc -v"
         check "tsx" "tsx --version"
         check "@types/node global" "test -d /usr/local/lib/node_modules/@types/node"
+        # The Web template needs HTML and CSS as languages, which the base excludes.
+        for p in vscode.html vscode.html-language-features vscode.css vscode.css-language-features; do
+            check "$p present" "test -d /home/theia/plugins/$p"
+        done
         ;;
     c)
         for cmd in gcc clang clangd gdb make valgrind cmake clang-format; do check "$cmd" "$cmd --version"; done

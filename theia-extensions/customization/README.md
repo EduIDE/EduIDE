@@ -39,6 +39,7 @@ script referenced in the pull request if they need refreshing.
 | `src/browser/customization-preferences.ts` | `eduide.level` and `eduide.overrides` |
 | `src/browser/workspace-mode-contribution.ts` | The "Saved workspace" / "Temporary workspace" status bar entry |
 | `src/node/workspace-mode-service.ts`, `src/node/mount-check.ts` | The server-side mount check behind it, served over JSON-RPC at `/services/eduide/workspace-mode` |
+| `src/browser/session-activity-contribution.ts` | Reports browser input to the session monitor and flags the tab before an inactivity timeout (see below) |
 
 ## Opening the menu
 
@@ -264,3 +265,15 @@ right level once they ship.
 
 which is what the concept asks for, without a single task label hardcoded
 anywhere.
+
+## Session activity
+
+The session monitor (`theia-cloud-monitor`, from EduIDE-Cloud) only sees VS Code API events.
+Typing in the terminal, clicking in the explorer or moving the mouse did not count as activity, so a student could be timed out while working.
+`SessionActivityContribution` listens for keyboard, pointer and wheel input anywhere in the tab and calls the monitor's `theia.cloud.monitor.activity.report` command, at most once a minute.
+Scrolling inside a webview, such as the Artemis problem statement, stays invisible: iframe events do not reach the tab.
+
+When the monitor shows its "Are you still here?" dialog, it executes `eduide.session.timeoutWarning`.
+This extension registers that command and blinks `⚠ Session ends soon` in the tab title until the next input, so a student watching a lecture in another tab notices it.
+
+`yarn test` in this folder runs `src/browser/session-activity.spec.ts` with Node's test runner after `yarn build`.

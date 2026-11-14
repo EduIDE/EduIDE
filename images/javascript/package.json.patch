@@ -11,7 +11,11 @@
     "ms-vscode.js-debug",
     "vscode.javascript",
     "vscode.typescript",
-    "vscode.typescript-language-features"
+    "vscode.typescript-language-features",
+    "vscode.css",
+    "vscode.css-language-features",
+    "vscode.html",
+    "vscode.html-language-features"
   ],
   "theiaPluginsExcludeIds": [
     "xabikos.JavaScriptSnippets",
@@ -29,8 +33,6 @@
     "vscode.configuration-editing",
     "vscode.cpp",
     "vscode.csharp",
-    "vscode.css",
-    "vscode.css-language-features",
     "vscode.dart",
     "vscode.debug-auto-launch",
     "vscode.debug-server-ready",
@@ -43,8 +45,6 @@
     "vscode.gulp",
     "vscode.handlebars",
     "vscode.hlsl",
-    "vscode.html",
-    "vscode.html-language-features",
     "vscode.ini",
     "vscode.jake",
     "vscode.java",

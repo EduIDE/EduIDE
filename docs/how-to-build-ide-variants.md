@@ -42,7 +42,7 @@ images/
               └── settings.json
 ```
 
-The directory name should be clear and concise (e.g., `c`, `python`, `java-17`, `rust`).
+The directory name should be clear and concise (e.g., `c`, `python`, `java-17`, `javascript`).
 
 ### 3. Create ToolDockerfile
 
@@ -339,4 +339,4 @@ The Java variants cap all resident JVM and node processes so many environments f
 - **Use specific versions**: Pin extension versions in `package.json.patch` for reproducibility
 - **Test thoroughly**: Verify that language features (IntelliSense, debugging, etc.) work correctly
 - **Check base excludes**: Review `images/base-ide/package.json.patch` to see what's already excluded
-- **Follow existing patterns**: Look at other variants (Python, Java, Rust) for reference
+- **Follow existing patterns**: Look at other variants (Python, Java, JavaScript) for reference

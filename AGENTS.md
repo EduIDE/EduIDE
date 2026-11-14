@@ -8,11 +8,14 @@ A fork of Eclipse Theia's `theia-ide` blueprint, heavily reworked.
 ## Layout
 
 ```
-images/base-ide/BaseDockerfile      the base image every language image builds FROM
-images/<lang>/ToolDockerfile        one per published image
+images/base-ide/BaseDockerfile      the base image: Theia, Scorpio, data bridge, no Artemis extension
+images/base-standalone/Dockerfile   thin layer FROM base: git credential cache
+images/base-artemis/Dockerfile      thin layer FROM base: Artemis extension
+images/<lang>/ToolDockerfile        one per language, built once per edition
+images/<lang>/templates/<id>/       project templates, each with a template.json
 applications/browser/               the Theia browser app
 theia-extensions/product/           branding and product extension
-scripts/                            build-time TypeScript and the package.json merge
+scripts/                            build-time TypeScript, the package.json merge, check-required-plugins.sh and smoke-test-image.sh
 docker-compose.images.yml           how to build and run every image locally
 .github/workflows/build.yml         what CI publishes
 docs/how-to-build-ide-variants.md   the fuller walkthrough; more current than this file
@@ -21,32 +24,54 @@ docs/base-image-lifecycle.md        which distro each image sits on, and when it
 
 ## What is actually published
 
-Ten images: `base`, plus nine from the matrix in
-`.github/workflows/build.yml` under the **`images`** job.
-
-```
-c  c-templates  java-17  java-17-templates  java-25
-java-25-templates  thm-java-25  javascript  python
-```
+`base`, `base-standalone` and `base-artemis`, plus ten language images from the
+matrix in `.github/workflows/build.yml` under the **`images`** job: each of
+`java-17`, `java-25`, `python`, `javascript` and `c`, built twice from the same
+`ToolDockerfile`, once as `<lang>-standalone` (on `base-standalone`) and once
+as `<lang>-artemis` (on `base-artemis`).
 
 `haskell`, `ocaml` and `rust` still have their directories and compose services,
 so they build locally, but CI no longer publishes them. To bring one back, add
-its matrix entry again and a catalog entry in EduIDE-Helm.
+its matrix entries again and a catalog entry in EduIDE-Helm.
 
 Do not hardcode that list anywhere. EduIDE-Helm's release train reads it from
-the matrix at run time, because a hand-kept copy went stale within days of
-being written and a release nearly shipped pinning two tags that were never
-built.
+the matrix at run time (`.jobs.images.strategy.matrix.include[]["image-name"]`),
+because a hand-kept copy went stale within days of being written and a release
+nearly shipped pinning two tags that were never built. Keep the job named
+`images` and the entries flat.
 
-**Three families, and they are not the same shape.**
+**Editions live in the base, not in the language images.** `base` has Scorpio,
+the data bridge and `theia-cloud-monitor`. `base-standalone` adds
+a global git config with `credential.helper = cache --timeout=10800`.
+`base-artemis` adds `artemis-extension` to `plugins/` **and** to `package.json`
+`theiaPlugins`, because every language image's `yarn download:plugins:smart`
+prunes `plugins/` against `package.json` and would delete it otherwise. The
+Artemis pin is `ARTEMIS_EXTENSION_URL` in `images/base-artemis/Dockerfile`.
+A `ToolDockerfile` must stay edition-agnostic: no Artemis, no git config.
 
-| Family | Has | Entrypoint |
-|---|---|---|
-| plain (`c`, `java-17`, `python`, …) | a `package.json.patch` and its own VS Code settings file | Theia's `main.js` |
-| `-templates` | `templates/<flavour>/`, `entrypoint.sh`. **No** `package.json.patch`, **no** `project/`. Plugins inherited from the language image | `entrypoint.sh`, which copies `$TEMPLATE` into `/home/project` |
-| base | the plugin set everything else inherits | — |
+Every `ToolDockerfile` runs `scripts/check-required-plugins.sh` twice: in the
+plugin stage right after the `package.json` merge (fails if `theiaPlugins`
+lacks or nulls `theia-cloud-monitor`, `scorpio` or `data-bridge`; this is the
+check that can fail, because the final stage merges plugin folders instead of
+replacing them) and at the end on the finished `plugins/` folder. CI then runs
+`scripts/smoke-test-image.sh` on every image, including each template's Test
+task (default build task if it has none) under `--network none`. Templates
+marked `needsNetwork` (Maven, Gradle, Bazel) run with network.
+
+**Templates** live in `images/<lang>/templates/<id>/` with a `template.json`
+(`label`, `description`, `order`, optional `needsNetwork`), are copied to `/home/theia/templates/<id>/`,
+and are applied by Scorpio, not by an entrypoint. The only entrypoint left is
+`images/c/entrypoint.sh`, which writes the Bazel remote cache config from
+runtime env. Renovate leaves `images/*/templates/**` alone.
 
 ## Traps
+
+**The HTML preview only works because of an ENV in each `ToolDockerfile`.**
+`THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"` moves the
+mini-browser onto the webview host family, which the gateway routes and has a
+certificate for. ENV does not travel from the base image, so it must be in
+every `ToolDockerfile`. Live Preview is not in the images: it serves on
+`127.0.0.1` of the container. `docs/how-to-build-ide-variants.md`.
 
 **The Theia backend has no auth of its own; it must never be reachable except
 through the authenticating proxy/gateway.** A direct TCP connection to the
@@ -82,7 +107,7 @@ passes.** Debian 11 went EOL on 2026-08-31 and took the v1.2.1 release build
 with it: `apt-get update` kept succeeding against a frozen `bullseye-security`
 index while the `.deb` files behind it had been purged, so the build 404'd on a
 single package and looked like a flaky mirror. Everything sits on
-`node:22-trixie` and `ubuntu:24.04` now - pick the suite that is current
+`node:22-trixie` and `ubuntu:26.04` now - pick the suite that is current
 stable, not one already handed to the LTS team. Apt only meets the live
 mirrors on the nightly `schedule` run and on a `workflow_dispatch` with
 `disable_layer_cache`; every other trigger reuses the cached layer, so the
@@ -172,9 +197,10 @@ CI threads the base image's **immutable sha tag** into every language build
 1. `images/<lang>/ToolDockerfile` — copy `images/java-17`, not `images/c`
 2. Its `package.json.patch` and VS Code settings, modelled on
    `images/java-17/project/.vscode/settings.json`
-   (omit both for a `-templates` image; add `templates/` and `entrypoint.sh`)
-3. A service in `docker-compose.images.yml` on the next free port
-4. A matrix entry under the **`images`** job in `.github/workflows/build.yml`
+   plus `templates/<id>/` folders, each with a `template.json`
+3. Two services in `docker-compose.images.yml` on the next free ports, one per edition
+4. Two matrix entries under the **`images`** job in `.github/workflows/build.yml`
+   (`<lang>-standalone`, `<lang>-artemis`), and the language in the `smoke` job matrix
 5. Keep the `EDUIDE_IMAGE_NAME` / `EDUIDE_IMAGE_TAG` / `EDUIDE_IMAGE_REVISION`
    stamp at the end of the final stage - it is what the About dialog shows, and
    an image without it reports its version as `unknown`

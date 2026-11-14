@@ -15,6 +15,7 @@
     "java.completion.guessMethodArguments": "auto",
     "java.inlayHints.parameterNames.enabled": "literals",
     "redhat.telemetry.enabled": false,
+    "cSpell.language": "en,de",
     "workbench.colorTheme": "edu-ide-theme-dark",
     "telemetry.telemetryLevel": "off"
 }

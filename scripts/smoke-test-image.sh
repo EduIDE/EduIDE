@@ -64,6 +64,7 @@ fi
 
 # --- 3. toolchain -----------------------------------------------------------
 check "session user is uid 101, group theia gid 101" "[ \"\$(id -u)\" = 101 ] && [ \"\$(id -g)\" = 101 ] && [ \"\$(id -gn)\" = theia ]"
+check "mini-browser host pattern set" "[ \"\$THEIA_MINI_BROWSER_HOST_PATTERN\" = '{{uuid}}.webview.{{hostname}}' ]"
 check "ubuntu 26.04" "grep -q 'VERSION_ID=\"26.04\"' /etc/os-release"
 for cmd in git ssh curl bash zsh less nano unzip; do
     check "common tool $cmd" "command -v $cmd"
@@ -86,7 +87,6 @@ case "$lang" in
         check "tsc" "tsc -v"
         check "tsx" "tsx --version"
         check "@types/node global" "test -d /usr/local/lib/node_modules/@types/node"
-        check "plugin ms-vscode.live-server present" "test -d /home/theia/plugins/ms-vscode.live-server"
         ;;
     c)
         for cmd in gcc clang clangd gdb make valgrind cmake clang-format; do check "$cmd" "$cmd --version"; done

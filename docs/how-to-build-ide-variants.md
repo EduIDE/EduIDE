@@ -362,6 +362,10 @@ About dialog then shows `unknown` and omits the revision line. The frontend just
 reads the environment at runtime, so a deployment can override the variables
 without rebuilding.
 
+## HTML preview
+
+Live Preview (`ms-vscode.live-server`) does not work in the cloud: it serves on `127.0.0.1:<port>` inside the container and its preview points at the student's own `127.0.0.1`. The images use Theia's built-in mini-browser instead, which serves files through the IDE server. Every `ToolDockerfile` sets `THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"` (ENV is not inherited from the base image), so previews live on the webview host family that the gateway already routes and certifies; the default `{{uuid}}.mini-browser.{{hostname}}` has no route. The product extension silences Theia's "host pattern changed" warning for this one pattern. Students open a preview with the "Open Preview to the Side" button of the editor toolbar, or right-click `index.html` and choose Open With, Preview. Relative CSS and scripts load; there is no auto-reload and no server-side code. Locally the browser must resolve `<uuid>.webview.<host>`, so use `http://localhost:3000` (Chrome resolves `*.localhost`), not `127.0.0.1`.
+
 ## Deriving an installation image
 
 A university that needs more than an edition offers (a build tool, an extension, settings, keymaps) does not fork this repository. It builds its own image `FROM` an edition image in its own repository:

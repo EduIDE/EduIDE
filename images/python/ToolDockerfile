@@ -112,8 +112,12 @@ COPY --chown=theia:theia images/python/templates /home/theia/templates
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
+# The HTML preview (mini-browser) needs its own origin per preview. Reuse the webview
+# host family, which the gateway already routes and certifies; the default
+# {{uuid}}.mini-browser.{{hostname}} has no route. ENV is not inherited from the base image.
 ENV SHELL=/bin/zsh \
-    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
+    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins \
+    THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"
 
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true

@@ -24,6 +24,14 @@ import { TaskToolbarContribution } from './toolbar/task-toolbar-contribution';
 import { DebugToolbarContribution } from './toolbar/debug-toolbar-contribution';
 import { RefactorToolbarContribution } from './toolbar/refactor-toolbar-contribution';
 import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import { MiniBrowserFrontendSecurityWarnings } from '@theia/mini-browser/lib/browser/mini-browser-frontend-security-warnings';
+
+// The images set THEIA_MINI_BROWSER_HOST_PATTERN to the webview host family so the
+// HTML preview works behind the gateway. Theia then warns about the changed pattern
+// on every start; that is intended here, so silence this one check. Patched on the
+// prototype because rebinding depends on module load order. The generic
+// warnOnPotentiallyInsecureHostPattern flag stays on, it also guards the backend bind.
+Reflect.set(MiniBrowserFrontendSecurityWarnings.prototype, 'checkHostPattern', async () => undefined);
 
 export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     bind(TheiaIDEGettingStartedWidget).toSelf();

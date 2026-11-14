@@ -66,6 +66,13 @@ runtime env. Renovate leaves `images/*/templates/**` alone.
 
 ## Traps
 
+**The HTML preview only works because of an ENV in each `ToolDockerfile`.**
+`THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"` moves the
+mini-browser onto the webview host family, which the gateway routes and has a
+certificate for. ENV does not travel from the base image, so it must be in
+every `ToolDockerfile`. Live Preview is not in the images: it serves on
+`127.0.0.1` of the container. `docs/how-to-build-ide-variants.md`.
+
 **The Theia backend has no auth of its own; it must never be reachable except
 through the authenticating proxy/gateway.** A direct TCP connection to the
 backend port (3000) is an unauthenticated session - file access, a terminal,

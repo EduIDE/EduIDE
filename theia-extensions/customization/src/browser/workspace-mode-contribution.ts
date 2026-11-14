@@ -41,6 +41,7 @@ export class WorkspaceModeContribution implements FrontendApplicationContributio
     protected readonly logger: ILogger;
 
     protected mode: WorkspaceMode = 'unknown';
+    protected refreshGeneration = 0;
 
     onStart(): void {
         this.customization.onDidChange(() => this.update());
@@ -50,19 +51,25 @@ export class WorkspaceModeContribution implements FrontendApplicationContributio
 
     /** The connection to the server may not be up yet, so a failure is tried again. */
     protected async refresh(): Promise<void> {
+        // Only the latest refresh may set the mode: a lookup for a root that
+        // has since been closed or replaced must not bring its answer back.
+        const generation = ++this.refreshGeneration;
         const root = this.workspaceService.tryGetRoots()[0];
         if (!root) {
             this.mode = 'unknown';
             this.update();
             return;
         }
+        let mode: WorkspaceMode = 'unknown';
         try {
-            this.mode = await retryWithDelays(() => this.workspaceMode.getMode(root.resource.toString()), RETRY_DELAYS_MS);
+            mode = await retryWithDelays(() => this.workspaceMode.getMode(root.resource.toString()), RETRY_DELAYS_MS);
         } catch (error) {
             this.logger.warn('EduIDE customization: could not read the workspace mode', error);
-            this.mode = 'unknown';
         }
-        this.update();
+        if (generation === this.refreshGeneration) {
+            this.mode = mode;
+            this.update();
+        }
     }
 
     protected update(): void {

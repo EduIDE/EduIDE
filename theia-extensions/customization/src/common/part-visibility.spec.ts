@@ -14,11 +14,12 @@ import { hideParts, restoreParts } from './part-visibility';
 interface FakePart {
     readonly partId: string;
     hidden: boolean;
+    readonly isHidden: boolean;
     setHidden(hidden: boolean): void;
 }
 
 function part(partId: string): FakePart {
-    return { partId, hidden: false, setHidden(hidden: boolean): void { this.hidden = hidden; } };
+    return { partId, hidden: false, get isHidden(): boolean { return this.hidden; }, setHidden(hidden: boolean): void { this.hidden = hidden; } };
 }
 
 test('a part we hid comes back', () => {
@@ -34,5 +35,14 @@ test('a part the student hid is not shown again', () => {
     const maven = part('maven');
     maven.hidden = true;
     restoreParts([maven], new Set());
+    assert.strictEqual(maven.hidden, true);
+});
+
+test('a part the student had already hidden is not claimed, so it stays hidden', () => {
+    const maven = part('maven');
+    maven.hidden = true;
+    const ours = new Set<string>();
+    hideParts([maven], ours);
+    restoreParts([maven], ours);
     assert.strictEqual(maven.hidden, true);
 });

@@ -46,3 +46,25 @@ test('requests made one after the other each get a pass', async () => {
     await queue.request();
     assert.strictEqual(runs, 2);
 });
+
+test('a pass that fails does not swallow the request that arrived during it', async () => {
+    let runs = 0;
+    let release!: () => void;
+    const queue = new ApplyQueue(async () => {
+        if (++runs === 1) {
+            await new Promise<void>(resolve => { release = resolve; });
+            throw new Error('first pass failed');
+        }
+    });
+    const first = queue.request();
+    await queue.request();
+    release();
+    await first;
+    assert.strictEqual(runs, 2);
+});
+
+test('the failure of the last pass is reported', async () => {
+    const queue = new ApplyQueue(async () => { throw new Error('down'); });
+    await assert.rejects(queue.request(), /down/);
+    await assert.rejects(queue.request(), /down/);
+});

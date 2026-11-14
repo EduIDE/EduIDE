@@ -433,18 +433,25 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     protected async applyPreferences(): Promise<void> {
-        const writes = planPreferenceWrites({
-            catalogue: ELEMENT_CATALOGUE,
-            level: this.level,
-            isEnabled: id => this.isEnabled(id),
-            isOverridden: id => this.isOverridden(id),
-            readUser: key => this.preferences.inspectInScope(key, PreferenceScope.User)
-        });
-        for (const { key, value } of writes) {
+        // Planned again before every write, so a value the student edited while
+        // an earlier write was pending is merged into, not replaced.
+        const attempted = new Set<string>();
+        for (;;) {
+            const next = planPreferenceWrites({
+                catalogue: ELEMENT_CATALOGUE,
+                level: this.level,
+                isEnabled: id => this.isEnabled(id),
+                isOverridden: id => this.isOverridden(id),
+                readUser: key => this.preferences.inspectInScope(key, PreferenceScope.User)
+            }).find(write => !attempted.has(write.key));
+            if (!next) {
+                return;
+            }
+            attempted.add(next.key);
             try {
-                await this.preferences.set(key, value, PreferenceScope.User);
+                await this.preferences.set(next.key, next.value, PreferenceScope.User);
             } catch (error) {
-                this.logger.warn(`EduIDE customization: could not set '${key}'`, error);
+                this.logger.warn(`EduIDE customization: could not set '${next.key}'`, error);
             }
         }
     }
@@ -466,14 +473,14 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     protected async hideView(view: ManagedView): Promise<void> {
-        const widgets = this.matchingWidgets(view);
-        if (widgets.length === 0) {
-            // A view inside another container (Maven in the Explorer) is a part
-            // of it, not a shell widget. Closing it would leave no way back
-            // short of a reload, so it is hidden and shown again instead.
-            hideParts(this.matchingParts(view), this.hiddenPartIds);
-        }
-        for (const widget of widgets) {
+        // A view inside another container (Maven in the Explorer) is a part of
+        // it. The shell tracks it as a widget too, but closing that would close
+        // the container, and leave no way back short of a reload, so it is
+        // hidden and shown again instead.
+        const parts = this.matchingParts(view);
+        hideParts(parts, this.hiddenPartIds);
+        const partWidgets = new Set<Widget>(parts.map(part => part.wrapped));
+        for (const widget of this.matchingWidgets(view).filter(candidate => !partWidgets.has(candidate))) {
             const area = this.shell.getAreaFor(widget);
             if (area) {
                 this.rememberedAreas.set(widget.id, area);

@@ -10,6 +10,7 @@
 /** The two things of a view container part this needs, so a test can stand in. */
 export interface HideablePart {
     readonly partId: string;
+    readonly isHidden: boolean;
     setHidden(hidden: boolean): void;
 }
 
@@ -20,8 +21,10 @@ export interface HideablePart {
  */
 export function hideParts(parts: readonly HideablePart[], hiddenByUs: Set<string>): void {
     for (const part of parts) {
-        part.setHidden(true);
-        hiddenByUs.add(part.partId);
+        if (!part.isHidden) {
+            part.setHidden(true);
+            hiddenByUs.add(part.partId);
+        }
     }
 }
 

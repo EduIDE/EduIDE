@@ -48,13 +48,22 @@ export class ApplyQueue {
             return;
         }
         this.running = true;
-        try {
-            do {
-                this.again = false;
+        let failure: unknown;
+        let failed = false;
+        do {
+            this.again = false;
+            try {
                 await this.pass();
-            } while (this.again);
-        } finally {
-            this.running = false;
+                failed = false;
+            } catch (error) {
+                // A request that came in meanwhile still gets its pass.
+                failed = true;
+                failure = error;
+            }
+        } while (this.again);
+        this.running = false;
+        if (failed) {
+            throw failure;
         }
     }
 }

@@ -10,4 +10,5 @@
 *.log
 license-check-summary.txt*
 .context/
-.claude/
+.claude/*
+!.claude/skills/

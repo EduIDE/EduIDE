@@ -74,7 +74,3 @@ test('linters and the workspace mode entry are on at every level', () => {
     assert.deepStrictEqual(defaults('status.workspaceMode'), ['beginner', 'advanced', 'expert']);
     assert.deepStrictEqual(ELEMENTS_BY_ID.get('status.workspaceMode')?.statusBarItems, [WORKSPACE_MODE_STATUS_ID]);
 });
-
-test('view.livePreview is listed but pending, since it has nothing to manage', () => {
-    assert.ok(ELEMENTS_BY_ID.get('view.livePreview')?.pending);
-});

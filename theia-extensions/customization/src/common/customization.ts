@@ -248,9 +248,6 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
         id: 'view.maven', label: 'Maven projects', group: 'views', defaults: ADVANCED_UP,
         views: [{ id: 'mavenProjects', area: 'left', match: 'includes' }]
     },
-    // Live Preview contributes commands and an editor action, no view of its own,
-    // so there is nothing to show or hide until it grows one.
-    { id: 'view.livePreview', label: 'Live Preview', group: 'views', defaults: ON, pending: 'the extension contributes no view to show or hide' },
     {
         id: 'view.output', label: 'Output', group: 'views', defaults: ADVANCED_UP,
         views: [{ id: 'outputView', area: 'bottom' }], menus: [viewMenuEntry('output:toggle')]

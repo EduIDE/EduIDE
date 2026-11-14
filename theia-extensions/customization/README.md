@@ -102,7 +102,6 @@ switches that do nothing:
   image change rather than IDE code
 - `diag.sonar` — held until the per-session memory budget is measured
 - `diag.typeCheck` - no image ships Pyright or Pylance, which provide the setting
-- `view.livePreview` - Live Preview contributes no view to show or hide
 - `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
 
 ## What an exercise can ask for
@@ -214,7 +213,6 @@ preferences are applied.
 
 `diag.lint` covers ruff and ESLint. Go has no switch for it (`go.lintTool` has no
 "none" value), so staticcheck is not part of the element.
-`view.livePreview` is listed but pending: Live Preview contributes no view.
 `view.maven` hides the `mavenProjects` view inside the Explorer; it has no View
 menu entry.
 
@@ -259,7 +257,7 @@ right level once they ship.
 | c make, bazel | Run | Build, Valgrind |
 | python | Run, Test | Lint (`ruff check`) |
 | node | Run, Test | Build (`tsc`) |
-| web | Start (`tsc --watch` + Live Preview) | Build |
+| web | Start (`tsc --watch` + preview) | Build |
 | cargo | Run, Test | Build, Clippy |
 | go | Run, Test | Build, Vet (`go vet`, `staticcheck`) |
 

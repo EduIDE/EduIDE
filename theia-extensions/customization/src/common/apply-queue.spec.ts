@@ -21,7 +21,7 @@ test('the screen is updated and listeners told before the settings are written',
     });
     await new Promise(resolve => setImmediate(resolve));
     assert.deepStrictEqual(calls, ['show', 'notify', 'write']);
-    void pending;
+    pending.catch(() => undefined);
 });
 
 test('a request during a pass runs it again instead of being dropped', async () => {

@@ -21,7 +21,7 @@
   "theia": {
     "frontend": {
       "config": {
-        "applicationName": "Theia IDE",
+        "applicationName": "EduIDE",
         "preferences": {
           "toolbar.showToolbar": true,
           "files.enableTrash": false,

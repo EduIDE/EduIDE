@@ -6,5 +6,6 @@
         "lost+found": true
     },
     "telemetry.telemetryLevel": "off",
+    "cSpell.language": "en,de",
     "workbench.colorTheme": "edu-ide-theme-dark",
 }

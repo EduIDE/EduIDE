@@ -62,40 +62,101 @@ jobs:
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
     secrets: inherit
 
-  images:
+  # The two editions of the base: a thin layer FROM base each. They exist as
+  # separate jobs because the shared workflow has no `target` input.
+  # base-standalone adds the git credential cache, base-artemis adds the
+  # Artemis extension.
+  base-standalone:
     needs: base
+    uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
+    with:
+      docker-file: images/base-standalone/Dockerfile
+      image-name: eduide/eduide/base-standalone
+      docker-context: .
+      build-args: |
+        BASE_IDE_TAG=${{ needs.base.outputs.sha_tag }}
+      # See the note on the base job.
+      image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
+      no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
+    secrets: inherit
+
+  base-artemis:
+    needs: base
+    uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
+    with:
+      docker-file: images/base-artemis/Dockerfile
+      image-name: eduide/eduide/base-artemis
+      docker-context: .
+      build-args: |
+        BASE_IDE_TAG=${{ needs.base.outputs.sha_tag }}
+      # See the note on the base job.
+      image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
+      no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
+    secrets: inherit
+
+  # One ToolDockerfile per language, built twice: once on base-standalone and
+  # once on base-artemis. EduIDE-Helm's release train reads `image-name` from
+  # this matrix (`.jobs.images.strategy.matrix.include[]["image-name"]`), so keep
+  # the job named `images` and the entries flat. The `smoke` job below repeats
+  # the language list; keep the two in step.
+  images:
+    needs: [base, base-standalone, base-artemis]
     name: ${{ matrix.image-name }}
     strategy:
       # These are large, independent images. One language failing to build must
-      # not cancel the other thirteen.
+      # not cancel the other nine.
       fail-fast: false
       matrix:
         include:
-          - image-name: eduide/eduide/c
-            docker-file: images/c/ToolDockerfile
-          - image-name: eduide/eduide/c-templates
-            docker-file: images/c-templates/ToolDockerfile
-          - image-name: eduide/eduide/java-17
+          - image-name: eduide/eduide/java-17-standalone
             docker-file: images/java-17/ToolDockerfile
-          - image-name: eduide/eduide/java-17-templates
-            docker-file: images/java-17-templates/ToolDockerfile
-          - image-name: eduide/eduide/java-25
+            edition: standalone
+          - image-name: eduide/eduide/java-17-artemis
+            docker-file: images/java-17/ToolDockerfile
+            edition: artemis
+          - image-name: eduide/eduide/java-25-standalone
             docker-file: images/java-25/ToolDockerfile
-          - image-name: eduide/eduide/java-25-templates
-            docker-file: images/java-25-templates/ToolDockerfile
-          - image-name: eduide/eduide/thm-java-25
-            docker-file: images/thm-java-25/ToolDockerfile
-          - image-name: eduide/eduide/javascript
-            docker-file: images/javascript/ToolDockerfile
-          - image-name: eduide/eduide/python
+            edition: standalone
+          - image-name: eduide/eduide/java-25-artemis
+            docker-file: images/java-25/ToolDockerfile
+            edition: artemis
+          - image-name: eduide/eduide/python-standalone
             docker-file: images/python/ToolDockerfile
+            edition: standalone
+          - image-name: eduide/eduide/python-artemis
+            docker-file: images/python/ToolDockerfile
+            edition: artemis
+          - image-name: eduide/eduide/javascript-standalone
+            docker-file: images/javascript/ToolDockerfile
+            edition: standalone
+          - image-name: eduide/eduide/javascript-artemis
+            docker-file: images/javascript/ToolDockerfile
+            edition: artemis
+          - image-name: eduide/eduide/c-standalone
+            docker-file: images/c/ToolDockerfile
+            edition: standalone
+          - image-name: eduide/eduide/c-artemis
+            docker-file: images/c/ToolDockerfile
+            edition: artemis
+          - image-name: eduide/eduide/rust-standalone
+            docker-file: images/rust/ToolDockerfile
+            edition: standalone
+          - image-name: eduide/eduide/rust-artemis
+            docker-file: images/rust/ToolDockerfile
+            edition: artemis
+          - image-name: eduide/eduide/go-standalone
+            docker-file: images/go/ToolDockerfile
+            edition: standalone
+          - image-name: eduide/eduide/go-artemis
+            docker-file: images/go/ToolDockerfile
+            edition: artemis
     uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
     with:
       docker-file: ${{ matrix.docker-file }}
       image-name: ${{ matrix.image-name }}
       docker-context: .
       build-args: |
-        BASE_IDE_TAG=${{ needs.base.outputs.sha_tag }}
+        BASE_IMAGE=ghcr.io/eduide/eduide/base-${{ matrix.edition }}:${{ needs.base.outputs.sha_tag }}
         IMAGE_NAME=${{ matrix.image-name }}
         IMAGE_REVISION=${{ github.sha }}
       # See the note on the base job.
@@ -104,3 +165,46 @@ jobs:
       image-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
       no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
     secrets: inherit
+
+  # Pulls each image that was just built and runs scripts/smoke-test-image.sh
+  # against it: IDE answers, required extensions, edition, toolchain, and every
+  # template's Test task offline. Also publishes the image's template list.
+  smoke:
+    needs: [base, images]
+    # Not gated on needs.images.result == 'success': a reusable-workflow matrix
+    # exposes no per-entry result, so that would skip every smoke test when one
+    # image fails. A missing image fails its own smoke job at the pull instead.
+    if: ${{ !cancelled() && needs.base.result == 'success' }}
+    permissions:
+      contents: read
+      packages: read
+    name: smoke ${{ matrix.language }}-${{ matrix.edition }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [java-17, java-25, python, javascript, c, rust, go]
+        edition: [standalone, artemis]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull the image
+        env:
+          IMAGE: ghcr.io/eduide/eduide/${{ matrix.language }}-${{ matrix.edition }}:${{ needs.base.outputs.sha_tag }}
+        run: docker pull "$IMAGE"
+      - name: Smoke test
+        env:
+          IMAGE: ghcr.io/eduide/eduide/${{ matrix.language }}-${{ matrix.edition }}:${{ needs.base.outputs.sha_tag }}
+          SMOKE_OUT_DIR: ${{ runner.temp }}/templates
+        run: scripts/smoke-test-image.sh "$IMAGE" "${{ matrix.edition }}"
+      # The release train checks the chart's buildSystems against these lists.
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: templates-${{ matrix.language }}-${{ matrix.edition }}
+          path: ${{ runner.temp }}/templates/templates-*.json
+          if-no-files-found: ignore

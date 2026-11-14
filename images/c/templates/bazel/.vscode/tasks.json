@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run",
+            "type": "shell",
+            "command": "bazel run //:app",
+            "group": { "kind": "build", "isDefault": true },
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" }
+        },
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "bazel build //:app",
+            "group": "build",
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" }
+        },
+        {
+            "label": "Valgrind",
+            "type": "shell",
+            "command": "bazel build //:app && valgrind --leak-check=full --error-exitcode=1 bazel-bin/app",
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "eduide": { "minLevel": "advanced" }
+        }
+    ]
+}

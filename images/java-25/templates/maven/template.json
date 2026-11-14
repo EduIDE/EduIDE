@@ -1,0 +1,1 @@
+{ "label": "Maven", "description": "Java 25 project built with Maven, JUnit 5", "order": 1, "needsNetwork": true }

@@ -68,7 +68,7 @@ jobs:
       # Bakes APP_VERSION=<derived tag> into the image, which the About dialog
       # reads back so a running session can name the image it came from.
       stamp-app-version: true
-      no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
+      no-cache: ${{ github.event_name == 'schedule' || inputs.disable_layer_cache || false }}
     secrets: inherit
 
   images:
@@ -111,5 +111,5 @@ jobs:
       stamp-app-version: true
       # See the note on the base job.
       image-tag: ${{ inputs.image_tag || '' }}
-      no-cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.disable_layer_cache) || false }}
+      no-cache: ${{ github.event_name == 'schedule' || inputs.disable_layer_cache || false }}
     secrets: inherit

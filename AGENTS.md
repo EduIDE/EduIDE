@@ -190,8 +190,9 @@ to students. Building an image deploys nothing on its own.
 - Electron code is deleted during the base build; do not add to it.
 - Release tags are `vX.Y.Z`; the image tag is the same string without the `v`.
 - Releases are manual: merge a release PR (CHANGELOG.md section), then run
-  `gh workflow run release.yml -f version=X.Y.Z`. It tags, creates the GitHub
-  Release and calls `build.yml` with `image_tag`. Nothing releases on a
+  `gh workflow run release.yml -f version=X.Y.Z`. It drafts the GitHub
+  Release, calls `build.yml` with `image_tag`, verifies the images and then
+  publishes the release, which creates the tag. Nothing releases on a
   published Release, because one created with `GITHUB_TOKEN` triggers no
   workflow. Use the `release` skill (`.claude/skills/release/SKILL.md`).
 - Every image stamps its own name, tag and commit into `EDUIDE_IMAGE_NAME` /

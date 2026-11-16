@@ -23,7 +23,7 @@ Two thin layers `FROM base`, one per edition. The base itself carries Scorpio, t
 base
  |- base-standalone   adds a git credential cache (cache --timeout=10800)
  |   '- <lang>-standalone
- '- base-artemis      adds artemis-extension to plugins/ and package.json
+ '- base-artemis      adds artemis-extension to plugins/
      '- <lang>-artemis
 ```
 

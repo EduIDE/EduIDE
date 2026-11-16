@@ -33,6 +33,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
 
 # Tool versions that do not come from apt are pinned here; Renovate bumps them.
+# renovate: datasource=pypi depName=pytest
+ARG PYTEST_VERSION=9.2.0
+# renovate: datasource=pypi depName=numpy
+ARG NUMPY_VERSION=2.5.5
+# renovate: datasource=pypi depName=pandas
+ARG PANDAS_VERSION=3.1.1
+# renovate: datasource=pypi depName=matplotlib
+ARG MATPLOTLIB_VERSION=3.11.2
 # renovate: datasource=pypi depName=ruff
 ARG RUFF_VERSION=0.17.5
 # renovate: datasource=pypi depName=uv
@@ -40,7 +48,7 @@ ARG UV_VERSION=0.13.8
 # renovate: datasource=pypi depName=debugpy
 ARG DEBUGPY_VERSION=1.8.22
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
-    pip3 install -U pytest numpy pandas matplotlib "debugpy==${DEBUGPY_VERSION}" "ruff==${RUFF_VERSION}" "uv==${UV_VERSION}" --retries 5 --timeout 30
+    pip3 install "pytest==${PYTEST_VERSION}" "numpy==${NUMPY_VERSION}" "pandas==${PANDAS_VERSION}" "matplotlib==${MATPLOTLIB_VERSION}" "debugpy==${DEBUGPY_VERSION}" "ruff==${RUFF_VERSION}" "uv==${UV_VERSION}" --retries 5 --timeout 30
 
 # Parallel stage: Plugin download (runs concurrently with apt-deps)
 FROM node:22-trixie AS plugin-image

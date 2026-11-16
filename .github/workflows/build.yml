@@ -28,7 +28,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Optional image tag override (e.g. my-test-tag, or 2.3.0 for the release train)"
+        description: "Optional image tag override (e.g. my-test-tag). Version tags (1.2.3, 1.2.3-rc.1) are refused here: only release.yml may publish them"
         required: false
         default: ""
         type: string
@@ -47,10 +47,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Release tags (X.Y.Z, optionally with a suffix) are immutable and may only be
+  # published by release.yml of this repository (any branch: the shared release
+  # workflow lets only -rc.N run off main and refuses stable versions there). In
+  # a called workflow, github.workflow_ref is the caller's ref, so a manual
+  # dispatch of this file cannot overwrite one.
+  guard:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Refuse version tags outside release.yml
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          if [[ "$IMAGE_TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+ && "$WORKFLOW_REF" != EduIDE/EduIDE/.github/workflows/release.yml@refs/heads/* ]]; then
+            echo "::error::image_tag '$IMAGE_TAG' looks like a release version; only release.yml may publish those."
+            exit 1
+          fi
+
   # The base IDE image every language image is built FROM. Its immutable
   # sha_tag is passed down so the language images cannot pick up a different
   # base than the one just built.
   base:
+    needs: guard
     uses: EduIDE/.github/.github/workflows/build-and-push-docker-image.yml@v1
     with:
       docker-file: images/base-ide/BaseDockerfile
@@ -167,6 +187,7 @@ jobs:
       build-args: |
         BASE_IMAGE=ghcr.io/eduide/eduide/base-${{ matrix.edition }}:${{ needs.base.outputs.sha_tag }}
         IMAGE_NAME=${{ matrix.image-name }}
+        GRADLE_PREWARM_AUTO_CONFIRM=${{ matrix.edition == 'artemis' }}
         IMAGE_REVISION=${{ github.sha }}
       # See the note on the base job.
       stamp-app-version: true
@@ -209,7 +230,8 @@ jobs:
         env:
           IMAGE: ghcr.io/eduide/eduide/${{ matrix.language }}-${{ matrix.edition }}:${{ needs.base.outputs.sha_tag }}
           SMOKE_OUT_DIR: ${{ runner.temp }}/templates
-        run: scripts/smoke-test-image.sh "$IMAGE" "${{ matrix.edition }}"
+          EDITION: ${{ matrix.edition }}
+        run: scripts/smoke-test-image.sh "$IMAGE" "$EDITION"
       # The release train checks the chart's buildSystems against these lists.
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}

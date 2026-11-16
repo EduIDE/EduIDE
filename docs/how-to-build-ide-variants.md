@@ -34,7 +34,7 @@ FROM ${BASE_IMAGE} AS base-ide
 |---|---|---|
 | `base` | `images/base-ide/BaseDockerfile` | Theia, Scorpio, data bridge, `theia-cloud-monitor`; no Artemis extension |
 | `base-standalone` | `images/base-standalone/Dockerfile` | git credential cache, `cache --timeout=10800` |
-| `base-artemis` | `images/base-artemis/Dockerfile` | `artemis-extension`, in `plugins/` and in `package.json` `theiaPlugins` (keeps the two consistent; the folder would survive in the language images anyway, their final stage merges plugin folders) |
+| `base-artemis` | `images/base-artemis/Dockerfile` | `artemis-extension`, in `plugins/` only (not in `package.json` `theiaPlugins`, so the language images never re-download it without the checksum; their final stage copies the folder from the base) |
 
 Never put edition specifics into a `ToolDockerfile`. The published names are `<lang>-standalone` and `<lang>-artemis`.
 

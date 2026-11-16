@@ -55,12 +55,16 @@ for plugin in theia-cloud-monitor scorpio data-bridge; do
 done
 if [ "$edition" = artemis ]; then
     check "artemis-extension present" "test -d /home/theia/plugins/artemis-extension"
-    check "artemis-extension kept in package.json" "grep -q '\"artemis-extension\"' /home/theia/package.json"
     check "no git credential cache" "! git config --global --get credential.helper | grep -q cache"
 else
     check "artemis-extension absent" "! test -e /home/theia/plugins/artemis-extension"
     check "git credential cache set" "git config --global --get credential.helper | grep -qx 'cache --timeout=10800'"
 fi
+
+case "$lang" in
+    java-*) want=false; [ "$edition" = artemis ] && want=true
+        check "gradle prewarm auto-confirm is $want" "[ \"\${GRADLE_PREWARM_AUTO_CONFIRM:-false}\" = $want ]" ;;
+esac
 
 check "project settings present" "test -f /home/project/.vscode/settings.json"
 

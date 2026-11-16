@@ -1,0 +1,14 @@
+[
+  {
+    "id": "node",
+    "label": "Node.js",
+    "order": 1,
+    "needsNetwork": false
+  },
+  {
+    "id": "web",
+    "label": "Web",
+    "order": 2,
+    "needsNetwork": false
+  }
+]

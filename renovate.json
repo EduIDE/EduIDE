@@ -16,6 +16,12 @@
       "enabled": false
     },
     {
+      "description": "These pins come with SHA-256 ARGs that Renovate cannot bump.",
+      "matchFileNames": ["images/**/ToolDockerfile"],
+      "matchDepNames": ["rust-lang/rustup", "bazelbuild/bazelisk", "go"],
+      "prBodyNotes": ["Update the matching `*_SHA256` ARGs in the same Dockerfile by hand, or the build fails. Rustup: the `.sha256` next to each `rustup-init` on static.rust-lang.org. Bazelisk: `sha256sum` of each `bazelisk-linux-<arch>` release asset. Go: https://go.dev/dl/."]
+    },
+    {
       "description": "Node stays on 22 in the images; @types/node must match it.",
       "matchPackageNames": ["@types/node"],
       "allowedVersions": "<23"

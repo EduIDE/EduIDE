@@ -9,7 +9,7 @@ services:
       context: .
       dockerfile: images/base-ide/BaseDockerfile
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
 
   base-standalone:
@@ -48,7 +48,7 @@ services:
     depends_on:
       - base-ide
     ports:
-      - "3002:3000"
+      - "127.0.0.1:3002:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
 
@@ -64,7 +64,7 @@ services:
     depends_on:
       - base-ide
     ports:
-      - "3005:3000"
+      - "127.0.0.1:3005:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
 
@@ -79,8 +79,9 @@ services:
         base-ide: "service:base-ide"
     depends_on:
       - base-ide
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
     ports:
-      - "3008:3000"
+      - "127.0.0.1:3008:3000"
 
   c-standalone:
     image: theia-c-standalone:local
@@ -94,7 +95,7 @@ services:
     depends_on:
       - base-standalone
     ports:
-      - "3101:3000"
+      - "127.0.0.1:3101:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   c-artemis:
@@ -109,7 +110,7 @@ services:
     depends_on:
       - base-artemis
     ports:
-      - "3102:3000"
+      - "127.0.0.1:3102:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-17-standalone:
@@ -124,7 +125,7 @@ services:
     depends_on:
       - base-standalone
     ports:
-      - "3103:3000"
+      - "127.0.0.1:3103:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-17-artemis:
@@ -139,7 +140,7 @@ services:
     depends_on:
       - base-artemis
     ports:
-      - "3104:3000"
+      - "127.0.0.1:3104:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-25-standalone:
@@ -154,7 +155,7 @@ services:
     depends_on:
       - base-standalone
     ports:
-      - "3105:3000"
+      - "127.0.0.1:3105:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   java-25-artemis:
@@ -169,7 +170,7 @@ services:
     depends_on:
       - base-artemis
     ports:
-      - "3106:3000"
+      - "127.0.0.1:3106:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   javascript-standalone:
@@ -184,7 +185,7 @@ services:
     depends_on:
       - base-standalone
     ports:
-      - "3107:3000"
+      - "127.0.0.1:3107:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   javascript-artemis:
@@ -199,7 +200,7 @@ services:
     depends_on:
       - base-artemis
     ports:
-      - "3108:3000"
+      - "127.0.0.1:3108:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   python-standalone:
@@ -214,7 +215,7 @@ services:
     depends_on:
       - base-standalone
     ports:
-      - "3109:3000"
+      - "127.0.0.1:3109:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   python-artemis:
@@ -229,7 +230,7 @@ services:
     depends_on:
       - base-artemis
     ports:
-      - "3110:3000"
+      - "127.0.0.1:3110:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   rust-standalone:
@@ -244,7 +245,7 @@ services:
     depends_on:
       - base-standalone
     ports:
-      - "3111:3000"
+      - "127.0.0.1:3111:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   rust-artemis:
@@ -259,7 +260,7 @@ services:
     depends_on:
       - base-artemis
     ports:
-      - "3112:3000"
+      - "127.0.0.1:3112:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   go-standalone:
@@ -274,7 +275,7 @@ services:
     depends_on:
       - base-standalone
     ports:
-      - "3113:3000"
+      - "127.0.0.1:3113:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
   go-artemis:
@@ -289,5 +290,5 @@ services:
     depends_on:
       - base-artemis
     ports:
-      - "3114:3000"
+      - "127.0.0.1:3114:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]

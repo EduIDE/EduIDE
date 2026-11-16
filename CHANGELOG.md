@@ -19,6 +19,7 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 ### Fixes
 
 - The browser tab and window title name the application EduIDE ([#219](https://github.com/EduIDE/EduIDE/pull/219))
+- The Welcome page no longer offers `Open Version Control` and `Open new Terminal` while the Beginner level (or an override) turns Source Control and the terminal off ([#229](https://github.com/EduIDE/EduIDE/pull/229))
 
 ### Dependencies
 

@@ -21,6 +21,7 @@ import {
 import { GettingStartedWidget } from "@theia/getting-started/lib/browser/getting-started-widget";
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { CommandRegistry, environment, isOSX, nls } from "@theia/core";
+import { CustomizationService } from "theia-ide-customization-ext/lib/browser/customization-service";
 
 const CommandIds = {
   OpenExplorer: 'workbench.view.explorer',
@@ -39,9 +40,13 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
   @inject(CommandRegistry)
   protected readonly commandRegistry: CommandRegistry;
 
+  @inject(CustomizationService)
+  protected readonly customization: CustomizationService;
 
   protected async doInit(): Promise<void> {
     super.doInit();
+    // The links follow the level, so a switch has to redraw the page.
+    this.toDispose.push(this.customization.onDidChange(() => this.update()));
     this.update();
   }
 
@@ -120,7 +125,7 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
               {nls.localizeByDefault('Open Problem Statement')}
           </a>
       </div>;
-      const openSourceControl = requireSingleOpen && <div className='gs-action-container'>
+      const openSourceControl = requireSingleOpen && this.customization.isEnabled('view.scm') && <div className='gs-action-container'>
           <a
               role={'button'}
               tabIndex={0}
@@ -129,7 +134,7 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
               {nls.localizeByDefault('Open Version Control')}
           </a>
       </div>;
-      const showAllTerminals = requireSingleOpen && <div className='gs-action-container'>
+      const showAllTerminals = requireSingleOpen && this.customization.isEnabled('view.terminal') && <div className='gs-action-container'>
           <a
               role={'button'}
               tabIndex={0}

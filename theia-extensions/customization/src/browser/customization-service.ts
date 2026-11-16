@@ -17,6 +17,7 @@ import {
     Widget,
     WidgetManager
 } from '@theia/core/lib/browser';
+import { ViewContainer, ViewContainerPart } from '@theia/core/lib/browser/view-container';
 import { ContextKey, ContextKeyService } from '@theia/core/lib/browser/context-key-service';
 import { CompoundMenuNode, MenuModelRegistry, MenuNode, MutableCompoundMenuNode } from '@theia/core/lib/common/menu';
 import { TaskConfiguration, TaskCustomization } from '@theia/task/lib/common/task-protocol';
@@ -41,6 +42,9 @@ import {
     ManagedView,
     MENU_REFRESH_PATH
 } from '../common/customization';
+import { ApplyQueue, applyOnce } from '../common/apply-queue';
+import { planPreferenceWrites } from '../common/preference-writes';
+import { hideParts, restoreParts } from '../common/part-visibility';
 
 /**
  * Owns the active experience level and applies it to the running frontend.
@@ -89,7 +93,6 @@ export class CustomizationService implements FrontendApplicationContribution {
     /** Fires whenever the level or any override changes. */
     readonly onDidChange: Event<void> = this.onDidChangeEmitter.event;
 
-    protected applying = false;
     protected viewSweepTimer: ReturnType<typeof setTimeout> | undefined;
     protected menuSweepTimer: ReturnType<typeof setTimeout> | undefined;
     protected seedTimer: ReturnType<typeof setTimeout> | undefined;
@@ -124,7 +127,8 @@ export class CustomizationService implements FrontendApplicationContribution {
         this.preferences.onPreferenceChanged(event => {
             if (event.preferenceName === CustomizationPreferences.LEVEL
                 || event.preferenceName === CustomizationPreferences.OVERRIDES) {
-                this.apply();
+                this.apply().catch(error =>
+                    this.logger.warn('EduIDE customization: could not apply the level', error));
             }
         });
     }
@@ -387,23 +391,21 @@ export class CustomizationService implements FrontendApplicationContribution {
     // ── Applying ─────────────────────────────────────────────────────
 
     async apply(): Promise<void> {
-        if (this.applying) {
-            return;
-        }
-        this.applying = true;
-        try {
+        await this.applyQueue.request();
+    }
+
+    protected readonly applyQueue = new ApplyQueue(() => applyOnce({
+        showLevel: async () => {
             this.levelContextKey?.set(this.level);
             this.refreshBlockedWidgetIds();
-            await this.applyPreferences();
             await this.applyViews();
             await this.applyTerminals();
             this.applyStatusBarItems();
             this.applyMenus();
-        } finally {
-            this.applying = false;
-        }
-        this.onDidChangeEmitter.fire();
-    }
+        },
+        notify: () => this.onDidChangeEmitter.fire(),
+        writePreferences: () => this.applyPreferences()
+    }));
 
     protected refreshBlockedWidgetIds(): void {
         this.blockedWidgetIds.clear();
@@ -431,20 +433,25 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     protected async applyPreferences(): Promise<void> {
-        for (const element of ELEMENT_CATALOGUE) {
-            if (element.pending || !element.preferences) {
-                continue;
+        // Planned again before every write, so a value the student edited while
+        // an earlier write was pending is merged into, not replaced.
+        const attempted = new Set<string>();
+        for (;;) {
+            const next = planPreferenceWrites({
+                catalogue: ELEMENT_CATALOGUE,
+                level: this.level,
+                isEnabled: id => this.isEnabled(id),
+                isOverridden: id => this.isOverridden(id),
+                readUser: key => this.preferences.inspectInScope(key, PreferenceScope.User)
+            }).find(write => !attempted.has(write.key));
+            if (!next) {
+                return;
             }
-            const values = this.isEnabled(element.id) ? element.preferences.on : element.preferences.off;
-            if (!values) {
-                continue;
-            }
-            for (const [key, value] of Object.entries(values)) {
-                try {
-                    await this.preferences.set(key, value, PreferenceScope.User);
-                } catch (error) {
-                    this.logger.warn(`EduIDE customization: could not set '${key}'`, error);
-                }
+            attempted.add(next.key);
+            try {
+                await this.preferences.set(next.key, next.value, PreferenceScope.User);
+            } catch (error) {
+                this.logger.warn(`EduIDE customization: could not set '${next.key}'`, error);
             }
         }
     }
@@ -466,7 +473,14 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     protected async hideView(view: ManagedView): Promise<void> {
-        for (const widget of this.matchingWidgets(view)) {
+        // A view inside another container (Maven in the Explorer) is a part of
+        // it. The shell tracks it as a widget too, but closing that would close
+        // the container, and leave no way back short of a reload, so it is
+        // hidden and shown again instead.
+        const parts = this.matchingParts(view);
+        hideParts(parts, this.hiddenPartIds);
+        const partWidgets = new Set<Widget>(parts.map(part => part.wrapped));
+        for (const widget of this.matchingWidgets(view).filter(candidate => !partWidgets.has(candidate))) {
             const area = this.shell.getAreaFor(widget);
             if (area) {
                 this.rememberedAreas.set(widget.id, area);
@@ -480,6 +494,7 @@ export class CustomizationService implements FrontendApplicationContribution {
     }
 
     protected async showView(element: CustomizableElement, view: ManagedView): Promise<void> {
+        restoreParts(this.matchingParts(view), this.hiddenPartIds);
         if (this.matchingWidgets(view).length > 0) {
             return;
         }
@@ -646,6 +661,18 @@ export class CustomizationService implements FrontendApplicationContribution {
         return view.match === 'includes'
             ? widget.id.toLowerCase().includes(view.id.toLowerCase())
             : widget.id === view.id;
+    }
+
+    protected readonly hiddenPartIds = new Set<string>();
+
+    protected matchingParts(view: ManagedView): ViewContainerPart[] {
+        const parts: ViewContainerPart[] = [];
+        for (const widget of this.shell.widgets) {
+            if (widget instanceof ViewContainer) {
+                parts.push(...widget.getParts().filter(part => this.viewMatches(view, part.wrapped)));
+            }
+        }
+        return parts;
     }
 
     protected matchingWidgets(view: ManagedView): Widget[] {

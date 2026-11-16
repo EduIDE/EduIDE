@@ -23,6 +23,18 @@
   ],
   "customManagers": [
     {
+      "description": "Scorpio is pinned by a full Open VSX URL in the base image's plugin list, which no built-in manager reads. Its GitHub release tags (v2.2.0) match its Open VSX versions (2.2.0), and the version appears twice in the URL.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/base-ide/package\\.json\\.patch$/"],
+      "matchStrings": [
+        "https://open-vsx\\.org/api/aet-tum/artemis-scorpio/(?<currentValue>\\d+\\.\\d+\\.\\d+)/file/aet-tum\\.artemis-scorpio-\\d+\\.\\d+\\.\\d+\\.vsix"
+      ],
+      "depNameTemplate": "EduIDE/scorpio",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "autoReplaceStringTemplate": "https://open-vsx.org/api/aet-tum/artemis-scorpio/{{{newValue}}}/file/aet-tum.artemis-scorpio-{{{newValue}}}.vsix"
+    },
+    {
       "customType": "regex",
       "description": "Tool versions pinned as ARG NAME_VERSION in a ToolDockerfile, annotated with a '# renovate: datasource=... depName=...' comment on the line above. The shared preset only matches files named Dockerfile, so it misses ours.",
       "managerFilePatterns": ["/(^|/)[^/]*Dockerfile$/"],

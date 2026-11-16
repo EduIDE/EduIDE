@@ -27,7 +27,7 @@ base
      '- <lang>-artemis
 ```
 
-They are separate Dockerfiles only because the shared build workflow has no `target` input. `base-artemis` also lists the extension in `package.json` so the base image's `package.json` and `plugins/` stay consistent. The folder would survive in a language image without that entry: the final stage copies the base's `/home/theia` first and the plugin stage's `plugins/` over it, a merge, so the plugin stage's pruning never removes what the base brought.
+They are separate Dockerfiles only because the shared build workflow has no `target` input. `base-artemis` adds the extension to `plugins/` only, not to `package.json` (`yarn download:plugins:smart` would re-download it without the checksum). The folder still reaches the language images: the final stage copies the base's `/home/theia` first and the plugin stage's `plugins/` over it, a merge, so the plugin stage's pruning never removes what the base brought.
 
 ### Stage 3: Language-Specific Images
 

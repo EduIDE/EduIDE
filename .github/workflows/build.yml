@@ -185,6 +185,7 @@ jobs:
       build-args: |
         BASE_IMAGE=ghcr.io/eduide/eduide/base-${{ matrix.edition }}:${{ needs.base.outputs.sha_tag }}
         IMAGE_NAME=${{ matrix.image-name }}
+        GRADLE_PREWARM_AUTO_CONFIRM=${{ matrix.edition == 'artemis' }}
         IMAGE_REVISION=${{ github.sha }}
       # See the note on the base job.
       stamp-app-version: true

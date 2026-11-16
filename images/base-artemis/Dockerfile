@@ -21,6 +21,9 @@ RUN curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 120 -fsSL 
 
 FROM ${BASE_IMAGE}
 ARG ARTEMIS_EXTENSION_URL
+# Artemis repositories come from the course, so scorpio may start the Gradle
+# prewarm without asking. Standalone editions keep the prompt.
+ENV GRADLE_PREWARM_AUTO_CONFIRM=true
 COPY --from=artemis-extension /artemis-extension /home/theia/plugins/artemis-extension
 RUN node -e "const fs=require('fs'); \
 const p=JSON.parse(fs.readFileSync('/home/theia/package.json')); \

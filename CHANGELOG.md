@@ -21,6 +21,10 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 - The browser tab and window title name the application EduIDE ([#219](https://github.com/EduIDE/EduIDE/pull/219))
 - The Welcome page no longer offers `Open Version Control` and `Open new Terminal` while the Beginner level (or an override) turns Source Control and the terminal off ([#229](https://github.com/EduIDE/EduIDE/pull/229))
 
+### Changes
+
+- The Artemis edition sets `GRADLE_PREWARM_AUTO_CONFIRM=true` (Java images and the base), so scorpio starts the Gradle prewarm without a prompt; standalone editions keep the prompt
+
 ### Security
 
 - The unpublished `swift` image binds the IDE to `127.0.0.1` like the published ones, and the retired `-no-ls`, `languageserver` and `theia-ls-setup` directories are removed

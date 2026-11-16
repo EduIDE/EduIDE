@@ -62,6 +62,11 @@ else
     check "git credential cache set" "git config --global --get credential.helper | grep -qx 'cache --timeout=10800'"
 fi
 
+case "$lang" in
+    java-*) want=false; [ "$edition" = artemis ] && want=true
+        check "gradle prewarm auto-confirm is $want" "[ \"\${GRADLE_PREWARM_AUTO_CONFIRM:-false}\" = $want ]" ;;
+esac
+
 check "project settings present" "test -f /home/project/.vscode/settings.json"
 
 # --- 3. toolchain -----------------------------------------------------------

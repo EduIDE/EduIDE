@@ -122,6 +122,11 @@ ENV SHELL=/bin/zsh \
     THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins \
     THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"
 
+# Set by the build per edition ("true" for artemis): ENV is not inherited from
+# the base image, and scorpio reads this to start the Gradle prewarm unprompted.
+ARG GRADLE_PREWARM_AUTO_CONFIRM=false
+ENV GRADLE_PREWARM_AUTO_CONFIRM=${GRADLE_PREWARM_AUTO_CONFIRM}
+
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
 

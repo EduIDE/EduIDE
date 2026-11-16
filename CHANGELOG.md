@@ -34,6 +34,6 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Dependencies
 
-- Scorpio 2.2.0 (TEMPLATE bootstrap, independent of Artemis), EduIDE-data-bridge 1.0.0 (atomic injection) and the EduIDE-Cloud monitor extension 2.0.1
+- Scorpio 3.0.0 (TEMPLATE bootstrap, independent of Artemis; never clears a non-empty workspace; asks before running the repository's Gradle wrapper unless the image sets `GRADLE_PREWARM_AUTO_CONFIRM=true`, which the Artemis Java images do), EduIDE-data-bridge 2.0.0 (per-instance token required, needs EduIDE-Cloud 3.0.0 and EduIDE-Helm 3.0.0) and the EduIDE-Cloud monitor extension 3.0.0
 - npm dependency updates of the launcher and updater extensions ([#226](https://github.com/EduIDE/EduIDE/pull/226))
 

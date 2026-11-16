@@ -87,7 +87,7 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
     yarn install --frozen-lockfile --production --ignore-scripts --network-timeout 600000
 
 # Stage: Clone Oh My Zsh and plugins (cached independently)
-FROM alpine/git AS zsh-setup
+FROM alpine/git:v2.54.1 AS zsh-setup
 ARG OH_MY_ZSH_COMMIT=5c4f27b7166360bd23709f24642b247eac30a147
 RUN n=0; until rm -rf /oh-my-zsh \
       && git init /oh-my-zsh \

@@ -21,6 +21,12 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 - The browser tab and window title name the application EduIDE ([#219](https://github.com/EduIDE/EduIDE/pull/219))
 - The Welcome page no longer offers `Open Version Control` and `Open new Terminal` while the Beginner level (or an override) turns Source Control and the terminal off ([#229](https://github.com/EduIDE/EduIDE/pull/229))
 
+### Security
+
+- The unpublished `swift` image binds the IDE to `127.0.0.1` like the published ones, and the retired `-no-ls`, `languageserver` and `theia-ls-setup` directories are removed
+- Downloads of rustup, Bazelisk and the Artemis extension are checked against pinned SHA-256 sums; the Python packages and the `alpine/git` stage are pinned to versions
+- A manual run of the image build refuses version tags (`1.2.3`, `1.2.3-rc.1`); only the release workflow publishes those
+
 ### Dependencies
 
 - Scorpio 2.2.0 (TEMPLATE bootstrap, independent of Artemis), EduIDE-data-bridge 1.0.0 (atomic injection) and the EduIDE-Cloud monitor extension 2.0.1

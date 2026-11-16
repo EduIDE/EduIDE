@@ -79,6 +79,7 @@ services:
         base-ide: "service:base-ide"
     depends_on:
       - base-ide
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
     ports:
       - "3008:3000"
 

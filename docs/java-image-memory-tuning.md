@@ -45,7 +45,6 @@ The defaults target hello-world up to medium single-module projects. For multi-m
 - `org.gradle.daemon=false`: only affects CLI runs, the Tooling API always uses a daemon; it would reintroduce the two-JVM split and add 10-15s to every run. The 2-minute idle timeout is the middle ground.
 - `org.gradle.configuration-cache`: marginal RAM benefit, compatibility risk with the Tooling API on Gradle 9.
 - `java.server.launchMode: LightWeight`: no classpath-aware completion, no run/debug/test. `Standard` is used instead of the default `Hybrid`, which removes the second (syntax-server) JVM.
-- `images/languageserver/java` sidecar (only used by the no-ls variants): out of scope, unchanged.
 
 ## Notes
 

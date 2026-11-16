@@ -142,24 +142,33 @@ reads JSONC and tolerates them; `jq` and `JSON.parse` do not. Do not "fix" them
 with a tool that reformats.
 
 **Settings go in a `.vscode` directory, not a `.theia` one.** Theia reads the
-former. The three retired `-no-ls` images use the latter and are not a pattern
-to copy.
+former.
 
 ## Dead weight, so you do not mistake it for live code
 
-Retired when the language-server images were dropped, directories left in place:
-
-```
-images/java-17-no-ls/  images/rust-no-ls/  images/theia-no-ls/
-images/languageserver/{java,rust}/
-```
-
-Their READMEs still advertise `ghcr.io/eduide/eduide/langserver-*` tags that are
-no longer produced. Nothing builds them.
+The retired language-server images (`-no-ls`, `languageserver`, `theia-ls-setup`) are deleted.
 
 `images/swift/` builds locally through `docker-compose.images.yml` (port 3008)
 but is in no build matrix, so it is never published (same for `haskell` and
 `ocaml`).
+
+## Build inputs and their integrity
+
+Downloads outside the plugin list carry a pinned SHA-256 that the build checks
+(Go, Maven, Stack, Bazelisk, rustup, the Artemis extension). Renovate bumps only
+the version ARG, so update the sums with it; the build fails on a mismatch.
+`artemis_extension_auto_update.yml` does this for the Artemis extension.
+
+The `theiaPlugins` URLs in `images/base-ide/package.json.patch` (and the Artemis
+URL written into the image's `package.json`) are fetched by Theia's
+`download:plugins`, which has no checksum option, so they are pinned by version
+only. Published GitHub release assets can be replaced by anyone with write
+access; turn on immutable releases for the organization.
+
+`decompress` 4.2.1 and `extract-zip` 2.0.1 in the Theia toolchain carry known
+path traversal advisories and are already the latest releases, so there is no
+version to move to. They only unpack the pinned plugin archives at build time.
+Revisit when upstream ships a fix.
 
 `images/README.md` still carries upstream Eclipse Theia text in its tutorial
 half (the three-stage "ide-image / plugin-image / tool-image" description is

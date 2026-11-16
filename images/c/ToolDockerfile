@@ -15,6 +15,10 @@ ARG TARGETARCH
 # via templates/bazel/.bazelversion.
 # renovate: datasource=github-releases depName=bazelbuild/bazelisk
 ARG BAZELISK_VERSION=v1.30.0
+# sha256 of the two bazelisk binaries of that release. Renovate bumps only
+# BAZELISK_VERSION: update these with it, the build fails on a mismatch.
+ARG BAZELISK_SHA256_AMD64=a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8
+ARG BAZELISK_SHA256_ARM64=b2bcc040c213b44586b121bda6d983c35df121b917c3a7a66fb16f2fa0df1a4f
 
 # Create the theia user and directories before apt installs anything: with
 # the group at gid 101 first, openssh-client's _ssh group lands elsewhere
@@ -35,9 +39,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     openssh-client curl less nano unzip zip python3 ca-certificates
 
 # Install Bazelisk as `bazel` (resolves/downloads the Bazel version in .bazelversion)
-RUN curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 120 -fsSL \
+RUN if [ "${TARGETARCH}" = arm64 ]; then sha="${BAZELISK_SHA256_ARM64}"; else sha="${BAZELISK_SHA256_AMD64}"; fi && \
+    curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 120 -fsSL \
     -o /usr/local/bin/bazel \
     "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-${TARGETARCH}" && \
+    echo "${sha}  /usr/local/bin/bazel" | sha256sum -c - && \
     chmod +x /usr/local/bin/bazel
 
 # Parallel stage: Plugin download (runs concurrently with apt-deps)

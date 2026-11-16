@@ -115,10 +115,20 @@ USER theia
 # proc-macro API version compatibility with the Rust toolchain
 # renovate: datasource=github-tags depName=rust-lang/rust versioning=semver
 ARG RUST_VERSION=1.100.0
-RUN curl --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 300 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs --output rust.sh \
-    && chmod +x rust.sh \
-    && ./rust.sh -y --profile minimal --default-toolchain "${RUST_VERSION}" \
-    && rm rust.sh \
+# rustup-init is downloaded from a pinned rustup release and checked against
+# these sha256 sums. Renovate bumps only RUSTUP_VERSION: update the sums with it,
+# the build fails on a mismatch.
+# renovate: datasource=github-tags depName=rust-lang/rustup versioning=semver
+ARG RUSTUP_VERSION=1.29.3
+ARG RUSTUP_SHA256_AMD64=b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55
+ARG RUSTUP_SHA256_ARM64=9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282
+ARG TARGETARCH
+RUN if [ "${TARGETARCH}" = arm64 ]; then triple=aarch64-unknown-linux-gnu; sha="${RUSTUP_SHA256_ARM64}"; else triple=x86_64-unknown-linux-gnu; sha="${RUSTUP_SHA256_AMD64}"; fi \
+    && curl --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 300 --proto '=https' --tlsv1.2 -fsSL "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/${triple}/rustup-init" --output rustup-init \
+    && echo "${sha}  rustup-init" | sha256sum -c - \
+    && chmod +x rustup-init \
+    && ./rustup-init -y --profile minimal --default-toolchain "${RUST_VERSION}" \
+    && rm rustup-init \
     && . "$HOME/.cargo/env" \
     && rustup component add rustfmt clippy rust-analyzer rust-src \
     && cp /home/theia/.cargo/bin/rust-analyzer /home/theia/plugins/rust-analyzer/extension/server/rust-analyzer \

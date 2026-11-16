@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run",
+            "type": "shell",
+            "command": "go run .",
+            "group": { "kind": "build", "isDefault": true },
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" }
+        },
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "go build ./...",
+            "group": "build",
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" }
+        },
+        {
+            "label": "Test",
+            "type": "shell",
+            "command": "go test ./...",
+            "group": "test",
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" }
+        },
+        {
+            "label": "Vet",
+            "type": "shell",
+            "command": "go vet ./... && staticcheck ./...",
+            "options": { "cwd": "${workspaceFolder}" },
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "eduide": { "minLevel": "advanced" }
+        }
+    ]
+}

@@ -225,6 +225,10 @@ images/c/
         └── settings.json   # IDE configuration (file exclusions, telemetry)
 ```
 
+## Pinning toolchains
+
+A toolchain that does not come from apt is pinned with an `ARG <NAME>_VERSION=...` in the `ToolDockerfile`, with a `# renovate: datasource=... depName=...` comment on the line above (`RUST_VERSION`, `GO_VERSION`, `GOPLS_VERSION`, `DELVE_VERSION`, `STATICCHECK_VERSION`, `RUFF_VERSION`, ...). The regex manager in `renovate.json` picks those up, so a bump is a one-line pull request. The Go tarball is verified against `GO_SHA256_AMD64` and `GO_SHA256_ARM64`; Renovate bumps only `GO_VERSION`, so update the checksums with it (the build fails on a mismatch).
+
 ## Project templates
 
 Templates live in `images/<lang>/templates/<id>/`; the folder name is the id. Each has a `template.json`:
@@ -236,6 +240,17 @@ Templates live in `images/<lang>/templates/<id>/`; the folder name is the id. Ea
 Optional field `"needsNetwork": true` marks a template whose tasks download on first use (Maven plugins, the Gradle distribution). The smoke test runs every other template under `--network none`. Maven, Gradle and Bazel (rules_cc from the Bazel registry) carry it. A folder without `template.json` is ignored. The image copies them to `/home/theia/templates/<id>/`; Scorpio copies the one named in `TEMPLATE` into an empty workspace.
 
 Rules: the template runs offline with the toolchain in the image, has one small program and one passing test, and has `.vscode/tasks.json` with Run (default build task), Build where the language has one, and a Test task (`"group": "test"`), plus `launch.json`, `settings.json`, `.gitignore`, neutral names and no university branding. The smoke test runs the Test task of every template; a template without one runs its default build task (Run) instead.
+
+| Image | Template ids | Offline Test task |
+|---|---|---|
+| `java-17`, `java-25` | `maven`, `gradle` | needs network (`needsNetwork`) |
+| `c` | `make`, `bazel` | none (Run, Build, Valgrind) |
+| `python` | `python` | `pytest` |
+| `javascript` | `node`, `web` | `tsx --test` (`web` has none and its default task is a watcher, so the smoke test skips it) |
+| `rust` | `cargo` | `cargo test` |
+| `go` | `go` | `go test ./...` |
+
+Which tasks a student sees at which level follows the task rules in `theia-extensions/customization/README.md` ("Run configurations"): the default build task and the test task are beginner work, everything else needs advanced. A task that has no group (Lint, Clippy, Vet, Valgrind) says so with `"eduide": { "minLevel": "advanced" }`.
 
 **Adding a template:**
 
@@ -380,7 +395,7 @@ USER theia
 
 Tag the result with the EduIDE version (`2.0.0`), with a `-N` suffix for changes that are only yours (`2.0.0-1`), and let Renovate bump `EDUIDE_VERSION`. Reference it in the Helm values with a full path and tag, since the chart prefixes `imageRegistry` to any image without a tag.
 
-`EduIDE/EduIDE-image-mannheim` (planned, the repository does not exist yet) will be the reference example (Mannheim's Maven from apt, Live Preview, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
+`EduIDE/EduIDE-image-mannheim` (planned, the repository does not exist yet) will be the reference example (Mannheim's Maven from apt, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
 
 ## Memory tuning
 

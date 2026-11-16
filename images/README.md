@@ -51,6 +51,8 @@ This repository includes example implementations demonstrating the extension pat
 | Java 17    | `java-17/`      | JDK installation, Maven, Java language server |
 | JavaScript | `javascript/`   | Node.js runtime, npm/npx, corepack, TypeScript CLI (tsc, tsx), ESLint, Prettier |
 | C          | `c/`            | GCC toolchain, C/C++ extensions |
+| Rust       | `rust/`         | rustup with a pinned toolchain (`RUST_VERSION`), rustfmt, clippy, rust-analyzer, CodeLLDB |
+| Go         | `go/`           | Go from the go.dev tarball (`GO_VERSION`, checksum verified), gopls, dlv, staticcheck, allowing `vscode.go` again |
 
 These examples serve as templates for creating additional language-specific variants of the web-based Theia IDE.
 
@@ -204,6 +206,7 @@ Matching Artemis' programming environments, the following images are available:
 | Ocaml     | ✔️         |        ✔️         |
 | Javascript| ✔️         |        ✔️         |
 | Rust      | ✔️         |        ✔️         |
+| Go        | ✔️         |        ✔️         |
 
 ## Structure of Images
 

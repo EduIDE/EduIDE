@@ -244,12 +244,7 @@ task. Three rules decide, in order:
    the default build task and test tasks are beginner work, anything else needs
    advanced. A task with no group at all is treated as advanced.
 
-Against the templates (the ones planned for the Python, JavaScript, Rust and Go
-images follow the same rules) that gives:
-
-Only the Java and C templates exist today; python, node, web, cargo and go are
-planned (see the image editions plan) and listed here so their tasks land at the
-right level once they ship.
+Against the shipped templates that gives:
 
 | Template | Beginner | Advanced adds |
 |---|---|---|

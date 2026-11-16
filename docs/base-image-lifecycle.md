@@ -10,7 +10,7 @@ next person recognises it in the first minute instead of the first hour.
 | Base | Used by | Supported until |
 |---|---|---|
 | `node:22-trixie`, `node:22-trixie-slim` | `BaseDockerfile` (all three stages), every `plugin-image` stage, `theia-no-ls` final stage | Debian 13: regular support 2028-08-09, then LTS to 2030-06-30 |
-| `ubuntu:26.04` | the `apt-deps` stage of every language image (`java-17`, `java-25`, `python`, `javascript`, `c`) | 2031-04 (standard) |
+| `ubuntu:26.04` | the `apt-deps` stage of every language image (`java-17`, `java-25`, `python`, `javascript`, `c`, `rust`, `go`) | 2031-04 (standard) |
 | `eclipse-temurin:21-jdk-jammy` | `languageserver/java` (unpublished) | Ubuntu 22.04: 2027-04 |
 | `alpine:3.22` | `languageserver/rust` (unpublished) | 2027-05 |
 | `swift:focal` | `swift` (unpublished, in no build matrix) | **already EOL** |

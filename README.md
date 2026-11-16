@@ -50,8 +50,10 @@ Both carry Scorpio and the data bridge, the same toolchain and the same template
 | Python | `python-artemis` | `python-standalone` |
 | JavaScript | `javascript-artemis` | `javascript-standalone` |
 | C | `c-artemis` | `c-standalone` |
+| Rust | `rust-artemis` | `rust-standalone` |
+| Go | `go-artemis` | `go-standalone` |
 
-`rust`, `ocaml` and `haskell` are no longer published; build them locally with
+`ocaml` and `haskell` are no longer published; build them locally with
 `docker compose -f docker-compose.images.yml build <name>`.
 
 There are no per-university images any more. A university with its own needs

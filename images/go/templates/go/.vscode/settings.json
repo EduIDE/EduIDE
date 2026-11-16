@@ -1,0 +1,10 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "files.exclude": {
+        "**/.theia": true,
+        "persisted": true,
+        "lost+found": true
+    },
+    "workbench.colorTheme": "edu-ide-theme-dark",
+    "telemetry.telemetryLevel": "off"
+}

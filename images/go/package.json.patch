@@ -1,0 +1,9 @@
+{
+  "theiaPlugins": {
+    "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
+    "golang.go": "https://open-vsx.org/api/golang/Go/0.58.0/file/golang.Go-0.58.0.vsix"
+  },
+  "theiaPluginsExcludeIdsRemove": [
+    "vscode.go"
+  ]
+}

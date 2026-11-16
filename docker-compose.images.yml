@@ -68,22 +68,6 @@ services:
     command: [ "/home/project", "--hostname=0.0.0.0" ]
 
 
-  rust:
-    image: theia-rust:local
-    build:
-      context: .
-      dockerfile: images/rust/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "3007:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-
   swift:
     image: theia-swift:local
     build:
@@ -246,4 +230,64 @@ services:
       - base-artemis
     ports:
       - "3110:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  rust-standalone:
+    image: theia-rust-standalone:local
+    build:
+      context: .
+      dockerfile: images/rust/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3111:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  rust-artemis:
+    image: theia-rust-artemis:local
+    build:
+      context: .
+      dockerfile: images/rust/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3112:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  go-standalone:
+    image: theia-go-standalone:local
+    build:
+      context: .
+      dockerfile: images/go/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-standalone:local
+      additional_contexts:
+        base-ide: "service:base-standalone"
+    depends_on:
+      - base-standalone
+    ports:
+      - "3113:3000"
+    command: [ "/home/project", "--hostname=0.0.0.0" ]
+
+  go-artemis:
+    image: theia-go-artemis:local
+    build:
+      context: .
+      dockerfile: images/go/ToolDockerfile
+      args:
+        BASE_IMAGE: theia-base-artemis:local
+      additional_contexts:
+        base-ide: "service:base-artemis"
+    depends_on:
+      - base-artemis
+    ports:
+      - "3114:3000"
     command: [ "/home/project", "--hostname=0.0.0.0" ]

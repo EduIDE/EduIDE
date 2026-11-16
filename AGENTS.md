@@ -127,7 +127,7 @@ as a starting point, copy one that uses the script — `images/java-17` — not
 **`@theia/cli` is pinned in every ToolDockerfile.** Language images do not
 re-run `yarn install`; they `COPY --from=base-ide /home/theia/node_modules` and
 then `yarn add -W @theia/cli@<version>`. Bumping the root `package.json` without
-bumping that literal in all sixteen leaves them building against two versions.
+bumping that literal in all ten leaves them building against two versions.
 
 **Builds run `yarn download:plugins:smart`, not `download:plugins`.** The plain
 script still exists and is not what anything uses.
@@ -181,8 +181,10 @@ The scorpio pin in `images/base-ide/package.json.patch` is bumped by Renovate
 releases). It replaced `scorpio_auto_update.yml`, which edited a file that does
 not exist, so do not bring a dispatch-driven updater back.
 
-`lerna.json` says `1.70.200` and `package.json` says `1.70.201`. Both track
-upstream Theia. Pick deliberately if you touch either.
+`lerna.json` (`1.70.200`) and the root `package.json` (`1.70.201`) carry stale
+version numbers. Neither is the EduIDE version (that comes from the release
+tag) nor the Theia version (see `@theia/cli` in the ToolDockerfiles), and lerna
+is only used for `lerna run`. Do not treat them as meaningful when you touch either.
 
 ## Building
 

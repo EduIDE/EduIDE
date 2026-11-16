@@ -81,7 +81,7 @@ A temporary stage to download and prepare language-specific plugins/extensions.
 - Copy the base `package.json` and your variant's `package.json.patch`
 - Merge them using `jq` to create the final `package.json` with language-specific plugins
 - Copy necessary scripts and configs from the base image
-- Run `yarn download:plugins` to fetch the language-specific extensions
+- Run `yarn download:plugins:smart` to fetch the language-specific extensions
 
 #### Phase 3: Final IDE Assembly
 
@@ -393,9 +393,9 @@ USER root
 USER theia
 ```
 
-Tag the result with the EduIDE version (`2.0.0`), with a `-N` suffix for changes that are only yours (`2.0.0-1`), and let Renovate bump `EDUIDE_VERSION`. Reference it in the Helm values with a full path and tag, since the chart prefixes `imageRegistry` to any image without a tag.
+Tag the result with the EduIDE version (`2.0.0`), with a patch bump for changes that are only yours (`2.0.1`), and let Renovate bump `EDUIDE_VERSION`. Reference it in the Helm values with a full path and tag, since the chart prefixes `imageRegistry` to any image without a tag.
 
-`EduIDE/EduIDE-image-mannheim` (planned, the repository does not exist yet) will be the reference example (Mannheim's Maven from apt, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
+[`EduIDE/EduIDE-image-mannheim`](https://github.com/EduIDE/EduIDE-image-mannheim) is the reference example (Live Preview extension, Java 25 `MAVEN_OPTS`, settings and keymaps on top of `java-25-standalone`, which provides Java and Maven) and a GitHub template repository to start from. See its README, section "Versioning", for the tagging scheme.
 
 ## Memory tuning
 

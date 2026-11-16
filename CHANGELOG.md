@@ -28,7 +28,8 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 ### Security
 
 - The unpublished `swift` image binds the IDE to `127.0.0.1` like the published ones, and the retired `-no-ls`, `languageserver` and `theia-ls-setup` directories are removed
-- Downloads of rustup, Bazelisk and the Artemis extension are checked against pinned SHA-256 sums; the Python packages and the `alpine/git` stage are pinned to versions
+- Downloads of rustup, Bazelisk and the Artemis extension are checked against pinned SHA-256 sums; the Python packages and the `alpine/git` stage are pinned to versions. The Artemis extension is no longer re-downloaded without the checksum in the language images. Plugin vsix downloads from `package.json` remain pinned by version only
+- The local compose file publishes its ports on `127.0.0.1` only
 - A manual run of the image build refuses version tags (`1.2.3`, `1.2.3-rc.1`); only the release workflow publishes those
 
 ### Dependencies

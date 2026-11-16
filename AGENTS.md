@@ -43,10 +43,11 @@ nearly shipped pinning two tags that were never built. Keep the job named
 **Editions live in the base, not in the language images.** `base` has Scorpio,
 the data bridge and `theia-cloud-monitor`. `base-standalone` adds
 a global git config with `credential.helper = cache --timeout=10800`.
-`base-artemis` adds `artemis-extension` to `plugins/` **and** to `package.json`
-`theiaPlugins`, because every language image's `yarn download:plugins:smart`
-prunes `plugins/` against `package.json` and would delete it otherwise. The
-Artemis pin is `ARTEMIS_EXTENSION_URL` in `images/base-artemis/Dockerfile`.
+`base-artemis` adds the verified, unpacked `artemis-extension` to `plugins/` only,
+not to `package.json` `theiaPlugins`: `yarn download:plugins:smart` would
+re-download its URL without the checksum. The language images get the folder
+because their final stage copies `/home/theia` from the base. The Artemis pin
+and its SHA-256 are `ARTEMIS_EXTENSION_URL` and `ARTEMIS_EXTENSION_SHA256` in `images/base-artemis/Dockerfile`.
 A `ToolDockerfile` must stay edition-agnostic: no Artemis, no git config.
 
 Every `ToolDockerfile` runs `scripts/check-required-plugins.sh` twice: in the

@@ -46,6 +46,10 @@ jobs:
             echo "::error::'ARG ARTEMIS_EXTENSION_URL=' not found in $FILE."
             exit 1
           fi
+          if ! grep -q '^ARG ARTEMIS_EXTENSION_SHA256=' "$FILE"; then
+            echo "::error::'ARG ARTEMIS_EXTENSION_SHA256=' not found in $FILE."
+            exit 1
+          fi
           if grep -qxF "ARG ARTEMIS_EXTENSION_URL=$NEW" "$FILE"; then
             echo "Already pinned to $VERSION; nothing to do."
             echo "changed=false" >> "$GITHUB_OUTPUT"

@@ -74,3 +74,9 @@ test('linters and the workspace mode entry are on at every level', () => {
     assert.deepStrictEqual(defaults('status.workspaceMode'), ['beginner', 'advanced', 'expert']);
     assert.deepStrictEqual(ELEMENTS_BY_ID.get('status.workspaceMode')?.statusBarItems, [WORKSPACE_MODE_STATUS_ID]);
 });
+
+test('the welcome page links to the terminal and source control follow view.terminal and view.scm', () => {
+    // theia-ide-getting-started-widget.tsx asks for these two ids by name.
+    assert.deepStrictEqual(defaults('view.terminal'), ['advanced', 'expert']);
+    assert.deepStrictEqual(defaults('view.scm'), ['advanced', 'expert']);
+});

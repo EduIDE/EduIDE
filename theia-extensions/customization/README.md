@@ -69,6 +69,7 @@ runtime APIs instead:
 | Status bar entries | `StatusBar.removeElement`, re-applied on every editor change |
 | Advanced toolbar | `RefactorToolbarContribution` in the product extension, gated per element |
 | Run configurations | `TaskToolbarContribution.fetchConfigurations` filtered by `isTaskAllowed` (see below) |
+| Welcome page links | `Open Version Control` and `Open new Terminal` are drawn only while `view.scm` / `view.terminal` are on |
 | Level for `when` clauses | the `eduide.level` context key |
 
 `MenuModelRegistry` fires its change event when a registration is **disposed**,

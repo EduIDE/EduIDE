@@ -4,7 +4,7 @@ This directory provides an extensible base image for creating language-specific 
 
 ## Architecture Overview
 
-The image structure uses a two-stage pattern optimized for creating multiple language-specific IDE variants:
+The image structure uses a layered pattern optimized for creating multiple language-specific IDE variants:
 
 ### Stage 1: Base IDE Image (`base-ide/`)
 
@@ -15,11 +15,27 @@ The **base-ide** multi-stage build (install → build → runtime) produces the 
 - Removes Electron launchers and packaging code along with other development artefacts
 - Emits a slim runtime layer based on `node:22-trixie-slim`, ready to be copied into language-specific images
 
-### Stage 2: Language-Specific Images
+### Stage 2: Editions (`base-standalone/`, `base-artemis/`)
+
+Two thin layers `FROM base`, one per edition. The base itself carries Scorpio, the data bridge and `theia-cloud-monitor`, but not the Artemis extension.
+
+```
+base
+ |- base-standalone   adds a git credential cache (cache --timeout=10800)
+ |   '- <lang>-standalone
+ '- base-artemis      adds artemis-extension to plugins/ and package.json
+     '- <lang>-artemis
+```
+
+They are separate Dockerfiles only because the shared build workflow has no `target` input. `base-artemis` also lists the extension in `package.json` so the base image's `package.json` and `plugins/` stay consistent. The folder would survive in a language image without that entry: the final stage copies the base's `/home/theia` first and the plugin stage's `plugins/` over it, a merge, so the plugin stage's pruning never removes what the base brought.
+
+### Stage 3: Language-Specific Images
 
 Language-specific images extend the base by copying the built Theia application and adding tooling:
 
-- Copy the complete Theia application from the `base-ide` runtime layer
+- Copy the complete Theia application from the edition image (`BASE_IMAGE`), so one edition-agnostic `ToolDockerfile` is built twice: `<lang>-standalone` and `<lang>-artemis`
+- Run on `ubuntu:26.04` and copy project templates from `images/<lang>/templates/<id>/` (each with a `template.json`) to `/home/theia/templates/`
+- Run `scripts/check-required-plugins.sh` after the `package.json` merge and again at the end; it fails the build if a patch removed `theia-cloud-monitor`, `scorpio` or `data-bridge`
 - Install language compilers, runtimes, and tools (e.g., Java JDK, Python, gcc)
 - Add language-specific VS Code extensions
 - Configure the environment for the target language

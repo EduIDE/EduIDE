@@ -10,11 +10,13 @@ next person recognises it in the first minute instead of the first hour.
 | Base | Used by | Supported until |
 |---|---|---|
 | `node:22-trixie`, `node:22-trixie-slim` | `BaseDockerfile` (all three stages), every `plugin-image` stage, `theia-no-ls` final stage | Debian 13: regular support 2028-08-09, then LTS to 2030-06-30 |
-| `ubuntu:24.04` | the `apt-deps` stage of most language images, including `python` | 2029-04 (standard), 2034-04 (ESM) |
-| `ubuntu:26.04` | `thm-java-25` | 2031-04 (standard) |
+| `ubuntu:26.04` | the `apt-deps` stage of every language image (`java-17`, `java-25`, `python`, `javascript`, `c`) | 2031-04 (standard) |
 | `eclipse-temurin:21-jdk-jammy` | `languageserver/java` (unpublished) | Ubuntu 22.04: 2027-04 |
 | `alpine:3.22` | `languageserver/rust` (unpublished) | 2027-05 |
 | `swift:focal` | `swift` (unpublished, in no build matrix) | **already EOL** |
+
+Ubuntu 26.04 (codename `resolute`) is the one Ubuntu suite on every language image. The Adoptium apt
+repository in `java-25` is addressed by that codename too, so it moves with the suite.
 
 Node's own version is pinned separately in each Dockerfile (`node:22-…`). Bumping the Node major
 and bumping the Debian suite are two different decisions - do not fold them into one commit.

@@ -1,0 +1,1 @@
+{ "label": "Gradle", "description": "Java 17 project built with Gradle, JUnit 5", "order": 2, "needsNetwork": true }

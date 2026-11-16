@@ -1,0 +1,14 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "files.exclude": {
+        "**/.theia": true,
+        "dist": true,
+        "persisted": true,
+        "lost+found": true
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "workbench.colorTheme": "edu-ide-theme-dark",
+    "telemetry.telemetryLevel": "off"
+}

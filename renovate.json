@@ -9,9 +9,21 @@
     "description": "Every image in the compose files is :local or :latest - nothing for Renovate to update.",
     "enabled": false
   },
+  "packageRules": [
+    {
+      "description": "Student course scaffolding baked into the language images as project templates, not real dependencies of this repo.",
+      "matchFileNames": ["images/*/templates/**"],
+      "enabled": false
+    },
+    {
+      "description": "Node stays on 22 in the images; @types/node must match it.",
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<23"
+    }
+  ],
   "customManagers": [
     {
-      "description": "Scorpio is pinned by a full Open VSX URL in the base image's plugin list, which no built-in manager reads. Its GitHub release tags (v2.1.1) match its Open VSX versions (2.1.1), and the version appears twice in the URL.",
+      "description": "Scorpio is pinned by a full Open VSX URL in the base image's plugin list, which no built-in manager reads. Its GitHub release tags (v2.2.0) match its Open VSX versions (2.2.0), and the version appears twice in the URL.",
       "customType": "regex",
       "managerFilePatterns": ["/^images/base-ide/package\\.json\\.patch$/"],
       "matchStrings": [
@@ -21,13 +33,14 @@
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.+)$",
       "autoReplaceStringTemplate": "https://open-vsx.org/api/aet-tum/artemis-scorpio/{{{newValue}}}/file/aet-tum.artemis-scorpio-{{{newValue}}}.vsix"
-    }
-  ],
-  "packageRules": [
+    },
     {
-      "description": "Student course scaffolding baked into the -templates images, not real dependencies of this repo.",
-      "matchFileNames": ["images/*-templates/templates/**"],
-      "enabled": false
+      "customType": "regex",
+      "description": "Tool versions pinned as ARG NAME_VERSION in a ToolDockerfile, annotated with a '# renovate: datasource=... depName=...' comment on the line above. The shared preset only matches files named Dockerfile, so it misses ours.",
+      "managerFilePatterns": ["/(^|/)[^/]*Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>\\S+?)(?: versioning=(?<versioning>\\S+?))?\\s+ARG \\w+?_VERSION=(?<currentValue>\\S+)\\s"
+      ]
     }
   ]
 }

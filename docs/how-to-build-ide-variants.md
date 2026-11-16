@@ -4,7 +4,7 @@ This guide explains how to create new IDE image variants for specific programmin
 
 ## Overview
 
-All language-specific IDE variants build upon the reusable base IDE image (`base-ide`), which provides the core Eclipse Theia platform. Language variants extend this base with:
+All language-specific IDE variants build upon the reusable base IDE image (`base-ide`), which provides the core Eclipse Theia platform. There is **one `ToolDockerfile` per language**, and it is edition-agnostic: CI builds it twice, once on `base-standalone` and once on `base-artemis` (see [Editions](#editions)). Language variants extend the base with:
 
 - Language-specific tools and compilers
 - Theia/VSCode extensions for the language
@@ -14,19 +14,29 @@ All language-specific IDE variants build upon the reusable base IDE image (`base
 
 ### 1. Start with the Base Image
 
-All language-specific variants start from the `base-ide` image, which is defined in `images/base-ide/BaseDockerfile`. This base image:
+All language-specific variants start from an edition of the base image. `base` is defined in `images/base-ide/BaseDockerfile`. It:
 
 - Provides the core Eclipse Theia IDE platform
-- Includes common extensions and plugins
+- Includes the extensions EduIDE itself needs (`theia-cloud-monitor`, `scorpio`, `data-bridge`) and common editing aids (Code Spell Checker with the German dictionary, Error Lens, EditorConfig)
 - Sets up the basic runtime environment
 
-In your variant's `ToolDockerfile`, you'll reference this base image:
+In your variant's `ToolDockerfile`, you'll reference the base image. CI passes `BASE_IMAGE` pointing at `base-standalone` or `base-artemis`; the default only serves local builds:
 
 ```dockerfile
 ARG BASE_IDE_TAG=latest
 ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
 FROM ${BASE_IMAGE} AS base-ide
 ```
+
+#### Editions
+
+| Image | Built from | Adds |
+|---|---|---|
+| `base` | `images/base-ide/BaseDockerfile` | Theia, Scorpio, data bridge, `theia-cloud-monitor`; no Artemis extension |
+| `base-standalone` | `images/base-standalone/Dockerfile` | git credential cache, `cache --timeout=10800` |
+| `base-artemis` | `images/base-artemis/Dockerfile` | `artemis-extension`, in `plugins/` and in `package.json` `theiaPlugins` (keeps the two consistent; the folder would survive in the language images anyway, their final stage merges plugin folders) |
+
+Never put edition specifics into a `ToolDockerfile`. The published names are `<lang>-standalone` and `<lang>-artemis`.
 
 ### 2. Create Subdirectory for Your Variant
 
@@ -37,8 +47,9 @@ images/
   └── c/              # Your new variant directory
       ├── ToolDockerfile
       ├── package.json.patch
+      ├── templates/      # project templates, see "Project templates"
       └── project/
-          └── .theia/
+          └── .vscode/
               └── settings.json
 ```
 
@@ -75,7 +86,7 @@ A temporary stage to download and prepare language-specific plugins/extensions.
 #### Phase 3: Final IDE Assembly
 
 ```dockerfile
-FROM ubuntu:24.04 AS final-ide
+FROM ubuntu:26.04 AS final-ide
 ```
 
 The final runtime image that combines everything.
@@ -91,7 +102,9 @@ The final runtime image that combines everything.
 - Copy project settings (including `.theia/settings.json`)
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
 - Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
-- Define the entrypoint to launch Theia
+- Copy `images/<lang>/templates` to `/home/theia/templates`
+- Run `scripts/check-required-plugins.sh` right after the `package.json` merge (it fails if the patch nulled or dropped `theia-cloud-monitor`, `scorpio` or `data-bridge`) and again at the end on the finished `plugins/`
+- Start `node .../main.js` directly as the entrypoint (the C image keeps a small `entrypoint.sh` that only writes the Bazel remote cache config)
 
 **Example from C variant (lines 66-69):**
 
@@ -101,7 +114,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 ```
 
-This installs C/C++ development tools. Adapt this for your language's requirements.
+This installs C/C++ development tools. Adapt this for your language's requirements. Every language image also carries `git`, `openssh-client`, `curl`, `ca-certificates`, `bash`, `zsh`, `less`, `nano` and `unzip`. The Python image picks the `linux-x64` or `linux-arm64` build of the Ruff and debugpy extensions from `TARGETARCH` (the patch names x64, the Dockerfile rewrites it) and points `ruff.path` at the pinned `/usr/local/bin/ruff`. Tools that do not come from apt are pinned with an `ARG <NAME>_VERSION` preceded by a `# renovate: datasource=... depName=...` comment; a regex manager in `renovate.json` proposes the bumps.
 
 ### 4. Create package.json.patch
 
@@ -160,9 +173,9 @@ The C variant excludes Python, Java, TypeScript, and many other language extensi
 
 **Note**: The list of excluded ids is best established by building and checking an image with an empty exclude list. There, you can see the extension browser to review all images.
 
-### 5. Optionally Include .theia/settings.json
+### 5. Optionally Include .vscode/settings.json
 
-The `.theia/settings.json` file configures IDE behavior for users. It's placed in `images/{variant}/project/.theia/settings.json` and needs to get copied to `/home/project` in the final image.
+The `.vscode/settings.json` file configures IDE behavior for users. It's placed in `images/{variant}/project/.vscode/settings.json` and needs to get copied to `/home/project` in the final image. Set `cSpell.language` to `en,de` and the default formatter of your language here if its extension is in the image.
 
 **Example from C variant:**
 
@@ -191,11 +204,11 @@ The `.theia/settings.json` file configures IDE behavior for users. It's placed i
 images/
   └── c/
       └── project/
-          └── .theia/
+          └── .vscode/
               └── settings.json
 ```
 
-This gets copied to `/home/project/.theia/settings.json` in the final image (see line 91 in C's `ToolDockerfile`).
+This gets copied to `/home/project/.vscode/settings.json` in the final image.
 
 ## Complete Example Structure
 
@@ -205,10 +218,46 @@ Here's the complete file structure for the C variant:
 images/c/
 ├── ToolDockerfile          # Multi-stage build for C IDE
 ├── package.json.patch      # C-specific extensions (clangd, MakefileTools)
+├── entrypoint.sh           # Bazel remote cache config, then starts Theia
+├── templates/              # make/, bazel/, each with a template.json
 └── project/
-    └── .theia/
+    └── .vscode/
         └── settings.json   # IDE configuration (file exclusions, telemetry)
 ```
+
+## Pinning toolchains
+
+A toolchain that does not come from apt is pinned with an `ARG <NAME>_VERSION=...` in the `ToolDockerfile`, with a `# renovate: datasource=... depName=...` comment on the line above (`RUST_VERSION`, `GO_VERSION`, `GOPLS_VERSION`, `DELVE_VERSION`, `STATICCHECK_VERSION`, `RUFF_VERSION`, ...). The regex manager in `renovate.json` picks those up, so a bump is a one-line pull request. The Go tarball is verified against `GO_SHA256_AMD64` and `GO_SHA256_ARM64`; Renovate bumps only `GO_VERSION`, so update the checksums with it (the build fails on a mismatch).
+
+## Project templates
+
+Templates live in `images/<lang>/templates/<id>/`; the folder name is the id. Each has a `template.json`:
+
+```json
+{ "label": "Maven", "description": "Java project built with Maven, JUnit 5", "order": 1 }
+```
+
+Optional field `"needsNetwork": true` marks a template whose tasks download on first use (Maven plugins, the Gradle distribution). The smoke test runs every other template under `--network none`. Maven, Gradle and Bazel (rules_cc from the Bazel registry) carry it. A folder without `template.json` is ignored. The image copies them to `/home/theia/templates/<id>/`; Scorpio copies the one named in `TEMPLATE` into an empty workspace.
+
+Rules: the template runs offline with the toolchain in the image, has one small program and one passing test, and has `.vscode/tasks.json` with Run (default build task), Build where the language has one, and a Test task (`"group": "test"`), plus `launch.json`, `settings.json`, `.gitignore`, neutral names and no university branding. The smoke test runs the Test task of every template; a template without one runs its default build task (Run) instead.
+
+| Image | Template ids | Offline Test task |
+|---|---|---|
+| `java-17`, `java-25` | `maven`, `gradle` | needs network (`needsNetwork`) |
+| `c` | `make`, `bazel` | none (Run, Build, Valgrind) |
+| `python` | `python` | `pytest` |
+| `javascript` | `node`, `web` | `tsx --test` (`web` has none and its default task is a watcher, so the smoke test skips it) |
+| `rust` | `cargo` | `cargo test` |
+| `go` | `go` | `go test ./...` |
+
+Which tasks a student sees at which level follows the task rules in `theia-extensions/customization/README.md` ("Run configurations"): the default build task and the test task are beginner work, everything else needs advanced. A task that has no group (Lint, Clippy, Vet, Valgrind) says so with `"eduide": { "minLevel": "advanced" }`.
+
+**Adding a template:**
+
+1. Add `images/<lang>/templates/<id>/` with `template.json`.
+2. The smoke test picks it up.
+3. Offer it by adding `{ id, label }` to the app's `buildSystems` in the EduIDE-Helm catalog. CI publishes each image's template list as the build artifact `templates-<image>.json`, which the release train checks against the catalog.
+4. Update the template table in the docs.
 
 ## Building Your Variant
 
@@ -220,11 +269,27 @@ Once you've created all the necessary files:
    docker build -f images/base-ide/BaseDockerfile -t ghcr.io/eduide/eduide/base:latest .
    ```
 
-2. **Build your language variant**:
+2. **Build the editions**:
 
    ```bash
-   docker build -f images/c/ToolDockerfile -t ghcr.io/eduide/eduide/c:latest .
+   docker build -f images/base-standalone/Dockerfile -t ghcr.io/eduide/eduide/base-standalone:latest .
+   docker build -f images/base-artemis/Dockerfile -t ghcr.io/eduide/eduide/base-artemis:latest .
    ```
+
+3. **Build your language variant** once per edition:
+
+   ```bash
+   docker build -f images/c/ToolDockerfile --build-arg BASE_IMAGE=ghcr.io/eduide/eduide/base-standalone:latest -t eduide-c-standalone:local .
+   docker build -f images/c/ToolDockerfile --build-arg BASE_IMAGE=ghcr.io/eduide/eduide/base-artemis:latest -t eduide-c-artemis:local .
+   ```
+
+4. **Smoke test it**:
+
+   ```bash
+   scripts/smoke-test-image.sh eduide-c-standalone:local standalone
+   ```
+
+   It checks that the IDE answers on :3000, that the required extensions are present (the Artemis extension only in the artemis edition), that the credential cache is set only in standalone, that the toolchain runs, and that every template's Test task (or default build task) passes with `--network none`, except templates marked `needsNetwork`. It also writes `templates-<image>.json`. The real Artemis flow (autoclone, Iris) is not covered; check it by hand on staging.
 
 ## Integrating into the Build Process
 
@@ -232,54 +297,37 @@ To have your new variant automatically built and pushed by GitHub Actions, add i
 
 ### Add to Build Matrix
 
-In the `build-and-push` job, add a new entry to the `matrix.include` array:
+Add two entries (one per edition) to `jobs.images.strategy.matrix.include`, and the language to the `smoke` job's `language` list:
 
 ```yaml
-build-and-push:
-  needs:
-    - determine-tag
-    - build-and-push-base
-  strategy:
-    fail-fast: false
-    matrix:
-      include:
-        # ... existing variants ...
-        - docker-file: images/c/ToolDockerfile
-          docker-context: "."
-          image-name: ghcr.io/eduide/eduide/c
-        # Add your new variant here:
-        - docker-file: images/your-language/ToolDockerfile
-          docker-context: "."
-          image-name: ghcr.io/eduide/eduide/your-language
+- image-name: eduide/eduide/go-standalone
+  docker-file: images/go/ToolDockerfile
+  edition: standalone
+- image-name: eduide/eduide/go-artemis
+  docker-file: images/go/ToolDockerfile
+  edition: artemis
 ```
 
 **Important fields:**
 
-- `docker-file`: Path to your variant's `ToolDockerfile` relative to the repo root
-- `docker-context`: Usually `"."` (repo root) to provide full context
-- `image-name`: Docker image name following the pattern `ghcr.io/eduide/eduide/{variant-name}`
-
-**Example for a new "go" variant:**
-
-```yaml
-- docker-file: images/go/ToolDockerfile
-  docker-context: "."
-  image-name: ghcr.io/eduide/eduide/go
-```
+- `image-name`: `eduide/eduide/<lang>-<edition>`. EduIDE-Helm's release train reads this key from the matrix, so keep the job named `images` and the entries flat.
+- `docker-file`: the same `ToolDockerfile` for both entries.
+- `edition`: selects `base-standalone` or `base-artemis` as `BASE_IMAGE`.
 
 ### Build Process Flow
 
 The workflow automatically:
 
 1. Determines the appropriate tag (`pr-{number}`, release version, or `latest`)
-2. Builds and pushes the base image first
+2. Builds and pushes the base image first, then `base-standalone` and `base-artemis`
 3. Builds all variants in parallel using the matrix strategy
-4. Passes `BASE_IDE_TAG` as a build argument so variants use the correct base image version
+4. Passes the immutable sha tag of the base in `BASE_IMAGE`, so variants use the correct base image version
+5. Pulls every built image and runs `scripts/smoke-test-image.sh` on it; a failing smoke test fails the PR
 
 Once added, your variant will be built automatically on:
 
-- Pull requests to `master`
-- Pushes to `master`
+- Pull requests to `main`
+- Pushes to `main`
 - Releases
 - Manual workflow dispatch
 
@@ -328,6 +376,26 @@ includes every `docker-compose.images.yml` build) leaves the variables empty; th
 About dialog then shows `unknown` and omits the revision line. The frontend just
 reads the environment at runtime, so a deployment can override the variables
 without rebuilding.
+
+## HTML preview
+
+Live Preview (`ms-vscode.live-server`) does not work in the cloud: it serves on `127.0.0.1:<port>` inside the container and its preview points at the student's own `127.0.0.1`. The images use Theia's built-in mini-browser instead, which serves files through the IDE server. Every `ToolDockerfile` sets `THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"` (ENV is not inherited from the base image), so previews live on the webview host family that the gateway already routes and certifies; the default `{{uuid}}.mini-browser.{{hostname}}` has no route. The product extension silences Theia's "host pattern changed" warning for this one pattern. Students open a preview with the "Open Preview to the Side" button of the editor toolbar, or right-click `index.html` and choose Open With, Preview. Relative CSS and scripts load; there is no auto-reload and no server-side code. Locally the browser must resolve `<uuid>.webview.<host>`, so use `http://localhost:3000` (Chrome resolves `*.localhost`), not `127.0.0.1`.
+
+## Deriving an installation image
+
+A university that needs more than an edition offers (a build tool, an extension, settings, keymaps) does not fork this repository. It builds its own image `FROM` an edition image in its own repository:
+
+```dockerfile
+ARG EDUIDE_VERSION=2.0.0
+FROM ghcr.io/eduide/eduide/java-25-standalone:${EDUIDE_VERSION}
+USER root
+# installation specifics: packages, extensions into /home/theia/plugins, settings
+USER theia
+```
+
+Tag the result with the EduIDE version (`2.0.0`), with a `-N` suffix for changes that are only yours (`2.0.0-1`), and let Renovate bump `EDUIDE_VERSION`. Reference it in the Helm values with a full path and tag, since the chart prefixes `imageRegistry` to any image without a tag.
+
+`EduIDE/EduIDE-image-mannheim` (planned, the repository does not exist yet) will be the reference example (Mannheim's Maven from apt, settings and keymaps on top of `java-25-standalone`) and a GitHub template repository to start from.
 
 ## Memory tuning
 

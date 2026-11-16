@@ -1,0 +1,5 @@
+# Compiled binaries and debugger output. Artemis grades the source you push.
+/example
+/__debug_bin*
+*.test
+*.out

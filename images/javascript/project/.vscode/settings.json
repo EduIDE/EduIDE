@@ -6,6 +6,7 @@
         "lost+found": true
     },
     "workbench.colorTheme": "edu-ide-theme-dark",
+    "cSpell.language": "en,de",
     /**
      * JavaScript Essentials Config
      */
@@ -37,7 +38,6 @@
     "javascript.format.enable": true,
     "javascript.format.semicolons": "insert",
     "javascript.preferences.quoteStyle": "single",
-    "eslint.enable": true,
     "eslint.codeAction.showDocumentation": {
         "enable": true
     },

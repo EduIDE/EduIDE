@@ -5,10 +5,11 @@ ARG BASE_IMAGE=ghcr.io/eduide/eduide/base:${BASE_IDE_TAG}
 FROM ${BASE_IMAGE} AS base-ide
 
 # Parallel stage: Install system dependencies (runs concurrently with plugin-image)
-FROM ubuntu:24.04 AS apt-deps
+FROM ubuntu:26.04 AS apt-deps
 
 # Create theia user and directories first (doesn't need apt)
-RUN useradd --system --create-home --user-group --uid 101 theia && \
+RUN groupadd --system --gid 101 theia && \
+    useradd --system --create-home --gid 101 --uid 101 theia && \
     chmod g+rw /home && \
     mkdir -p /home/project && \
     chown -R theia:theia /home/theia && \
@@ -19,7 +20,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
-    git openssh-client bash zsh libsecret-1-0 openjdk-17-jdk-headless maven ca-certificates && \
+    git openssh-client curl less nano unzip bash zsh libsecret-1-0 openjdk-17-jdk-headless maven ca-certificates && \
     apt-get autoremove -y
 
 # Parallel stage: Plugin download (runs concurrently with apt-deps)
@@ -38,6 +39,10 @@ COPY scripts/merge-package-json.js /usr/local/bin/merge-package-json.js
 # Merge the base package.json with the java-17-specific patch without dropping base exclusions.
 RUN node /usr/local/bin/merge-package-json.js package.json.base package.json.patch package.json && \
     rm package.json.base package.json.patch
+
+# Fail early if the patch nulled or dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh --package-json package.json
 
 # Copy from base-ide: scripts, configs, existing plugins, and production node_modules
 COPY --from=base-ide /home/theia/scripts /home/theia/scripts
@@ -98,11 +103,24 @@ COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plu
 # Copy the project configuration files
 COPY --chown=theia:theia images/java-17/project /home/project
 
+# Project templates, picked by Scorpio via TEMPLATE and copied into an empty workspace
+COPY --chown=theia:theia images/java-17/templates /home/theia/templates
+# Download the Gradle wrapper jar (binary - not checked into repo)
+RUN curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 60 -fsSL \
+    "https://github.com/gradle/gradle/raw/v9.4.1/gradle/wrapper/gradle-wrapper.jar" \
+    -o /home/theia/templates/gradle/gradle/wrapper/gradle-wrapper.jar && \
+    echo "55243ef57851f12b070ad14f7f5bb8302daceeebc5bce5ece5fa6edb23e1145c  /home/theia/templates/gradle/gradle/wrapper/gradle-wrapper.jar" \
+    | sha256sum -c -
+
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory
+# The HTML preview (mini-browser) needs its own origin per preview. Reuse the webview
+# host family, which the gateway already routes and certifies; the default
+# {{uuid}}.mini-browser.{{hostname}} has no route. ENV is not inherited from the base image.
 ENV SHELL=/bin/zsh \
-    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins
+    THEIA_DEFAULT_PLUGINS=local-dir:/home/theia/plugins \
+    THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"
 
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
@@ -125,6 +143,10 @@ ARG IMAGE_REVISION=""
 ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
     EDUIDE_IMAGE_TAG=${APP_VERSION} \
     EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
+
+# Fail the build if a language patch dropped an extension EduIDE itself needs
+RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
+    sh /tmp/check-required-plugins.sh /home/theia/plugins
 
 # Launch the backend application via node
 ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]

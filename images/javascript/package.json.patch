@@ -5,14 +5,17 @@
     "esbenp.prettier-vscode": "https://open-vsx.org/api/esbenp/prettier-vscode/12.4.0/file/esbenp.prettier-vscode-12.4.0.vsix",
     "christian-kohler.path-intellisense": "https://open-vsx.org/api/christian-kohler/path-intellisense/2.8.0/file/christian-kohler.path-intellisense-2.8.0.vsix",
     "christian-kohler.npm-intellisense": "https://open-vsx.org/api/christian-kohler/npm-intellisense/1.4.5/file/christian-kohler.npm-intellisense-1.4.5.vsix",
-    "formulahendry.auto-rename-tag": "https://open-vsx.org/api/formulahendry/auto-rename-tag/0.1.10/file/formulahendry.auto-rename-tag-0.1.10.vsix",
-    "EditorConfig.EditorConfig": "https://open-vsx.org/api/EditorConfig/EditorConfig/0.18.2/file/EditorConfig.EditorConfig-0.18.2.vsix"
+    "formulahendry.auto-rename-tag": "https://open-vsx.org/api/formulahendry/auto-rename-tag/0.1.10/file/formulahendry.auto-rename-tag-0.1.10.vsix"
   },
   "theiaPluginsExcludeIdsRemove": [
     "ms-vscode.js-debug",
     "vscode.javascript",
     "vscode.typescript",
-    "vscode.typescript-language-features"
+    "vscode.typescript-language-features",
+    "vscode.css",
+    "vscode.css-language-features",
+    "vscode.html",
+    "vscode.html-language-features"
   ],
   "theiaPluginsExcludeIds": [
     "xabikos.JavaScriptSnippets",
@@ -30,8 +33,6 @@
     "vscode.configuration-editing",
     "vscode.cpp",
     "vscode.csharp",
-    "vscode.css",
-    "vscode.css-language-features",
     "vscode.dart",
     "vscode.debug-auto-launch",
     "vscode.debug-server-ready",
@@ -44,8 +45,6 @@
     "vscode.gulp",
     "vscode.handlebars",
     "vscode.hlsl",
-    "vscode.html",
-    "vscode.html-language-features",
     "vscode.ini",
     "vscode.jake",
     "vscode.java",

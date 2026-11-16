@@ -23,6 +23,6 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Dependencies
 
-- Scorpio 2.2.0 (TEMPLATE bootstrap, independent of Artemis), EduIDE-data-bridge 1.0.0 (atomic injection) and the EduIDE-Cloud monitor extension 2.0.0
+- Scorpio 2.2.0 (TEMPLATE bootstrap, independent of Artemis), EduIDE-data-bridge 1.0.0 (atomic injection) and the EduIDE-Cloud monitor extension 2.0.1
 - npm dependency updates of the launcher and updater extensions ([#226](https://github.com/EduIDE/EduIDE/pull/226))
 

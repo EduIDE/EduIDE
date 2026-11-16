@@ -117,6 +117,9 @@ export function viewMenuEntry(toggleCommandId: string): string[] {
     return [...VIEW_VIEWS_MENU, toggleCommandId];
 }
 
+/** Status bar entry id of the saved/temporary workspace indicator. */
+export const WORKSPACE_MODE_STATUS_ID = 'eduide-workspace-mode';
+
 export type ElementGroup =
     | 'views'
     | 'toolbar'
@@ -221,8 +224,8 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'view.explorer', label: 'Explorer', group: 'views', defaults: ON, views: [{ id: 'explorer-view-container', area: 'left' }] },
     { id: 'view.search', label: 'Search', group: 'views', defaults: ON, views: [{ id: 'search-view-container', area: 'left' }] },
     {
-        id: 'view.artemis', label: 'Artemis', group: 'views', defaults: ON,
-        views: [{ id: 'artemis', area: 'left', match: 'includes' }, { id: 'scorpio', area: 'left', match: 'includes' }]
+        id: 'view.artemis', label: 'Artemis (Artemis sessions only)', group: 'views', defaults: ON,
+        views: [{ id: 'artemis', area: 'left', match: 'includes' }]
     },
     { id: 'view.problems', label: 'Problems', group: 'views', defaults: ON, views: [{ id: 'problems', area: 'bottom' }] },
     {
@@ -238,6 +241,12 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
         id: 'view.gradle', label: 'Gradle tasks', group: 'views', defaults: ADVANCED_UP,
         views: [{ id: 'gradle', area: 'left', match: 'includes' }],
         menus: [viewMenuEntry('plugin.view-container.workbench.view.extension.gradleContainerView.toggle')]
+    },
+    {
+        // A view inside the Explorer container rather than a container of its
+        // own, and it has no View-menu toggle, so there is no menu entry to remove.
+        id: 'view.maven', label: 'Maven projects', group: 'views', defaults: ADVANCED_UP,
+        views: [{ id: 'mavenProjects', area: 'left', match: 'includes' }]
     },
     {
         id: 'view.output', label: 'Output', group: 'views', defaults: ADVANCED_UP,
@@ -303,7 +312,20 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     },
     {
         id: 'editor.organizeImportsOnSave', label: 'Organize imports on save', group: 'editor', defaults: ON,
-        preferences: { on: { 'java.saveActions.organizeImports': true }, off: { 'java.saveActions.organizeImports': false } }
+        // The generic code action covers Python, TypeScript and Go. A language
+        // scoped key (`[python].editor.codeActionsOnSave`) is only understood
+        // once the language is registered, which happens after the preferences
+        // are applied, so the generic key is the one that always lands.
+        preferences: {
+            on: {
+                'java.saveActions.organizeImports': true,
+                'editor.codeActionsOnSave': { 'source.organizeImports': true }
+            },
+            off: {
+                'java.saveActions.organizeImports': false,
+                'editor.codeActionsOnSave': { 'source.organizeImports': false }
+            }
+        }
     },
     {
         id: 'editor.lightbulb', label: 'Quick-fix lightbulb', group: 'editor', defaults: ON,
@@ -330,13 +352,43 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     },
     {
         id: 'editor.referencesCodeLens', label: 'References CodeLens', group: 'editor', defaults: ADVANCED_UP,
-        preferences: { on: { 'java.referencesCodeLens.enabled': true }, off: { 'java.referencesCodeLens.enabled': false } }
+        preferences: {
+            on: {
+                'java.referencesCodeLens.enabled': true,
+                'typescript.referencesCodeLens.enabled': true,
+                'javascript.referencesCodeLens.enabled': true,
+                'rust-analyzer.lens.references.adt.enable': true,
+                'rust-analyzer.lens.references.enumVariant.enable': true,
+                'rust-analyzer.lens.references.method.enable': true,
+                'rust-analyzer.lens.references.trait.enable': true
+            },
+            off: {
+                'java.referencesCodeLens.enabled': false,
+                'typescript.referencesCodeLens.enabled': false,
+                'javascript.referencesCodeLens.enabled': false,
+                'rust-analyzer.lens.references.adt.enable': false,
+                'rust-analyzer.lens.references.enumVariant.enable': false,
+                'rust-analyzer.lens.references.method.enable': false,
+                'rust-analyzer.lens.references.trait.enable': false
+            }
+        }
     },
     {
         id: 'editor.runDebugCodeLens', label: 'Run | Debug CodeLens above main', group: 'editor', defaults: EXPERT_ONLY,
         preferences: {
-            on: { 'java.debug.settings.enableRunDebugCodeLens': true },
-            off: { 'java.debug.settings.enableRunDebugCodeLens': false }
+            on: {
+                'java.debug.settings.enableRunDebugCodeLens': true,
+                'rust-analyzer.lens.run.enable': true,
+                'rust-analyzer.lens.debug.enable': true,
+                // An object setting whose only key is `runtest`, so it is written whole.
+                'go.enableCodeLens': { runtest: true }
+            },
+            off: {
+                'java.debug.settings.enableRunDebugCodeLens': false,
+                'rust-analyzer.lens.run.enable': false,
+                'rust-analyzer.lens.debug.enable': false,
+                'go.enableCodeLens': { runtest: false }
+            }
         }
     },
 
@@ -346,6 +398,33 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
         preferences: {
             on: { 'errorLens.enabledDiagnosticLevels': ['error', 'warning'] },
             off: { 'errorLens.enabledDiagnosticLevels': ['error'] }
+        }
+    },
+    {
+        // Dots instead of squiggles, so identifiers do not drown the code. At
+        // Advanced the words are flagged as information, which is the
+        // extension's own default and so what Expert gets as well.
+        id: 'diag.spellcheck', label: 'Spelling as quiet hints', group: 'diagnostics', defaults: BEGINNER_ONLY,
+        preferences: { on: { 'cSpell.diagnosticLevel': 'Hint' }, off: { 'cSpell.diagnosticLevel': 'Information' } }
+    },
+    {
+        // `off` is the stock mode, so Expert stays untouched.
+        id: 'diag.typeCheck', label: 'Python type checking', group: 'diagnostics', defaults: ADVANCED_ONLY,
+        pending: 'no image ships Pyright or Pylance, which provide the setting',
+        preferences: { on: { 'python.analysis.typeCheckingMode': 'basic' }, off: { 'python.analysis.typeCheckingMode': 'off' } }
+    },
+    {
+        // `cargo check` is the stock command; clippy is too chatty for a first course.
+        id: 'diag.clippy', label: 'Clippy lints (Rust)', group: 'diagnostics', defaults: ADVANCED_ONLY,
+        preferences: { on: { 'rust-analyzer.check.command': 'clippy' }, off: { 'rust-analyzer.check.command': 'check' } }
+    },
+    {
+        // Linters teach, so they stay on at every level. Go has no switch for
+        // this (`go.lintTool` has no "none" value), so staticcheck is not part of it.
+        id: 'diag.lint', label: 'Linter findings (ruff, ESLint)', group: 'diagnostics', defaults: ON,
+        preferences: {
+            on: { 'ruff.lint.enable': true, 'eslint.enable': true },
+            off: { 'ruff.lint.enable': false, 'eslint.enable': false }
         }
     },
     { id: 'diag.checkstyleLive', label: 'Checkstyle findings in Problems', group: 'diagnostics', defaults: ADVANCED_ONLY, pending: 'no Checkstyle ruleset in the image yet' },
@@ -364,6 +443,12 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
 
     // ── Status bar ───────────────────────────────────────────────────
     { id: 'status.level', label: 'Experience level indicator', group: 'statusBar', defaults: ON },
+    {
+        // Whether files survive the session. Set by WorkspaceModeContribution
+        // from a server-side mount check, so the switch only hides the entry.
+        id: 'status.workspaceMode', label: 'Saved or temporary workspace', group: 'statusBar', defaults: ON,
+        statusBarItems: [WORKSPACE_MODE_STATUS_ID]
+    },
     {
         id: 'status.editorInfo', label: 'Cursor position, encoding, EOL, indentation, language',
         group: 'statusBar', defaults: ADVANCED_UP,

@@ -73,7 +73,7 @@ const LEVEL_LABELS: Record<EduIdeLevel, string> = {
 };
 
 const LEVEL_DESCRIPTIONS: Record<EduIdeLevel, string> = {
-    beginner: 'Explorer, Search and Artemis. Run only — no debugger, no terminal.',
+    beginner: 'Explorer and Search, plus Artemis in Artemis sessions. Run only - no debugger, no terminal.',
     advanced: 'Version control, tests, the build tool and refactorings. Still no debugger.',
     expert: 'Stock EduIDE — the only level with a debugger, Outline and Memory Inspector.'
 };

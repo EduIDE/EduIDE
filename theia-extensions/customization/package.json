@@ -20,7 +20,8 @@
   },
   "theiaExtensions": [
     {
-      "frontend": "lib/browser/customization-frontend-module"
+      "frontend": "lib/browser/customization-frontend-module",
+      "backend": "lib/node/customization-backend-module"
     }
   ],
   "keywords": [
@@ -34,8 +35,8 @@
   "scripts": {
     "clean": "rimraf lib *.tsbuildinfo",
     "build": "tsc -b",
+    "test": "tsc -b && node --test \"lib/**/*.spec.js\"",
     "lint": "eslint --ext js,jsx,ts,tsx src",
-    "test": "node --test lib/browser/session-activity.spec.js",
     "lint:fix": "eslint --ext js,jsx,ts,tsx src --fix",
     "update:theia": "ts-node ../../scripts/update-theia-version.ts",
     "update:next": "ts-node ../../scripts/update-theia-version.ts next"

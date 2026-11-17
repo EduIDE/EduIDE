@@ -7,5 +7,8 @@
         "lost+found": true
     },
     "workbench.colorTheme": "edu-ide-theme-dark",
-    "telemetry.telemetryLevel": "off"
+    "telemetry.telemetryLevel": "off",
+    "makefile.configureOnOpen": false,
+    "makefile.configureOnEdit": false,
+    "makefile.configureAfterCommand": false
 }

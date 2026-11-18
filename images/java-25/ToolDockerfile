@@ -141,6 +141,14 @@ RUN curl --retry 5 --retry-all-errors --connect-timeout 30 --max-time 60 -fsSL \
     echo "55243ef57851f12b070ad14f7f5bb8302daceeebc5bce5ece5fa6edb23e1145c  /home/theia/templates/gradle/gradle/wrapper/gradle-wrapper.jar" \
     | sha256sum -c -
 
+# Template metadata for the control plane (U12). The image workflow reads it into the OCI
+# annotation io.eduide.template. Runs as root because /opt is not writable for theia.
+ARG APP_VERSION=""
+USER root
+RUN --mount=type=bind,source=scripts/collect-template-json.js,target=/tmp/collect-template-json.js \
+    node /tmp/collect-template-json.js /opt/eduide/template.json java-25
+USER theia
+
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory

@@ -127,6 +127,14 @@ COPY --chown=theia:theia images/c/templates /home/theia/templates
 # a prefetched repository cache was not enough for an offline `bazel run`.
 RUN cd /home/theia/templates/bazel && bazel version
 
+# Template metadata for the control plane (U12). The image workflow reads it into the OCI
+# annotation io.eduide.template. Runs as root because /opt is not writable for theia.
+ARG APP_VERSION=""
+USER root
+RUN --mount=type=bind,source=scripts/collect-template-json.js,target=/tmp/collect-template-json.js \
+    node /tmp/collect-template-json.js /opt/eduide/template.json c
+USER theia
+
 EXPOSE 3000
 
 # Specify default shell for Theia and the Built-In plugins directory

@@ -387,6 +387,9 @@ Everything in this section is experimental and must not be merged before the mig
 The base image builds the `eduide-session` extension from `extensions/eduide-session` of EduIDE-control-plane at the commit in the build arg `EDUIDE_SESSION_COMMIT` (repository in `EDUIDE_SESSION_REPO`) and unpacks it into `/home/theia/plugins/eduide-session`.
 Scorpio is built the same way from `SCORPIO_COMMIT` of EduIDE/scorpio (PR #230, which looks up `eduide.eduide-session` instead of `tum-aet.data-bridge`) and unpacked into `plugins/scorpio`.
 It replaces the data bridge and `theia-cloud-monitor` and keeps the commands `dataBridge.getEnv` and `dataBridge.getEnvState`.
+Every language image also writes its template metadata (U12) to `/opt/eduide/template.json` with `scripts/collect-template-json.js`: `imageVersion`, `variants` (from the templates' `template.json`, `logoUrl` is empty for now) and `includes` (installed tools with their versions and the editor extensions, grouped).
+The `smoke` job in `build.yml` copies that file into the OCI index annotation `io.eduide.template` (under 64 KiB) and re-publishes the tags with it.
+The shared build workflow has no `annotations` input, so only the index carries it, not the per-platform manifests.
 The IDE still listens on `127.0.0.1:3000`; the agent sidecar proxies to it, and nothing in the images needs the oauth2-proxy.
 
 ## Deriving an installation image

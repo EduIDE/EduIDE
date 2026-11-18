@@ -66,6 +66,7 @@ case "$lang" in
         check "gradle prewarm auto-confirm is $want" "[ \"\${GRADLE_PREWARM_AUTO_CONFIRM:-false}\" = $want ]" ;;
 esac
 
+check "git trusts /home/project" "git config --system --get-all safe.directory | grep -qx /home/project"
 check "project settings present" "test -f /home/project/.vscode/settings.json"
 
 # --- 3. toolchain -----------------------------------------------------------

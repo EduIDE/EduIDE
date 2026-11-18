@@ -19,6 +19,7 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Fixes
 
+- Experimental: git trusts `/home/project` (system `safe.directory`), so cloning into a workspace volume root owned by root no longer fails with "dubious ownership"
 - The browser tab and window title name the application EduIDE ([#219](https://github.com/EduIDE/EduIDE/pull/219))
 - The Welcome page no longer offers `Open Version Control` and `Open new Terminal` while the Beginner level (or an override) turns Source Control and the terminal off ([#229](https://github.com/EduIDE/EduIDE/pull/229))
 - C sessions with a Makefile no longer open with the Makefile Tools "Configuring project ... Do you want to continue?" dialog, which swallowed the student's first action; the images and the Make template turn off `makefile.configureOnOpen`, `makefile.configureOnEdit` and `makefile.configureAfterCommand` (clangd provides IntelliSense and does not use that configure)

@@ -24,7 +24,7 @@ What a release publishes:
 
 | Artifact | Where | Check |
 |---|---|---|
-| IDE images `base`, `c`, `c-templates`, `java-17`, `java-17-templates`, `java-25`, `java-25-templates`, `thm-java-25`, `javascript`, `python` (the list is the matrix in `build.yml`, never copy it) | `ghcr.io/eduide/eduide/<name>:X.Y.Z` and `:X.Y.Z-<sha7>`, amd64 + arm64 | `docker buildx imagetools inspect ghcr.io/eduide/eduide/<name>:X.Y.Z` lists both architectures (the `verify` job does this) |
+| IDE images `base`, `base-standalone`, `base-artemis`, and `<lang>-standalone` and `<lang>-artemis` for `java-17`, `java-25`, `python`, `javascript`, `c`, `rust`, `go` (the list is the matrix in `build.yml`, never copy it) | `ghcr.io/eduide/eduide/<name>:X.Y.Z` and `:X.Y.Z-<sha7>`, amd64 + arm64 | `docker buildx imagetools inspect ghcr.io/eduide/eduide/<name>:X.Y.Z` lists both architectures (the `verify` job does this) |
 | GitHub Release | `v` tag + notes from CHANGELOG.md | `gh release view vX.Y.Z -R EduIDE/EduIDE` |
 
 EduIDE dependencies this repository pins:

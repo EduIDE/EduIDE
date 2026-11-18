@@ -31,10 +31,10 @@ rather than a text box in a web page:
 Any published image runs standalone. No Kubernetes, no Artemis, no account:
 
 ```sh
-docker run --rm -p 3000:3000 ghcr.io/eduide/eduide/java-17-standalone:latest
+docker run --rm -p 127.0.0.1:3000:3000 ghcr.io/eduide/eduide/java-17-standalone:latest /home/project --hostname=0.0.0.0
 ```
 
-Open <http://127.0.0.1:3000/>. The screenshot above is that container.
+The images bind `127.0.0.1` inside the container, so the command overrides the hostname for Docker port forwarding and publishes the port on the loopback interface only. Open <http://127.0.0.1:3000/>. The screenshot above is that container.
 
 Every language comes in two **editions**, published to `ghcr.io/eduide/eduide/<language>-<edition>`:
 
@@ -59,7 +59,7 @@ Both carry Scorpio and the data bridge, the same toolchain and the same template
 There are no per-university images any more. A university with its own needs
 builds its own image `FROM` an edition image, see
 [Building an IDE variant](docs/how-to-build-ide-variants.md); the
-planned Mannheim image (`EduIDE/EduIDE-image-mannheim`, not created yet) will be the example.
+Mannheim image ([`EduIDE/EduIDE-image-mannheim`](https://github.com/EduIDE/EduIDE-image-mannheim)) is the example.
 
 ## Documentation
 

@@ -6,6 +6,7 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Breaking changes
 
+- **Experimental, do not merge before the Go control plane migration:** the base image ships the `eduide-session` extension (built from a pinned EduIDE-control-plane commit) instead of the data bridge and `theia-cloud-monitor`, and webviews and the HTML preview use the fixed host `webview.{{hostname}}` (`THEIA_WEBVIEW_EXTERNAL_ENDPOINT`, `THEIA_MINI_BROWSER_HOST_PATTERN`) instead of `{{uuid}}.webview.{{hostname}}`. The browser input reporting of the customization extension is removed, `eduide-session` sends the heartbeats
 - Every language comes in two editions instead of per-university images: `ghcr.io/eduide/eduide/<lang>-artemis` (with the Artemis extension) and `<lang>-standalone` (git credentials cached in memory for 3 hours), both on Ubuntu 26.04. The images `java-17`, `java-25`, `python`, `javascript`, `c`, the `*-templates` images and `thm-java-25` get no new tags. Installation-specific images derive FROM an edition image (template repository EduIDE/EduIDE-image-mannheim) ([#221](https://github.com/EduIDE/EduIDE/pull/221))
 - Live Preview is removed; HTML preview uses Theia's mini browser ("Open Preview to the Side") ([#221](https://github.com/EduIDE/EduIDE/pull/221))
 

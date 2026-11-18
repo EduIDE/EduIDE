@@ -17,7 +17,7 @@ All language-specific IDE variants build upon the reusable base IDE image (`base
 All language-specific variants start from an edition of the base image. `base` is defined in `images/base-ide/BaseDockerfile`. It:
 
 - Provides the core Eclipse Theia IDE platform
-- Includes the extensions EduIDE itself needs (`theia-cloud-monitor`, `scorpio`, `data-bridge`) and common editing aids (Code Spell Checker with the German dictionary, Error Lens, EditorConfig)
+- Includes the extensions EduIDE itself needs (`scorpio`, `eduide-session`) and common editing aids (Code Spell Checker with the German dictionary, Error Lens, EditorConfig)
 - Sets up the basic runtime environment
 
 In your variant's `ToolDockerfile`, you'll reference the base image. CI passes `BASE_IMAGE` pointing at `base-standalone` or `base-artemis`; the default only serves local builds:
@@ -32,7 +32,7 @@ FROM ${BASE_IMAGE} AS base-ide
 
 | Image | Built from | Adds |
 |---|---|---|
-| `base` | `images/base-ide/BaseDockerfile` | Theia, Scorpio, data bridge, `theia-cloud-monitor`; no Artemis extension |
+| `base` | `images/base-ide/BaseDockerfile` | Theia, Scorpio, `eduide-session`; no Artemis extension |
 | `base-standalone` | `images/base-standalone/Dockerfile` | git credential cache, `cache --timeout=10800` |
 | `base-artemis` | `images/base-artemis/Dockerfile` | `artemis-extension`, in `plugins/` only (not in `package.json` `theiaPlugins`, so the language images never re-download it without the checksum; their final stage copies the folder from the base) |
 
@@ -103,7 +103,7 @@ The final runtime image that combines everything.
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
 - Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
 - Copy `images/<lang>/templates` to `/home/theia/templates`
-- Run `scripts/check-required-plugins.sh` right after the `package.json` merge (it fails if the patch nulled or dropped `theia-cloud-monitor`, `scorpio` or `data-bridge`) and again at the end on the finished `plugins/`
+- Run `scripts/check-required-plugins.sh` right after the `package.json` merge (it fails if the patch nulled or dropped `scorpio` or `eduide-session`) and again at the end on the finished `plugins/`
 - Start `node .../main.js` directly as the entrypoint (the C image keeps a small `entrypoint.sh` that only writes the Bazel remote cache config)
 
 **Example from C variant (lines 66-69):**
@@ -379,7 +379,14 @@ without rebuilding.
 
 ## HTML preview
 
-Live Preview (`ms-vscode.live-server`) does not work in the cloud: it serves on `127.0.0.1:<port>` inside the container and its preview points at the student's own `127.0.0.1`. The images use Theia's built-in mini-browser instead, which serves files through the IDE server. Every `ToolDockerfile` sets `THEIA_MINI_BROWSER_HOST_PATTERN="{{uuid}}.webview.{{hostname}}"` (ENV is not inherited from the base image), so previews live on the webview host family that the gateway already routes and certifies; the default `{{uuid}}.mini-browser.{{hostname}}` has no route. The product extension silences Theia's "host pattern changed" warning for this one pattern. Students open a preview with the "Open Preview to the Side" button of the editor toolbar, or right-click `index.html` and choose Open With, Preview. Relative CSS and scripts load; there is no auto-reload and no server-side code. Locally the browser must resolve `<uuid>.webview.<host>`, so use `http://localhost:3000` (Chrome resolves `*.localhost`), not `127.0.0.1`.
+Live Preview (`ms-vscode.live-server`) does not work in the cloud: it serves on `127.0.0.1:<port>` inside the container and its preview points at the student's own `127.0.0.1`. The images use Theia's built-in mini-browser instead, which serves files through the IDE server. Every `ToolDockerfile` sets `THEIA_WEBVIEW_EXTERNAL_ENDPOINT` and `THEIA_MINI_BROWSER_HOST_PATTERN` to the fixed host `webview.{{hostname}}` (ENV is not inherited from the base image), so webviews and previews share one origin that the gateway routes and certifies (no wildcard host); the default `{{uuid}}.mini-browser.{{hostname}}` has no route. The product extension silences Theia's "host pattern changed" warning for these two checks. Students open a preview with the "Open Preview to the Side" button of the editor toolbar, or right-click `index.html` and choose Open With, Preview. Relative CSS and scripts load; there is no auto-reload and no server-side code. Locally the browser must resolve `webview.<host>`, so use `http://localhost:3000` (Chrome resolves `*.localhost`), not `127.0.0.1`.
+
+## Experimental: Go control plane images
+
+Everything in this section is experimental and must not be merged before the migration to the Go control plane (EduIDE-control-plane).
+The base image builds the `eduide-session` extension from `extensions/eduide-session` of EduIDE-control-plane at the commit in the build arg `EDUIDE_SESSION_COMMIT` (repository in `EDUIDE_SESSION_REPO`) and unpacks it into `/home/theia/plugins/eduide-session`.
+It replaces the data bridge and `theia-cloud-monitor` and keeps the commands `dataBridge.getEnv` and `dataBridge.getEnvState`.
+The IDE still listens on `127.0.0.1:3000`; the agent sidecar proxies to it, and nothing in the images needs the oauth2-proxy.
 
 ## Deriving an installation image
 

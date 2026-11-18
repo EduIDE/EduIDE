@@ -17,7 +17,7 @@ The **base-ide** multi-stage build (install → build → runtime) produces the 
 
 ### Stage 2: Editions (`base-standalone/`, `base-artemis/`)
 
-Two thin layers `FROM base`, one per edition. The base itself carries Scorpio, the data bridge and `theia-cloud-monitor`, but not the Artemis extension.
+Two thin layers `FROM base`, one per edition. The base itself carries Scorpio and `eduide-session` (experimental, replaces the data bridge and `theia-cloud-monitor`), but not the Artemis extension.
 
 ```
 base
@@ -35,7 +35,7 @@ Language-specific images extend the base by copying the built Theia application 
 
 - Copy the complete Theia application from the edition image (`BASE_IMAGE`), so one edition-agnostic `ToolDockerfile` is built twice: `<lang>-standalone` and `<lang>-artemis`
 - Run on `ubuntu:26.04` and copy project templates from `images/<lang>/templates/<id>/` (each with a `template.json`) to `/home/theia/templates/`
-- Run `scripts/check-required-plugins.sh` after the `package.json` merge and again at the end; it fails the build if a patch removed `theia-cloud-monitor`, `scorpio` or `data-bridge`
+- Run `scripts/check-required-plugins.sh` after the `package.json` merge and again at the end; it fails the build if a patch removed `scorpio` or `eduide-session`
 - Install language compilers, runtimes, and tools (e.g., Java JDK, Python, gcc)
 - Add language-specific VS Code extensions
 - Configure the environment for the target language

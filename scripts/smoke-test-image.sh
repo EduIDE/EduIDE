@@ -50,7 +50,7 @@ check() { # check <description> <command run in the container>
 }
 
 # --- 2. extensions and edition --------------------------------------------
-for plugin in theia-cloud-monitor scorpio data-bridge; do
+for plugin in scorpio eduide-session; do
     check "plugin $plugin present" "test -d /home/theia/plugins/$plugin"
 done
 if [ "$edition" = artemis ]; then
@@ -70,7 +70,8 @@ check "project settings present" "test -f /home/project/.vscode/settings.json"
 
 # --- 3. toolchain -----------------------------------------------------------
 check "session user is uid 101, group theia gid 101" "[ \"\$(id -u)\" = 101 ] && [ \"\$(id -g)\" = 101 ] && [ \"\$(id -gn)\" = theia ]"
-check "mini-browser host pattern set" "[ \"\$THEIA_MINI_BROWSER_HOST_PATTERN\" = '{{uuid}}.webview.{{hostname}}' ]"
+check "webview endpoint set" "[ \"\$THEIA_WEBVIEW_EXTERNAL_ENDPOINT\" = 'webview.{{hostname}}' ]"
+check "mini-browser host pattern set" "[ \"\$THEIA_MINI_BROWSER_HOST_PATTERN\" = 'webview.{{hostname}}' ]"
 check "ubuntu 26.04" "grep -q 'VERSION_ID=\"26.04\"' /etc/os-release"
 for cmd in git ssh curl bash zsh less nano unzip; do
     check "common tool $cmd" "command -v $cmd"

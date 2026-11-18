@@ -105,7 +105,9 @@ case "$lang" in
         check "no sudo" "! command -v sudo"
         # Makefile Tools' configure pops up a dialog on first open that swallows the student's first action.
         for f in /home/project/.vscode/settings.json /home/theia/templates/make/.vscode/settings.json; do
-            check "Makefile Tools configure off in $f" "[ \$(grep -c '\"makefile.configure[A-Za-z]*\": false' $f) = 3 ]"
+            for key in makefile.configureOnOpen makefile.configureOnEdit makefile.configureAfterCommand; do
+                check "Makefile Tools $key off in $f" "grep -q '^ *\"$key\": false' $f"
+            done
         done
         ;;
     rust)

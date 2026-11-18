@@ -121,6 +121,9 @@ COPY --chown=theia:theia images/python/templates /home/theia/templates
 # annotation io.eduide.template. Runs as root because /opt is not writable for theia.
 ARG APP_VERSION=""
 USER root
+# The workspace volume root belongs to root (group theia via fsGroup), so git would refuse it
+# as dubious ownership. The base image has no git, so this lives here in every edition.
+RUN git config --system --add safe.directory /home/project
 RUN --mount=type=bind,source=scripts/collect-template-json.js,target=/tmp/collect-template-json.js \
     node /tmp/collect-template-json.js /opt/eduide/template.json python
 USER theia
@@ -140,10 +143,6 @@ ENV SHELL=/bin/zsh \
 ENV USE_LOCAL_GIT=true
 
 # Switch to Theia user
-# The workspace volume root belongs to root (group theia via fsGroup), so git would refuse it
-# as dubious ownership. The base image has no git, so this lives here in every edition.
-RUN git config --system --add safe.directory /home/project
-
 USER theia
 
 WORKDIR /home/theia/applications/browser

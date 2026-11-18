@@ -139,7 +139,7 @@ This field specifies additional Theia and VSCode extensions to include. Each ent
 ```
 
 - `eclipse-theia.builtin-extension-pack`: Core Theia extensions
-- `MakefileTools`: VSCode extension for Makefile support
+- `MakefileTools`: VSCode extension for Makefile support. Its configure (`make --dry-run`) only feeds the Microsoft C/C++ extension, which the image does not ship, so the C settings turn `makefile.configureOnOpen`, `makefile.configureOnEdit` and `makefile.configureAfterCommand` off; otherwise its first-run "Do you want to continue?" dialog interrupts the student
 - `clangd`: Language server for C/C++ providing IntelliSense, diagnostics, etc.
 
 **Finding extensions:**

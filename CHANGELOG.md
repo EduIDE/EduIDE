@@ -34,6 +34,6 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Dependencies
 
-- Scorpio 3.2.0 (`GIT_REF`/`GIT_SOURCE` for repository links, hint for private repositories; shows a "Preparing your workspace" progress notification while the workspace is prepared; TEMPLATE bootstrap, independent of Artemis; never clears a non-empty workspace; asks before running the repository's Gradle wrapper unless the image sets `GRADLE_PREWARM_AUTO_CONFIRM=true`, which the Artemis Java images do), EduIDE-data-bridge 2.0.0 (per-instance token required, needs EduIDE-Cloud 3.0.0 and EduIDE-Helm 3.0.0) and the EduIDE-Cloud monitor extension 3.0.4 (keeps answering after an operator restart)
+- Scorpio 3.2.0 (`GIT_REF`/`GIT_SOURCE` for repository links, hint for private repositories; shows a "Preparing your workspace" progress notification while the workspace is prepared; TEMPLATE bootstrap, independent of Artemis; never clears a non-empty workspace; asks before running the repository's Gradle wrapper unless the image sets `GRADLE_PREWARM_AUTO_CONFIRM=true`, which the Artemis Java images do), EduIDE-data-bridge 2.0.0 (per-instance token required, needs EduIDE-Cloud 3.0.0 and EduIDE-Helm 3.0.0) and the EduIDE-Cloud monitor extension 3.0.4
 - npm dependency updates of the launcher and updater extensions ([#226](https://github.com/EduIDE/EduIDE/pull/226))
 

@@ -103,7 +103,7 @@ The final runtime image that combines everything.
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
 - Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
 - Copy `images/<lang>/templates` to `/home/theia/templates`
-- Run `scripts/check-required-plugins.sh` right after the `package.json` merge (it fails if the patch nulled or dropped `scorpio` or `eduide-session`) and again at the end on the finished `plugins/`
+- Run `scripts/check-required-plugins.sh` right after the `package.json` merge (it checks nothing while both are unpacked by the base image) and again at the end on the finished `plugins/`
 - Start `node .../main.js` directly as the entrypoint (the C image keeps a small `entrypoint.sh` that only writes the Bazel remote cache config)
 
 **Example from C variant (lines 66-69):**
@@ -385,6 +385,7 @@ Live Preview (`ms-vscode.live-server`) does not work in the cloud: it serves on 
 
 Everything in this section is experimental and must not be merged before the migration to the Go control plane (EduIDE-control-plane).
 The base image builds the `eduide-session` extension from `extensions/eduide-session` of EduIDE-control-plane at the commit in the build arg `EDUIDE_SESSION_COMMIT` (repository in `EDUIDE_SESSION_REPO`) and unpacks it into `/home/theia/plugins/eduide-session`.
+Scorpio is built the same way from `SCORPIO_COMMIT` of EduIDE/scorpio (PR #230, which looks up `eduide.eduide-session` instead of `tum-aet.data-bridge`) and unpacked into `plugins/scorpio`.
 It replaces the data bridge and `theia-cloud-monitor` and keeps the commands `dataBridge.getEnv` and `dataBridge.getEnvState`.
 The IDE still listens on `127.0.0.1:3000`; the agent sidecar proxies to it, and nothing in the images needs the oauth2-proxy.
 

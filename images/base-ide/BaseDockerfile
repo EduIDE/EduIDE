@@ -1,10 +1,23 @@
 # syntax=docker/dockerfile:1
 # EXPERIMENTAL (Go control plane): eduide-session replaces the data bridge and theia-cloud-monitor.
+# Scorpio is built the same way from EduIDE/scorpio#230 (it looks up the id eduide.eduide-session).
 # It is built from the pinned commit below and shipped as an unpacked folder in plugins/, not
 # through theiaPlugins, so the language images inherit it from this image's /home/theia.
 ARG EDUIDE_SESSION_REPO=https://github.com/EduIDE/EduIDE-control-plane
 # Commit of EduIDE-control-plane to build extensions/eduide-session from.
-ARG EDUIDE_SESSION_COMMIT=8e4dd789a8bfa2d941105541445877a2a24e813c
+ARG EDUIDE_SESSION_COMMIT=d225758f8ade6ec7bdbc001bcd55f6fc49e3e051
+ARG SCORPIO_REPO=https://github.com/EduIDE/scorpio
+# Head of EduIDE/scorpio#230. Not yet released, so it replaces the Open VSX scorpio 3.0.0.
+ARG SCORPIO_COMMIT=fad733b4d42a442098d7d0a01176976988def2c8
+
+FROM node:22-trixie AS scorpio
+ARG SCORPIO_REPO
+ARG SCORPIO_COMMIT
+WORKDIR /src
+RUN git init -q . && git remote add origin "${SCORPIO_REPO}" \
+    && git fetch -q --depth 1 origin "${SCORPIO_COMMIT}" && git checkout -q FETCH_HEAD
+RUN npm ci && npx vsce package --allow-missing-repository --skip-license -o scorpio.vsix \
+    && mkdir /scorpio && unzip -q scorpio.vsix -d /scorpio
 
 FROM node:22-trixie AS eduide-session
 ARG EDUIDE_SESSION_REPO
@@ -146,6 +159,7 @@ WORKDIR /home/theia
 # Copy the built artefacts and configuration from the build stage
 COPY --from=build-stage /home/theia/applications /home/theia/applications
 COPY --from=build-stage /home/theia/plugins /home/theia/plugins
+COPY --from=scorpio /scorpio /home/theia/plugins/scorpio
 COPY --from=eduide-session /eduide-session /home/theia/plugins/eduide-session
 COPY --from=build-stage /home/theia/theia-extensions /home/theia/theia-extensions
 COPY --from=build-stage /home/theia/package.json /home/theia/package.json

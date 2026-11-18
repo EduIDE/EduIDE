@@ -51,10 +51,10 @@ and its SHA-256 are `ARTEMIS_EXTENSION_URL` and `ARTEMIS_EXTENSION_SHA256` in `i
 A `ToolDockerfile` must stay edition-agnostic: no Artemis, no git config.
 
 Every `ToolDockerfile` runs `scripts/check-required-plugins.sh` twice: in the
-plugin stage right after the `package.json` merge (fails if `theiaPlugins`
-lacks or nulls `scorpio`; the finished-folder check also needs `eduide-session`; this is the
-check that can fail, because the final stage merges plugin folders instead of
-replacing them) and at the end on the finished `plugins/` folder. CI then runs
+plugin stage right after the `package.json` merge (experimental: scorpio and `eduide-session` are no longer in `theiaPlugins`, so this check requires nothing; formerly it failed if `theiaPlugins`
+lacked or nulled a required plugin; this was the
+check that could fail, because the final stage merges plugin folders instead of
+replacing them) and at the end on the finished `plugins/` folder (requires `scorpio` and `eduide-session`). CI then runs
 `scripts/smoke-test-image.sh` on every image, including each template's Test
 task (default build task if it has none) under `--network none`. Templates
 marked `needsNetwork` (Maven, Gradle, Bazel) run with network.
@@ -178,7 +178,9 @@ half (the three-stage "ide-image / plugin-image / tool-image" description is
 older than the current Dockerfiles). Its image table and publishing paragraph
 match the build matrix, but the matrix stays the source of truth.
 
-The scorpio pin in `images/base-ide/package.json.patch` is bumped by Renovate
+Experimental: scorpio is built from the commit in `SCORPIO_COMMIT` (BaseDockerfile, EduIDE/scorpio#230, adds the id `eduide.eduide-session`) and is no longer in `package.json.patch`, so the Renovate rule below matches nothing until that PR is released.
+
+The scorpio pin in `images/base-ide/package.json.patch` was bumped by Renovate
 (a regex `customManager` in `renovate.json` reading `EduIDE/scorpio` GitHub
 releases). It replaced `scorpio_auto_update.yml`, which edited a file that does
 not exist, so do not bring a dispatch-driven updater back.

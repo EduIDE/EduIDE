@@ -3,7 +3,6 @@
     "vscjava.vscode-java-pack": null,
     "vscjava.vscode-java-dependency": null,
     "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
-    "scorpio": "https://open-vsx.org/api/aet-tum/artemis-scorpio/3.0.0/file/aet-tum.artemis-scorpio-3.0.0.vsix",
     "streetsidesoftware.code-spell-checker": "https://open-vsx.org/api/streetsidesoftware/code-spell-checker/4.10.0/file/streetsidesoftware.code-spell-checker-4.10.0.vsix",
     "streetsidesoftware.code-spell-checker-german": "https://open-vsx.org/api/streetsidesoftware/code-spell-checker-german/3.0.2/file/streetsidesoftware.code-spell-checker-german-3.0.2.vsix",
     "usernamehw.errorlens": "https://open-vsx.org/api/usernamehw/errorlens/3.28.0/file/usernamehw.errorlens-3.28.0.vsix",

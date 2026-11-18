@@ -32,7 +32,7 @@ EduIDE dependencies this repository pins:
 | Repository | Pinned in | Current pin | How to bump |
 |---|---|---|---|
 | EduIDE-control-plane (eduide-session) | `images/base-ide/BaseDockerfile`, build arg `EDUIDE_SESSION_COMMIT` (experimental) | commit SHA | set to the commit of the control plane to ship |
-| scorpio | `images/base-ide/package.json.patch`, `theiaPlugins.scorpio` (Open VSX URL, version appears twice) | `3.0.0` | edit both occurrences; latest: `gh release list -R EduIDE/scorpio --exclude-drafts --exclude-pre-releases --limit 1` |
+| scorpio (experimental) | `images/base-ide/BaseDockerfile`, build arg `SCORPIO_COMMIT` (EduIDE/scorpio#230) | commit SHA | set to the released commit; latest: `gh release list -R EduIDE/scorpio --exclude-drafts --exclude-pre-releases --limit 1` |
 
 Who pins this repository (tell the user after the release):
 

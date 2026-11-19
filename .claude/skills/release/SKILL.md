@@ -31,9 +31,8 @@ EduIDE dependencies this repository pins:
 
 | Repository | Pinned in | Current pin | How to bump |
 |---|---|---|---|
-| EduIDE-data-bridge | `images/base-ide/package.json.patch`, `theiaPlugins.data-bridge` (release asset URL, version appears twice) | `v2.0.0` | edit both occurrences; latest: `gh release list -R EduIDE/EduIDE-data-bridge --exclude-drafts --exclude-pre-releases --limit 1` |
-| scorpio | `images/base-ide/package.json.patch`, `theiaPlugins.scorpio` (Open VSX URL, version appears twice) | `3.0.0` | edit both occurrences; latest: `gh release list -R EduIDE/scorpio --exclude-drafts --exclude-pre-releases --limit 1` |
-| EduIDE-Cloud (monitor vsix) | `images/base-ide/package.json.patch`, `theiaPlugins.theia-cloud-monitor` (release asset URL, version appears twice) | `v3.0.0` | edit both occurrences; latest: `gh release list -R EduIDE/EduIDE-Cloud --exclude-drafts --exclude-pre-releases --limit 1` |
+| EduIDE-control-plane (eduide-session) | `images/base-ide/BaseDockerfile`, build arg `EDUIDE_SESSION_COMMIT` | commit of `v0.1.0` | set to the commit of the release tag; latest: `gh release list -R EduIDE/EduIDE-control-plane --exclude-drafts --exclude-pre-releases --limit 1` |
+| scorpio | `images/base-ide/package.json.patch`, `theiaPlugins.scorpio` (Open VSX URL, version appears twice) | `3.3.0` | edit both occurrences (Renovate does it too); latest: `gh release list -R EduIDE/scorpio --exclude-drafts --exclude-pre-releases --limit 1` |
 
 Who pins this repository (tell the user after the release):
 

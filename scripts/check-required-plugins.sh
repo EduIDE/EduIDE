@@ -1,7 +1,7 @@
 #!/bin/sh
 # Fails if a language image lost an extension that EduIDE itself depends on.
 # A language patch can null any plugin of the base (thm-java-25 did so for
-# scorpio and data-bridge), and nothing else would notice.
+# scorpio and the data bridge before eduide-session replaced it), and nothing else would notice.
 #
 #   check-required-plugins.sh --package-json <file>   theiaPlugins of the merged package.json
 #   check-required-plugins.sh [plugins-dir]            plugins folder of the finished image
@@ -12,12 +12,14 @@
 # the folder, only from package.json.
 set -eu
 
-required="theia-cloud-monitor scorpio data-bridge"
+# eduide-session is built and unpacked into plugins/ by the base image, so only scorpio is in theiaPlugins.
+required="scorpio eduide-session"
+required_json="scorpio"
 missing=""
 
 if [ "${1:-}" = "--package-json" ]; then
     file="${2:?usage: $0 --package-json <file>}"
-    for plugin in $required; do
+    for plugin in $required_json; do
         node -e '
 const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
 const url = (p.theiaPlugins || {})[process.argv[2]];
@@ -36,4 +38,4 @@ if [ -n "$missing" ]; then
     echo "ERROR: required plugins missing from $where:$missing" >&2
     exit 1
 fi
-echo "Required plugins present in $where: $required"
+echo "Required plugins present in $where"

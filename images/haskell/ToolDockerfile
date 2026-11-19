@@ -161,6 +161,11 @@ ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
     EDUIDE_IMAGE_REVISION=${IMAGE_REVISION}
 
 # Launch the backend application via node
+# The Artemis extension asks the session bridge for its login only when this is set; build.yml
+# turns it on for the artemis edition.
+ARG DATA_BRIDGE_ENABLED=false
+ENV DATA_BRIDGE_ENABLED=${DATA_BRIDGE_ENABLED}
+
 ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
 
 # Arguments passed to the application

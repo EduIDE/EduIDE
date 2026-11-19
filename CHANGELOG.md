@@ -6,11 +6,13 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Breaking changes
 
+- The images run with the Go control plane (EduIDE-control-plane) only: the base image ships the `eduide-session` extension (built from EduIDE-control-plane v0.1.0) instead of the data bridge and `theia-cloud-monitor`, and webviews and the HTML preview use the fixed host `webview.{{hostname}}` (`THEIA_WEBVIEW_EXTERNAL_ENDPOINT`, `THEIA_MINI_BROWSER_HOST_PATTERN`) instead of `{{uuid}}.webview.{{hostname}}`. Scorpio 3.3.0 looks up `eduide.eduide-session`. The browser input reporting of the customization extension is removed, `eduide-session` sends the heartbeats
 - Every language comes in two editions instead of per-university images: `ghcr.io/eduide/eduide/<lang>-artemis` (with the Artemis extension) and `<lang>-standalone` (git credentials cached in memory for 3 hours), both on Ubuntu 26.04. The images `java-17`, `java-25`, `python`, `javascript`, `c`, the `*-templates` images and `thm-java-25` get no new tags. Installation-specific images derive FROM an edition image (template repository EduIDE/EduIDE-image-mannheim) ([#221](https://github.com/EduIDE/EduIDE/pull/221))
 - Live Preview is removed; HTML preview uses Theia's mini browser ("Open Preview to the Side") ([#221](https://github.com/EduIDE/EduIDE/pull/221))
 
 ### Features
 
+- Every language image writes `/opt/eduide/template.json` (variants, installed tool and extension versions, image version) and carries it as the OCI index annotation `io.eduide.template` for the Go control plane
 - Rust is back and Go is new, with starter templates for Python, Node (TypeScript), Web (TypeScript), Cargo and Go next to the Java and C ones. Scorpio applies a template from `/home/theia/templates` when a session starts without a repository ([#222](https://github.com/EduIDE/EduIDE/pull/222))
 - Spell checker (English, German), Error Lens and EditorConfig in every image; the Python images ship numpy, pandas, matplotlib, uv and ruff, and Ruff formats Python on save ([#221](https://github.com/EduIDE/EduIDE/pull/221))
 - Experience levels apply to every language and take effect immediately; the status bar shows "Temporary workspace" or "Saved workspace" ([#220](https://github.com/EduIDE/EduIDE/pull/220))
@@ -19,6 +21,8 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Fixes
 
+- The Artemis edition sets `DATA_BRIDGE_ENABLED=true` in every language image, so the Artemis extension fetches its login from `eduide-session` (the Go control plane does not set it per session like the Java operator did)
+- Git trusts `/home/project` (system `safe.directory`), so cloning into a workspace volume root owned by root no longer fails with "dubious ownership"
 - The browser tab and window title name the application EduIDE ([#219](https://github.com/EduIDE/EduIDE/pull/219))
 - The Welcome page no longer offers `Open Version Control` and `Open new Terminal` while the Beginner level (or an override) turns Source Control and the terminal off ([#229](https://github.com/EduIDE/EduIDE/pull/229))
 - The Welcome page stays centered and no longer cuts off its right column next to the open Explorer

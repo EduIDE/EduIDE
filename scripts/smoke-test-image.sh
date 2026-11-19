@@ -50,14 +50,16 @@ check() { # check <description> <command run in the container>
 }
 
 # --- 2. extensions and edition --------------------------------------------
-for plugin in theia-cloud-monitor scorpio data-bridge; do
+for plugin in scorpio eduide-session; do
     check "plugin $plugin present" "test -d /home/theia/plugins/$plugin"
 done
 if [ "$edition" = artemis ]; then
     check "artemis-extension present" "test -d /home/theia/plugins/artemis-extension"
+    check "data bridge enabled for the artemis extension" "[ \"\${DATA_BRIDGE_ENABLED:-}\" = true ]"
     check "no git credential cache" "! git config --global --get credential.helper | grep -q cache"
 else
     check "artemis-extension absent" "! test -e /home/theia/plugins/artemis-extension"
+    check "data bridge not enabled" "[ \"\${DATA_BRIDGE_ENABLED:-false}\" = false ]"
     check "git credential cache set" "git config --global --get credential.helper | grep -qx 'cache --timeout=10800'"
 fi
 
@@ -66,11 +68,13 @@ case "$lang" in
         check "gradle prewarm auto-confirm is $want" "[ \"\${GRADLE_PREWARM_AUTO_CONFIRM:-false}\" = $want ]" ;;
 esac
 
+check "git trusts /home/project" "git config --system --get-all safe.directory | grep -qx /home/project"
 check "project settings present" "test -f /home/project/.vscode/settings.json"
 
 # --- 3. toolchain -----------------------------------------------------------
 check "session user is uid 101, group theia gid 101" "[ \"\$(id -u)\" = 101 ] && [ \"\$(id -g)\" = 101 ] && [ \"\$(id -gn)\" = theia ]"
-check "mini-browser host pattern set" "[ \"\$THEIA_MINI_BROWSER_HOST_PATTERN\" = '{{uuid}}.webview.{{hostname}}' ]"
+check "webview endpoint set" "[ \"\$THEIA_WEBVIEW_EXTERNAL_ENDPOINT\" = 'webview.{{hostname}}' ]"
+check "mini-browser host pattern set" "[ \"\$THEIA_MINI_BROWSER_HOST_PATTERN\" = 'webview.{{hostname}}' ]"
 check "ubuntu 26.04" "grep -q 'VERSION_ID=\"26.04\"' /etc/os-release"
 for cmd in git ssh curl bash zsh less nano unzip; do
     check "common tool $cmd" "command -v $cmd"

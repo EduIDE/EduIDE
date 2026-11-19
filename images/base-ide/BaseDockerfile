@@ -1,3 +1,21 @@
+# syntax=docker/dockerfile:1
+# eduide-session (the session extension of the EduIDE control plane) is built from the release commit
+# below and shipped as an unpacked folder in plugins/, not through theiaPlugins, so the language images
+# inherit it from this image's /home/theia.
+ARG EDUIDE_SESSION_REPO=https://github.com/EduIDE/EduIDE-control-plane
+# EduIDE-control-plane v0.1.0. Bump together with the control plane release.
+ARG EDUIDE_SESSION_COMMIT=016a561fc6859d801028e501f7e5582791f4ee74
+
+FROM node:22-trixie AS eduide-session
+ARG EDUIDE_SESSION_REPO
+ARG EDUIDE_SESSION_COMMIT
+WORKDIR /src
+RUN git init -q . && git remote add origin "${EDUIDE_SESSION_REPO}" \
+    && git fetch -q --depth 1 origin "${EDUIDE_SESSION_COMMIT}" && git checkout -q FETCH_HEAD
+WORKDIR /src/extensions/eduide-session
+RUN npm ci && npm run package \
+    && mkdir /eduide-session && unzip -q eduide-session.vsix -d /eduide-session
+
 # Dependency installation stage to maximise caching
 FROM node:22-trixie AS install-deps
 
@@ -128,6 +146,7 @@ WORKDIR /home/theia
 # Copy the built artefacts and configuration from the build stage
 COPY --from=build-stage /home/theia/applications /home/theia/applications
 COPY --from=build-stage /home/theia/plugins /home/theia/plugins
+COPY --from=eduide-session /eduide-session /home/theia/plugins/eduide-session
 COPY --from=build-stage /home/theia/theia-extensions /home/theia/theia-extensions
 COPY --from=build-stage /home/theia/package.json /home/theia/package.json
 COPY --from=build-stage /home/theia/scripts /home/theia/scripts

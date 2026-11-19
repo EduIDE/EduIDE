@@ -25,12 +25,14 @@ import { DebugToolbarContribution } from './toolbar/debug-toolbar-contribution';
 import { RefactorToolbarContribution } from './toolbar/refactor-toolbar-contribution';
 import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { MiniBrowserFrontendSecurityWarnings } from '@theia/mini-browser/lib/browser/mini-browser-frontend-security-warnings';
+import { WebviewFrontendSecurityWarnings } from '@theia/plugin-ext/lib/main/browser/webview/webview-frontend-security-warnings';
 
-// The images set THEIA_MINI_BROWSER_HOST_PATTERN to the webview host family so the
-// HTML preview works behind the gateway. Theia then warns about the changed pattern
-// on every start; that is intended here, so silence this one check. Patched on the
+// The images set THEIA_WEBVIEW_EXTERNAL_ENDPOINT and THEIA_MINI_BROWSER_HOST_PATTERN to the fixed
+// host webview.{{hostname}} (control plane decision G3). Theia then warns about the changed
+// pattern on every start; that is intended here, so silence these two checks. Patched on the
 // prototype because rebinding depends on module load order. The generic
-// warnOnPotentiallyInsecureHostPattern flag stays on, it also guards the backend bind.
+// warnOnPotentiallyInsecureHostPattern flag stays on, Theia offers no per-check switch.
+Reflect.set(WebviewFrontendSecurityWarnings.prototype, 'checkHostPattern', async () => undefined);
 Reflect.set(MiniBrowserFrontendSecurityWarnings.prototype, 'checkHostPattern', async () => undefined);
 
 export default new ContainerModule((bind, _unbind, isBound, rebind) => {

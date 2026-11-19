@@ -188,6 +188,7 @@ jobs:
         BASE_IMAGE=ghcr.io/eduide/eduide/base-${{ matrix.edition }}:${{ needs.base.outputs.sha_tag }}
         IMAGE_NAME=${{ matrix.image-name }}
         GRADLE_PREWARM_AUTO_CONFIRM=${{ matrix.edition == 'artemis' }}
+        DATA_BRIDGE_ENABLED=${{ matrix.edition == 'artemis' }}
         IMAGE_REVISION=${{ github.sha }}
       # See the note on the base job.
       stamp-app-version: true
@@ -207,7 +208,7 @@ jobs:
     if: ${{ !cancelled() && needs.base.result == 'success' }}
     permissions:
       contents: read
-      packages: read
+      packages: write
     name: smoke ${{ matrix.language }}-${{ matrix.edition }}
     runs-on: ubuntu-latest
     strategy:
@@ -232,6 +233,23 @@ jobs:
           SMOKE_OUT_DIR: ${{ runner.temp }}/templates
           EDITION: ${{ matrix.edition }}
         run: scripts/smoke-test-image.sh "$IMAGE" "$EDITION"
+      # Control plane decision U12: the template metadata that the image build wrote to
+      # /opt/eduide/template.json becomes the OCI index annotation io.eduide.template, so the operator can
+      # read it from the registry without starting a pod. Re-creating the index from itself adds the
+      # annotation and moves both tags to the annotated index (new digest, same images). Only the index
+      # carries it; the per-platform manifests are untouched.
+      - name: Annotate the image with its template metadata
+        env:
+          REPO: ghcr.io/eduide/eduide/${{ matrix.language }}-${{ matrix.edition }}
+          BASE_TAG: ${{ needs.base.outputs.image_tag }}
+          SHA_TAG: ${{ needs.base.outputs.sha_tag }}
+        run: |
+          set -euo pipefail
+          json="$(docker run --rm --entrypoint cat "$REPO:$SHA_TAG" /opt/eduide/template.json | tr -d '\n')"
+          [ "${#json}" -lt 65536 ] || { echo "::error::template metadata over 64 KiB"; exit 1; }
+          docker buildx imagetools create --annotation "index:io.eduide.template=$json" \
+            -t "$REPO:$BASE_TAG" -t "$REPO:$SHA_TAG" "$REPO:$SHA_TAG"
+          docker buildx imagetools inspect --raw "$REPO:$BASE_TAG" | python3 -c 'import sys,json; a=json.load(sys.stdin)["annotations"]["io.eduide.template"]; json.loads(a); print("annotation ok,", len(a), "bytes")'
       # The release train checks the chart's buildSystems against these lists.
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}

@@ -12,6 +12,7 @@
     "@theia/getting-started": "1.74.1",
     "@theia/mini-browser": "1.74.1",
     "@theia/monaco": "1.74.1",
+    "@theia/navigator": "1.74.1",
     "@theia/outline-view": "1.74.1",
     "@theia/plugin-ext": "1.74.1",
     "@theia/task": "1.74.1",

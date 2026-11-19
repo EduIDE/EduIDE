@@ -26,6 +26,7 @@ import { McpFrontendApplicationContribution } from '@theia/ai-mcp/lib/browser/mc
 import { InstallMcpUriHandler } from '@theia/ai-mcp/lib/browser/install-mcp-uri-handler';
 import { HostedPluginSupport } from '@theia/plugin-ext/lib/hosted/browser/hosted-plugin';
 import { MonacoThemingService } from '@theia/monaco/lib/browser/monaco-theming-service';
+import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
 import { eduIdeDarkThemeIncludes, eduIdeTheme } from './themes/eduide-theme';
 import { eduIdeLightTheme, eduIdeLightThemeIncludes } from './themes/eduide-light-theme';
 
@@ -155,6 +156,24 @@ export class DisabledAIActivationService implements AIActivationService, Fronten
 
     initialize(): void {
         this.contextKeyService.createKey(ENABLE_AI_CONTEXT_KEY, false);
+    }
+}
+
+/**
+ * Shows the Explorer when the IDE starts with the default layout.
+ *
+ * Theia adds the Explorer to the left panel but leaves the panel collapsed, so
+ * students had to open it by hand every time. `initializeLayout` only runs when
+ * there is no stored layout, so a layout the student arranged is kept on reload.
+ */
+@injectable()
+export class ExplorerOpenByDefaultContribution implements FrontendApplicationContribution {
+
+    @inject(FileNavigatorContribution)
+    protected readonly navigator: FileNavigatorContribution;
+
+    async initializeLayout(_app: FrontendApplication): Promise<void> {
+        await this.navigator.openView({ reveal: true });
     }
 }
 

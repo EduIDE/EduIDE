@@ -9,7 +9,7 @@
 
 import '../../src/browser/style/index.css';
 
-import { WidgetFactory, FrontendApplicationContribution } from '@theia/core/lib/browser';
+import { WidgetFactory, FrontendApplicationContribution, ApplicationShellOptions } from '@theia/core/lib/browser';
 import { AboutDialog } from '@theia/core/lib/browser/about-dialog';
 import { CommandContribution } from '@theia/core/lib/common/command';
 import { ContainerModule } from '@theia/core/shared/inversify';
@@ -61,6 +61,9 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     // Open the Explorer in the default layout; a restored layout is left alone
     bind(ExplorerOpenByDefaultContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(ExplorerOpenByDefaultContribution);
+
+    // A bit wider than Theia's 19.1% default, so file names in the Explorer fit
+    rebind(ApplicationShellOptions).toConstantValue({ leftPanel: { initialSizeRatio: 0.24 } });
 
     // Keep AI features off: @theia/ai-core arrives transitively via @theia/plugin-ext
     // and its default activation service enables AI. Replace it with a disabled one.

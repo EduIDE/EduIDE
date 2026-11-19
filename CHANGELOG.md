@@ -14,12 +14,14 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 - Rust is back and Go is new, with starter templates for Python, Node (TypeScript), Web (TypeScript), Cargo and Go next to the Java and C ones. Scorpio applies a template from `/home/theia/templates` when a session starts without a repository ([#222](https://github.com/EduIDE/EduIDE/pull/222))
 - Spell checker (English, German), Error Lens and EditorConfig in every image; the Python images ship numpy, pandas, matplotlib, uv and ruff, and Ruff formats Python on save ([#221](https://github.com/EduIDE/EduIDE/pull/221))
 - Experience levels apply to every language and take effect immediately; the status bar shows "Temporary workspace" or "Saved workspace" ([#220](https://github.com/EduIDE/EduIDE/pull/220))
+- The Explorer is open when a session starts, so students see their files without opening it by hand; a layout the student arranged is kept on reload
 - Browser input now counts as session activity, so a session that is in use is not stopped as idle ([#218](https://github.com/EduIDE/EduIDE/pull/218))
 
 ### Fixes
 
 - The browser tab and window title name the application EduIDE ([#219](https://github.com/EduIDE/EduIDE/pull/219))
 - The Welcome page no longer offers `Open Version Control` and `Open new Terminal` while the Beginner level (or an override) turns Source Control and the terminal off ([#229](https://github.com/EduIDE/EduIDE/pull/229))
+- The Welcome page stays centered and no longer cuts off its right column next to the open Explorer
 - C sessions with a Makefile no longer open with the Makefile Tools "Configuring project ... Do you want to continue?" dialog, which swallowed the student's first action; the images and the Make template turn off `makefile.configureOnOpen`, `makefile.configureOnEdit` and `makefile.configureAfterCommand` (clangd provides IntelliSense and does not use that configure)
 
 ### Changes

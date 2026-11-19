@@ -18,7 +18,7 @@ import { MenuContribution } from '@theia/core/lib/common/menu';
 import { FilterContribution } from '@theia/core/lib/common';
 import { AIActivationService } from '@theia/ai-core/lib/browser/ai-activation-service';
 import { TheiaIDEAboutDialog } from './theia-ide-about-dialog';
-import { TheiaIDEContribution, ViewsFilter, DisabledFeaturesContribution, DisabledAIActivationService } from './theia-ide-contribution';
+import { TheiaIDEContribution, ViewsFilter, DisabledFeaturesContribution, DisabledAIActivationService, ExplorerOpenByDefaultContribution } from './theia-ide-contribution';
 import { TheiaIDEGettingStartedWidget } from './theia-ide-getting-started-widget';
 import { TaskToolbarContribution } from './toolbar/task-toolbar-contribution';
 import { DebugToolbarContribution } from './toolbar/debug-toolbar-contribution';
@@ -57,6 +57,10 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     // Register runtime feature disabler for additional protection
     bind(DisabledFeaturesContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(DisabledFeaturesContribution);
+
+    // Open the Explorer in the default layout; a restored layout is left alone
+    bind(ExplorerOpenByDefaultContribution).toSelf().inSingletonScope();
+    bind(FrontendApplicationContribution).toService(ExplorerOpenByDefaultContribution);
 
     // Keep AI features off: @theia/ai-core arrives transitively via @theia/plugin-ext
     // and its default activation service enables AI. Replace it with a disabled one.

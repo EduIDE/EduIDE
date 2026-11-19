@@ -12,9 +12,9 @@
 # the folder, only from package.json.
 set -eu
 
-# scorpio and eduide-session are built and unpacked into plugins/ by the base image, not in theiaPlugins.
+# eduide-session is built and unpacked into plugins/ by the base image, so only scorpio is in theiaPlugins.
 required="scorpio eduide-session"
-required_json=""
+required_json="scorpio"
 missing=""
 
 if [ "${1:-}" = "--package-json" ]; then

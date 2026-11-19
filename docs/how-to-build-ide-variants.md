@@ -381,11 +381,10 @@ without rebuilding.
 
 Live Preview (`ms-vscode.live-server`) does not work in the cloud: it serves on `127.0.0.1:<port>` inside the container and its preview points at the student's own `127.0.0.1`. The images use Theia's built-in mini-browser instead, which serves files through the IDE server. Every `ToolDockerfile` sets `THEIA_WEBVIEW_EXTERNAL_ENDPOINT` and `THEIA_MINI_BROWSER_HOST_PATTERN` to the fixed host `webview.{{hostname}}` (ENV is not inherited from the base image), so webviews and previews share one origin that the gateway routes and certifies (no wildcard host); the default `{{uuid}}.mini-browser.{{hostname}}` has no route. The product extension silences Theia's "host pattern changed" warning for these two checks. Students open a preview with the "Open Preview to the Side" button of the editor toolbar, or right-click `index.html` and choose Open With, Preview. Relative CSS and scripts load; there is no auto-reload and no server-side code. Locally the browser must resolve `webview.<host>`, so use `http://localhost:3000` (Chrome resolves `*.localhost`), not `127.0.0.1`.
 
-## Experimental: Go control plane images
+## Go control plane integration
 
-Everything in this section is experimental and must not be merged before the migration to the Go control plane (EduIDE-control-plane).
 The base image builds the `eduide-session` extension from `extensions/eduide-session` of EduIDE-control-plane at the commit in the build arg `EDUIDE_SESSION_COMMIT` (repository in `EDUIDE_SESSION_REPO`) and unpacks it into `/home/theia/plugins/eduide-session`.
-Scorpio is built the same way from `SCORPIO_COMMIT` of EduIDE/scorpio (PR #230, which looks up `eduide.eduide-session` instead of `tum-aet.data-bridge`) and unpacked into `plugins/scorpio`.
+Scorpio (3.3.0 or later from Open VSX, `theiaPlugins.scorpio`) looks up `eduide.eduide-session` first.
 It replaces the data bridge and `theia-cloud-monitor` and keeps the commands `dataBridge.getEnv` and `dataBridge.getEnvState`.
 Every language image also writes its template metadata (U12) to `/opt/eduide/template.json` with `scripts/collect-template-json.js`: `imageVersion`, `variants` (from the templates' `template.json`, `logoUrl` is empty for now) and `includes` (installed tools with their versions and the editor extensions, grouped).
 The `smoke` job in `build.yml` copies that file into the OCI index annotation `io.eduide.template` (under 64 KiB) and re-publishes the tags with it.

@@ -17,7 +17,7 @@ The **base-ide** multi-stage build (install → build → runtime) produces the 
 
 ### Stage 2: Editions (`base-standalone/`, `base-artemis/`)
 
-Two thin layers `FROM base`, one per edition. The base itself carries Scorpio and `eduide-session` (experimental, replaces the data bridge and `theia-cloud-monitor`), but not the Artemis extension.
+Two thin layers `FROM base`, one per edition. The base itself carries Scorpio and `eduide-session` (replaces the data bridge and `theia-cloud-monitor`), but not the Artemis extension.
 
 ```
 base

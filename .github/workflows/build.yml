@@ -233,7 +233,7 @@ jobs:
           SMOKE_OUT_DIR: ${{ runner.temp }}/templates
           EDITION: ${{ matrix.edition }}
         run: scripts/smoke-test-image.sh "$IMAGE" "$EDITION"
-      # Control plane decision U12 (experimental): the template metadata that the image build wrote to
+      # Control plane decision U12: the template metadata that the image build wrote to
       # /opt/eduide/template.json becomes the OCI index annotation io.eduide.template, so the operator can
       # read it from the registry without starting a pod. Re-creating the index from itself adds the
       # annotation and moves both tags to the annotated index (new digest, same images). Only the index

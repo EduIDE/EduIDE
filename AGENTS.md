@@ -41,7 +41,7 @@ nearly shipped pinning two tags that were never built. Keep the job named
 `images` and the entries flat.
 
 **Editions live in the base, not in the language images.** `base` has Scorpio and
-`eduide-session` (experimental, replaces the data bridge and `theia-cloud-monitor`, built from a pinned EduIDE-control-plane commit in `images/base-ide/BaseDockerfile`). `base-standalone` adds
+`eduide-session` (replaces the data bridge and `theia-cloud-monitor`, built from the EduIDE-control-plane release commit in `images/base-ide/BaseDockerfile`). `base-standalone` adds
 a global git config with `credential.helper = cache --timeout=10800`.
 `base-artemis` adds the verified, unpacked `artemis-extension` to `plugins/` only,
 not to `package.json` `theiaPlugins`: `yarn download:plugins:smart` would
@@ -51,9 +51,9 @@ and its SHA-256 are `ARTEMIS_EXTENSION_URL` and `ARTEMIS_EXTENSION_SHA256` in `i
 A `ToolDockerfile` must stay edition-agnostic: no Artemis, no git config.
 
 Every `ToolDockerfile` runs `scripts/check-required-plugins.sh` twice: in the
-plugin stage right after the `package.json` merge (experimental: scorpio and `eduide-session` are no longer in `theiaPlugins`, so this check requires nothing; formerly it failed if `theiaPlugins`
-lacked or nulled a required plugin; this was the
-check that could fail, because the final stage merges plugin folders instead of
+plugin stage right after the `package.json` merge (fails if `theiaPlugins`
+lacks or nulls `scorpio`; `eduide-session` is not in `theiaPlugins`; this is the
+check that can fail, because the final stage merges plugin folders instead of
 replacing them) and at the end on the finished `plugins/` folder (requires `scorpio` and `eduide-session`). CI then runs
 `scripts/smoke-test-image.sh` on every image, including each template's Test
 task (default build task if it has none) under `--network none`. Templates
@@ -70,7 +70,7 @@ runtime env. Renovate leaves `images/*/templates/**` alone.
 **The HTML preview only works because of an ENV in each `ToolDockerfile`.**
 `THEIA_WEBVIEW_EXTERNAL_ENDPOINT` and `THEIA_MINI_BROWSER_HOST_PATTERN`, both `webview.{{hostname}}`, put webviews and the
 mini-browser on one fixed host, which the gateway routes and has a
-certificate for (no wildcard; experimental, control plane G3). ENV does not travel from the base image, so it must be in
+certificate for (no wildcard; control plane decision G3). ENV does not travel from the base image, so it must be in
 every `ToolDockerfile`. Live Preview is not in the images: it serves on
 `127.0.0.1` of the container. `docs/how-to-build-ide-variants.md`.
 
@@ -78,18 +78,17 @@ every `ToolDockerfile`. Live Preview is not in the images: it serves on
 through the authenticating proxy/gateway.** A direct TCP connection to the
 backend port (3000) is an unauthenticated session - file access, a terminal,
 task execution, the lot. In production the only thing allowed to reach it is
-the in-pod `oauth2-proxy` sidecar, which authenticates every request and
-forwards to `http://127.0.0.1:<port>` over the pod's shared loopback
-(EduIDE-Helm's `oauth2-proxy-config` ConfigMap). Because the proxy reaches the
-IDE over loopback, the published images bind the backend to `127.0.0.1`
+the in-pod agent sidecar of the Go control plane, which accepts only requests
+carrying the instance token the gateway adds after its own login check, and
+forwards to `http://127.0.0.1:<port>` over the pod's shared loopback.
+Because the agent reaches the IDE over loopback, the published images bind the backend to `127.0.0.1`
 (`--hostname=127.0.0.1` in each `ToolDockerfile` `CMD`), **not** `0.0.0.0`. Do
 not widen that bind, and do not disable `warnOnPotentiallyInsecureHostPattern`
 in `applications/browser/package.json` - that warning is the signal that would
 surface an accidental `0.0.0.0` exposure. The pod network / NetworkPolicy must
-still ensure nothing but the proxy can reach port 3000 (handled in EduIDE-Helm);
+still ensure nothing but the gateway can reach the agent (handled by the control plane chart);
 the loopback bind is defence in depth, not the only line.
 
-Experimental (Go control plane): there the agent sidecar replaces the oauth2-proxy and proxies to `127.0.0.1:3000` with an instance token. The images change nothing for that and require no oauth2-proxy.
 Local-only caveat: Docker port forwarding cannot reach a loopback-only bind, so
 `docker-compose.images.yml` overrides the hostname back to `0.0.0.0` per service
 for local testing. That override is for the host-only compose setup and must
@@ -177,8 +176,6 @@ Revisit when upstream ships a fix.
 half (the three-stage "ide-image / plugin-image / tool-image" description is
 older than the current Dockerfiles). Its image table and publishing paragraph
 match the build matrix, but the matrix stays the source of truth.
-
-Experimental: scorpio is built from the commit in `SCORPIO_COMMIT` (BaseDockerfile, EduIDE/scorpio#230, adds the id `eduide.eduide-session`) and is no longer in `package.json.patch`, so the Renovate rule below matches nothing until that PR is released.
 
 The scorpio pin in `images/base-ide/package.json.patch` was bumped by Renovate
 (a regex `customManager` in `renovate.json` reading `EduIDE/scorpio` GitHub

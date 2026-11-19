@@ -23,6 +23,15 @@ export const eduIdeLightTheme = {
     colors: {
         ...eduIdeTheme.colors,
         'activityBar.background': '#f0f0f0',
+        // The dark theme's teal is too light on white; these keep text at 4.5:1 or more.
+        'focusBorder': '#1A7A7C',
+        'button.background': '#1A7A7C',
+        'button.hoverBackground': '#1A6E70',
+        'activityBarBadge.background': '#1A7A7C',
+        'list.highlightForeground': '#136366',
+        'menu.selectionBackground': '#1A7A7C',
+        'statusBarItem.remoteBackground': '#1A6E70',
+        'progressBar.background': '#1A7A7C',
         'textLink.foreground': '#1A7A7C',
         'textLink.activeForeground': '#1A7A7C',
     }

@@ -29,8 +29,7 @@
   },
   "theiaExtensions": [
     {
-      "frontend": "lib/browser/theia-ide-frontend-module",
-      "electronMain": "lib/electron-main/theia-ide-main-module"
+      "frontend": "lib/browser/theia-ide-frontend-module"
     }
   ],
   "keywords": [

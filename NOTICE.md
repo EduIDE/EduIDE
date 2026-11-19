@@ -80,33 +80,11 @@ dugite (1.52.0)
 
 * License: MIT
 
-Electron (3.1.7)
-
-* License: BSD-2-Clause AND BSD-3-Clause AND (MIT OR GPL-2.0) AND Apache-2.0
-   AND (BSD-2-Clause OR MIT OR Apache-2.0) AND ISC AND MIT AND X11 AND
-   BSD-2-Clause-FreeBSD AND Public-Domain AND Unlicense AND MPL-2.0 AND
-   (BSD-3-Clause OR MPL-2.0) AND CC-BY-3.0 AND (AFL-2.0
-* Project: https://electronjs.org/
-* Source: https://github.com/electron/electron
-
-electron@2.0.14 (2.0.14)
-
-* License: MIT AND BSD-2-Clause AND Apache-2.0 AND (AFL-2.1 OR BSD-3-Clause)
-   AND BSD-3-Clause AND ISC AND X11 AND Public-Domain AND (GPL-2.0 OR MIT) AND
-   Unlicense AND IJG AND ICU AND UNICODE-TOU AND NTP AND (MIT OR BSD-3-Clause)
-   AND Libpng AND MPL-2.0 AND LGPL-2.1+
-* Project: https://github.com/electron/electron
-* Source: https://github.com/electron/electron/releases/tag/v2.0.14
-
 getmac (1.4.6)
 
 * License: MIT
 * Project: https://github.com/bevry/getmac
 * Source: https://github.com/bevry/getmac
-
-GH-3397: Implemented the HTTP-based authentication for Git in Electron. (n/a)
-
-* License: MIT
 
 glob promise (3.4.0)
 
@@ -120,10 +98,6 @@ Icon configure-inverse.svg (n/a)
 * Project: https://github.com/Microsoft/vscode
 * Source:
    https://github.com/Microsoft/vscode/blob/master/src/vs/workbench/contrib/tasks/common/media/configure-inverse.svg#L1
-
-libffmpeg (FFmpeg) Delivered with Electron (3.1.7)
-
-* License: LGPL-2.1+
 
 long.js (3.2.0)
 
@@ -305,26 +279,3 @@ another country, of encryption software. BEFORE using any encryption software,
 please check the country's laws, regulations and policies concerning the import,
 possession, or use, and re-export of encryption software, to see if this is
 permitted.
-
-
-## Electron
-
-NOTICE:
-
-Please note Electron combines Chromium and Node.js into a single runtime.
-While Electron, Chromium and Node.js are generally licensed under very
-permissive MIT and BSD-3-Clause licenses, both Electron and Chromium distribute
-FFmpeg.  While FFmpeg is under the LGPL-2.1-or-later license it incorporates
-several optional parts and optimizations that are covered by the
-GPL-2.0-or-later.  We understand both Electron and Chromium do not distribute
-versions of FFmpeg with GPL content enabled; however, FFmpeg may be configured
-enabled to work with proprietary codecs.  It is our understanding these
-proprietary codecs may be patented; and as a result, may be subject to
-licensing fees.
-
-We strongly recommend downstream consumers verify the type of FFmpeg support
-configured and modify as required.  More information on instructions to verify
-can be found here
-https://electronjs.org/docs/development/upgrading-chromium#verify-ffmpeg-support
-
-

@@ -6,9 +6,6 @@
     },
     "references": [
       {
-        "path": "../../theia-extensions/launcher"
-      },
-      {
         "path": "../../theia-extensions/product"
       }
     ]

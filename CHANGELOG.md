@@ -32,6 +32,9 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Changes
 
+- Smaller images: the language images no longer copy `/home/theia/node_modules` (about 300 MB; the backend is bundled into `applications/browser/lib`), and `java-25` uses the universal `redhat.java` 1.58.0 without its embedded JRE (about 134 MB; the language server runs on the image's JDK 25). `java-25` also moves from a `redhat.java` nightly to that stable release
+- Browser only: the Electron application, the launcher and updater extensions and the Electron code of the product extension are removed, as are `@theia/plugin-dev` and `@theia/metrics` (243 npm packages fewer in `yarn.lock`)
+- The unpublished Haskell, OCaml and Swift images, the old Theia IDE logo and an orphaned template file are removed
 - The Artemis edition sets `GRADLE_PREWARM_AUTO_CONFIRM=true` (Java images and the base), so scorpio starts the Gradle prewarm without a prompt; standalone editions keep the prompt
 
 ### Security

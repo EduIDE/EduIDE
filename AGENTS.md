@@ -30,10 +30,6 @@ matrix in `.github/workflows/build.yml` under the **`images`** job: each of
 `ToolDockerfile`, once as `<lang>-standalone` (on `base-standalone`) and once
 as `<lang>-artemis` (on `base-artemis`).
 
-`haskell` and `ocaml` still have their directories and compose services,
-so they build locally, but CI no longer publishes them. To bring one back, add
-its matrix entries again and a catalog entry in EduIDE-Helm.
-
 Do not hardcode that list anywhere. EduIDE-Helm's release train reads it from
 the matrix at run time (`.jobs.images.strategy.matrix.include[]["image-name"]`),
 because a hand-kept copy went stale within days of being written and a release
@@ -150,9 +146,7 @@ former.
 
 The retired language-server images (`-no-ls`, `languageserver`, `theia-ls-setup`) are deleted.
 
-`images/swift/` builds locally through `docker-compose.images.yml` (port 3008)
-but is in no build matrix, so it is never published (same for `haskell` and
-`ocaml`).
+Haskell, OCaml and Swift are deleted; every language in `images/` is in the build matrix.
 
 ## Build inputs and their integrity
 
@@ -226,7 +220,8 @@ to students. Building an image deploys nothing on its own.
 ## Conventions
 
 - The `theia` user is uid 101 in every image.
-- Electron code is deleted during the base build; do not add to it.
+- Browser only: there is no Electron application, launcher or updater; do not add one.
+- The language images copy `/home/theia` from the base without `node_modules` (`COPY --exclude=node_modules`): the backend is bundled into `applications/browser/lib`. Keep it that way, or the images grow by about 300 MB.
 - Release tags are `vX.Y.Z`; the image tag is the same string without the `v`.
 - Releases are manual: merge a release PR (CHANGELOG.md section), then run
   `gh workflow run release.yml -f version=X.Y.Z`. It drafts the GitHub

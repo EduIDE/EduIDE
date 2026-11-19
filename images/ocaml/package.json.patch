@@ -1,8 +1,0 @@
-{
-  "theiaPlugins": {
-    "ocaml-platform": "https://open-vsx.org/api/ocamllabs/ocaml-platform/1.18.1/file/ocamllabs.ocaml-platform-1.18.1.vsix"
-  },
-  "theiaPluginsExcludeIds": [
-    "vscode.extension-editing"
-  ]
-}

@@ -11,7 +11,6 @@ next person recognises it in the first minute instead of the first hour.
 |---|---|---|
 | `node:22-trixie`, `node:22-trixie-slim` | `BaseDockerfile` (all three stages), every `plugin-image` stage | Debian 13: regular support 2028-08-09, then LTS to 2030-06-30 |
 | `ubuntu:26.04` | the `apt-deps` stage of every language image (`java-17`, `java-25`, `python`, `javascript`, `c`, `rust`, `go`) | 2031-04 (standard) |
-| `swift:focal` | `swift` (unpublished, in no build matrix) | **already EOL** |
 
 Ubuntu 26.04 (codename `resolute`) is the one Ubuntu suite on every language image. The Adoptium apt
 repository in `java-25` is addressed by that codename too, so it moves with the suite.

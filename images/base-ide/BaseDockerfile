@@ -5,7 +5,7 @@
 # through theiaPlugins, so the language images inherit it from this image's /home/theia.
 ARG EDUIDE_SESSION_REPO=https://github.com/EduIDE/EduIDE-control-plane
 # Commit of EduIDE-control-plane to build extensions/eduide-session from.
-ARG EDUIDE_SESSION_COMMIT=d225758f8ade6ec7bdbc001bcd55f6fc49e3e051
+ARG EDUIDE_SESSION_COMMIT=1c4e5b890e88001444d7c3675b232b01c42c9cd0
 ARG SCORPIO_REPO=https://github.com/EduIDE/scorpio
 # Head of EduIDE/scorpio#230. Not yet released, so it replaces the Open VSX scorpio 3.0.0.
 ARG SCORPIO_COMMIT=fad733b4d42a442098d7d0a01176976988def2c8

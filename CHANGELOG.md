@@ -13,6 +13,7 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 ### Features
 
 - Every language image writes `/opt/eduide/template.json` (variants, installed tool and extension versions, image version) and carries it as the OCI index annotation `io.eduide.template` for the Go control plane
+- File > Back to Start Page returns to the installation's landing page and replaces Close Workspace, which only left an empty IDE. The session keeps running
 - Rust is back and Go is new, with starter templates for Python, Node (TypeScript), Web (TypeScript), Cargo and Go next to the Java and C ones. Scorpio applies a template from `/home/theia/templates` when a session starts without a repository ([#222](https://github.com/EduIDE/EduIDE/pull/222))
 - Spell checker (English, German), Error Lens and EditorConfig in every image; the Python images ship numpy, pandas, matplotlib, uv and ruff, and Ruff formats Python on save ([#221](https://github.com/EduIDE/EduIDE/pull/221))
 - Experience levels apply to every language and take effect immediately; the status bar shows "Temporary workspace" or "Saved workspace" ([#220](https://github.com/EduIDE/EduIDE/pull/220))

@@ -52,6 +52,7 @@
   "scripts": {
     "clean": "rimraf lib *.tsbuildinfo",
     "build": "tsc -b",
+    "test": "tsc -b && node --test \"lib/**/*.spec.js\"",
     "lint": "eslint --ext js,jsx,ts,tsx src",
     "lint:fix": "eslint --ext js,jsx,ts,tsx src --fix",
     "update:theia": "ts-node ../../scripts/update-theia-version.ts",

@@ -29,6 +29,8 @@ import { MonacoThemingService } from '@theia/monaco/lib/browser/monaco-theming-s
 import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
 import { eduIdeDarkThemeIncludes, eduIdeTheme } from './themes/eduide-theme';
 import { eduIdeLightTheme, eduIdeLightThemeIncludes } from './themes/eduide-light-theme';
+import { WorkspaceCommands } from '@theia/workspace/lib/browser/workspace-commands';
+import { landingPageUrl } from './landing-page';
 
 export namespace TheiaIDEMenus {
     export const THEIA_IDE_HELP: MenuPath = [...CommonMenus.HELP, 'theia-ide'];
@@ -39,6 +41,11 @@ export namespace TheiaIDECommands {
         id: 'theia-ide:report-issue',
         category: CATEGORY,
         label: 'Report Issue'
+    };
+    export const BACK_TO_START_PAGE: Command = {
+        id: 'theia-ide:back-to-start-page',
+        category: CATEGORY,
+        label: 'Back to Start Page'
     };
 }
 
@@ -220,6 +227,13 @@ export class TheiaIDEContribution implements CommandContribution, MenuContributi
         commandRegistry.registerCommand(TheiaIDECommands.REPORT_ISSUE, {
             execute: () => this.windowService.openNewWindow(TheiaIDEContribution.REPORT_ISSUE_URL, { external: true })
         });
+        const startPage = landingPageUrl(window.location.hostname);
+        commandRegistry.registerCommand(TheiaIDECommands.BACK_TO_START_PAGE, {
+            isEnabled: () => !!startPage,
+            isVisible: () => !!startPage,
+            // Only navigates; the session keeps running until it idles out.
+            execute: () => startPage && window.location.assign(startPage)
+        });
     }
 
     registerMenus(menus: MenuModelRegistry): void {
@@ -227,6 +241,12 @@ export class TheiaIDEContribution implements CommandContribution, MenuContributi
             commandId: TheiaIDECommands.REPORT_ISSUE.id,
             label: TheiaIDECommands.REPORT_ISSUE.label,
             order: '1'
+        });
+        // Closing the workspace leaves an empty IDE in a session that owns exactly one workspace.
+        menus.unregisterMenuAction(WorkspaceCommands.CLOSE, CommonMenus.FILE_CLOSE);
+        menus.registerMenuAction(CommonMenus.FILE_CLOSE, {
+            commandId: TheiaIDECommands.BACK_TO_START_PAGE.id,
+            label: TheiaIDECommands.BACK_TO_START_PAGE.label
         });
     }
 }

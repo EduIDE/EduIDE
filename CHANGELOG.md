@@ -20,6 +20,7 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Fixes
 
+- Experimental: the Artemis edition sets `DATA_BRIDGE_ENABLED=true` in every language image, so the Artemis extension fetches its login from `eduide-session` (the Go control plane does not set it per session like the Java operator did)
 - Experimental: git trusts `/home/project` (system `safe.directory`), so cloning into a workspace volume root owned by root no longer fails with "dubious ownership"
 - The browser tab and window title name the application EduIDE ([#219](https://github.com/EduIDE/EduIDE/pull/219))
 - The Welcome page no longer offers `Open Version Control` and `Open new Terminal` while the Beginner level (or an override) turns Source Control and the terminal off ([#229](https://github.com/EduIDE/EduIDE/pull/229))

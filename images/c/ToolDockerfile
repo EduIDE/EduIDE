@@ -169,6 +169,11 @@ RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check
 # The only thing the entrypoint still does is write the Bazel remote cache
 # config, which depends on env injected at runtime. It then starts Theia.
 COPY --chown=theia:theia images/c/entrypoint.sh /home/theia/entrypoint.sh
+# The Artemis extension asks the session bridge for its login only when this is set; build.yml
+# turns it on for the artemis edition.
+ARG DATA_BRIDGE_ENABLED=false
+ENV DATA_BRIDGE_ENABLED=${DATA_BRIDGE_ENABLED}
+
 ENTRYPOINT [ "/bin/bash", "/home/theia/entrypoint.sh" ]
 
 # Arguments passed to the application

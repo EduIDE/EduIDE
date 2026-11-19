@@ -55,9 +55,11 @@ for plugin in scorpio eduide-session; do
 done
 if [ "$edition" = artemis ]; then
     check "artemis-extension present" "test -d /home/theia/plugins/artemis-extension"
+    check "data bridge enabled for the artemis extension" "[ \"\${DATA_BRIDGE_ENABLED:-}\" = true ]"
     check "no git credential cache" "! git config --global --get credential.helper | grep -q cache"
 else
     check "artemis-extension absent" "! test -e /home/theia/plugins/artemis-extension"
+    check "data bridge not enabled" "[ \"\${DATA_BRIDGE_ENABLED:-false}\" = false ]"
     check "git credential cache set" "git config --global --get credential.helper | grep -qx 'cache --timeout=10800'"
 fi
 

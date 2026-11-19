@@ -8,7 +8,7 @@ ARG EDUIDE_SESSION_REPO=https://github.com/EduIDE/EduIDE-control-plane
 ARG EDUIDE_SESSION_COMMIT=1c4e5b890e88001444d7c3675b232b01c42c9cd0
 ARG SCORPIO_REPO=https://github.com/EduIDE/scorpio
 # Head of EduIDE/scorpio#230. Not yet released, so it replaces the Open VSX scorpio 3.0.0.
-ARG SCORPIO_COMMIT=fad733b4d42a442098d7d0a01176976988def2c8
+ARG SCORPIO_COMMIT=c575ba77570debb082ccf2b2bda19da01ba87e06
 
 FROM node:22-trixie AS scorpio
 ARG SCORPIO_REPO

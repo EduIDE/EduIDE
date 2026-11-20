@@ -53,9 +53,6 @@ Both carry Scorpio and the data bridge, the same toolchain and the same template
 | Rust | `rust-artemis` | `rust-standalone` |
 | Go | `go-artemis` | `go-standalone` |
 
-`ocaml` and `haskell` are no longer published; build them locally with
-`docker compose -f docker-compose.images.yml build <name>`.
-
 There are no per-university images any more. A university with its own needs
 builds its own image `FROM` an edition image, see
 [Building an IDE variant](docs/how-to-build-ide-variants.md); the

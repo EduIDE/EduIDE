@@ -19,41 +19,6 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Electron Backend",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
-      "windows": {
-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
-      },
-      "cwd": "${workspaceFolder}/applications/electron",
-      "protocol": "inspector",
-      "args": [
-        ".",
-        "--log-level=debug",
-        "--hostname=localhost",
-        "--no-cluster",
-        "--app-project-path=${workspaceFolder}/applications/electron",
-        "--remote-debugging-port=9222",
-        "--no-app-auto-install",
-        "--plugins=local-dir:../../plugins"
-      ],
-      "env": {
-        "NODE_ENV": "development"
-      },
-      "sourceMaps": true,
-      "outFiles": [
-        "${workspaceFolder}/applications/electron/src-gen/frontend/electron-main.js",
-        "${workspaceFolder}/applications/electron/src-gen/backend/main.js",
-        "${workspaceFolder}/applications/electron/lib/**/*.js",
-        "${workspaceFolder}/theia-extensions/*/lib/**/*.js",
-        "${workspaceFolder}/dev-packages/*/lib/**/*.js"
-      ],
-      "smartStep": true,
-      "internalConsoleOptions": "openOnSessionStart",
-      "outputCapture": "std"
-    },
-    {
-      "type": "node",
-      "request": "launch",
       "name": "Launch Browser Backend",
       "program": "${workspaceFolder}/applications/browser/lib/backend/main.js",
       "args": [
@@ -139,13 +104,6 @@
       "webRoot": "${workspaceFolder}/applications/browser"
     },
     {
-      "type": "chrome",
-      "request": "attach",
-      "name": "Attach to Electron Frontend",
-      "port": 9222,
-      "webRoot": "${workspaceFolder}/applications/electron"
-    },
-    {
       "name": "Launch VS Code Tests",
       "type": "node",
       "request": "launch",
@@ -168,11 +126,6 @@
     }
   ],
   "compounds": [
-    {
-      "name": "Launch Electron Backend & Frontend",
-      "configurations": ["Launch Electron Backend", "Attach to Plugin Host", "Attach to Electron Frontend"],
-      "stopAll": true
-    },
     {
       "name": "Launch Browser Backend & Frontend",
       "configurations": ["Launch Browser Backend", "Attach to Plugin Host", "Launch Browser Frontend"],

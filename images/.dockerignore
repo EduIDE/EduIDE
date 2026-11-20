@@ -8,11 +8,6 @@ node_modules
 **/.DS_Store
 **/*.log
 
-# Exclude unused application variants and extensions.
-applications/electron
-theia-extensions/launcher
-theia-extensions/updater
-
 # Omit development artefacts and local build output.
 **/dist
 **/lib

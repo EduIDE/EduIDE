@@ -12,7 +12,7 @@ The **base-ide** multi-stage build (install → build → runtime) produces the 
 
 - Installs build prerequisites and caches workspace dependencies for faster rebuilds
 - Compiles the browser-only Theia application from source and downloads core plugins (Git, Markdown, JSON, etc.)
-- Removes Electron launchers and packaging code along with other development artefacts
+- Builds the browser application only (no Electron, launcher or updater)
 - Emits a slim runtime layer based on `node:22-trixie-slim`, ready to be copied into language-specific images
 
 ### Stage 2: Editions (`base-standalone/`, `base-artemis/`)

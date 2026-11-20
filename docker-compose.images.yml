@@ -11,7 +11,6 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
 
-
   base-standalone:
     image: theia-base-standalone:local
     build:
@@ -35,53 +34,6 @@ services:
         base-ide: "service:base-ide"
     depends_on:
       - base-ide
-
-  haskell:
-    image: theia-haskell:local
-    build:
-      context: .
-      dockerfile: images/haskell/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "127.0.0.1:3002:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-
-  ocaml:
-    image: theia-ocaml:local
-    build:
-      context: .
-      dockerfile: images/ocaml/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    ports:
-      - "127.0.0.1:3005:3000"
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-
-
-  swift:
-    image: theia-swift:local
-    build:
-      context: .
-      dockerfile: images/swift/ToolDockerfile
-      args:
-        BASE_IMAGE: theia-base:local
-      additional_contexts:
-        base-ide: "service:base-ide"
-    depends_on:
-      - base-ide
-    command: [ "/home/project", "--hostname=0.0.0.0" ]
-    ports:
-      - "127.0.0.1:3008:3000"
 
   c-standalone:
     image: theia-c-standalone:local

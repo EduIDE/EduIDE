@@ -20,7 +20,6 @@ ToolDockerfile
 .vscode/
 .eslintrc.js
 docs/
-TheiaIDE logo/
 AGENTS.md
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md

@@ -1,5 +1,6 @@
 {
   "theiaPlugins": {
+    "redhat.java": "https://open-vsx.org/api/redhat/java/1.58.0/file/redhat.java-1.58.0.vsix",
     "vscjava.vscode-java-pack": "https://open-vsx.org/api/vscjava/vscode-java-pack/0.31.1/file/vscjava.vscode-java-pack-0.31.1.vsix",
     "vscjava.vscode-java-dependency": "https://open-vsx.org/api/vscjava/vscode-java-dependency/0.27.6/file/vscjava.vscode-java-dependency-0.27.6.vsix",
     "vscjava.vscode-gradle": "https://open-vsx.org/api/vscjava/vscode-gradle/3.18.0/file/vscjava.vscode-gradle-3.18.0.vsix"

@@ -31,6 +31,19 @@ The sidecars (agent 4 MiB, oauth2-proxy 5-6 MiB) are not worth tuning.
 
 `scripts/smoke-test-image.sh` checks all four in every image.
 
+All four together (cgroup `anon` in MiB, three minutes after the template build; the file watcher picked up a file created from outside in every image, and every template build passed):
+
+| Image (template) | Before | After |
+|---|---|---|
+| c (make) | 590 | 308 |
+| go | 606 | 398 |
+| python | 530-550 | 349 |
+| javascript (node) | 635 | 446 |
+| rust (cargo) | 1043 | 750 |
+| java-17 (maven) | 863-874 | 785 |
+| java-17 (gradle) | ~1036 | 930 |
+| java-25 (maven) | | 771 |
+
 ### `--no-cluster`
 
 Theia's server starts the file watcher (`@parcel/watcher`) in a child node process unless `--no-cluster` is on the command line (`WATCHER_SINGLE_THREADED` in `@theia/filesystem`).

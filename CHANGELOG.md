@@ -8,7 +8,7 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Changes
 
-- New workspaces start empty, so `git clone <url> .` works, and a repository's or template's own `.vscode/settings.json` now wins over the image defaults. The image settings moved out of the workspace: shared ones into the Theia preferences defaults, language specific ones into `/home/theia/.theia-ide/settings.json`. Existing workspaces keep their old `/home/project/.vscode/settings.json`, students can delete it ([#TBD](https://github.com/EduIDE/EduIDE/pull/TBD))
+- New workspaces start empty, so `git clone <url> .` works, and a repository's or template's own `.vscode/settings.json` now wins over the image defaults. The image settings moved out of the workspace: shared ones into the Theia preferences defaults, language specific ones into `/home/theia/.theia-ide/settings.json`. Existing workspaces keep their old `/home/project/.vscode/settings.json`, students can delete it ([#250](https://github.com/EduIDE/EduIDE/pull/250))
 
 ### Dependencies
 

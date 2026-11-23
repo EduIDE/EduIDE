@@ -124,6 +124,11 @@ ENV SHELL=/bin/zsh \
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
 
+# glibc gives busy threads their own malloc arena, and language servers and Theia's node
+# processes then keep freed memory spread over many of them. Two arenas save 80-200 MB per
+# session (docs/ide-memory-tuning.md).
+ENV MALLOC_ARENA_MAX=2
+
 # Let plain `node`/`tsc` resolve the globally-installed npm packages (typescript, tsx)
 ENV NODE_PATH=/usr/local/lib/node_modules
 
@@ -151,7 +156,9 @@ RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check
 ARG DATA_BRIDGE_ENABLED=false
 ENV DATA_BRIDGE_ENABLED=${DATA_BRIDGE_ENABLED}
 
-ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
+# --no-cluster runs the file watcher inside the server process instead of a separate node
+# process, which saves 30-60 MB per session (docs/ide-memory-tuning.md).
+ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js", "--no-cluster" ]
 
 # Arguments passed to the application
 CMD [ "/home/project", "--hostname=127.0.0.1" ]

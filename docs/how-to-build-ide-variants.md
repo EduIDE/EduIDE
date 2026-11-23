@@ -104,7 +104,8 @@ The final runtime image that combines everything.
 - Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
 - Copy `images/<lang>/templates` to `/home/theia/templates`
 - Run `scripts/check-required-plugins.sh` right after the `package.json` merge (it checks nothing while both are unpacked by the base image) and again at the end on the finished `plugins/`
-- Start `node .../main.js` directly as the entrypoint (the C image keeps a small `entrypoint.sh` that only writes the Bazel remote cache config)
+- Set `MALLOC_ARENA_MAX=2`, see [ide-memory-tuning.md](ide-memory-tuning.md)
+- Start `node .../main.js --no-cluster` directly as the entrypoint (the C image keeps a small `entrypoint.sh` that only writes the Bazel remote cache config)
 
 **Example from C variant (lines 66-69):**
 
@@ -408,6 +409,8 @@ Tag the result with the EduIDE version (`2.0.0`), with a patch bump for changes 
 [`EduIDE/EduIDE-image-mannheim`](https://github.com/EduIDE/EduIDE-image-mannheim) is the reference example (Live Preview extension, Java 25 `MAVEN_OPTS`, settings and keymaps on top of `java-25-standalone`, which provides Java and Maven) and a GitHub template repository to start from. See its README, section "Versioning", for the tagging scheme.
 
 ## Memory tuning
+
+Every image runs the file watcher in the server process (`--no-cluster`), limits glibc to two malloc arenas and has the spell checker off by default. See [ide-memory-tuning.md](ide-memory-tuning.md) for the numbers and keep these settings in a new image.
 
 The Java variants cap all resident JVM and node processes so many environments fit on one host. See [java-image-memory-tuning.md](java-image-memory-tuning.md) before changing Gradle or language server settings in those images.
 

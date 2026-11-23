@@ -197,7 +197,9 @@ RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check
 ARG DATA_BRIDGE_ENABLED=false
 ENV DATA_BRIDGE_ENABLED=${DATA_BRIDGE_ENABLED}
 
-ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js" ]
+# --no-cluster runs the file watcher inside the server process instead of a separate node
+# process, which saves 30-60 MB per session (docs/ide-memory-tuning.md).
+ENTRYPOINT [ "node", "/home/theia/applications/browser/lib/backend/main.js", "--no-cluster" ]
 
 # Arguments passed to the application
 CMD [ "/home/project", "--hostname=127.0.0.1" ]

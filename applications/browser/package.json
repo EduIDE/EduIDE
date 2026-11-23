@@ -29,7 +29,8 @@
             "**/.vscode": true,
             "lost+found": true
           },
-          "security.workspace.trust.enabled": false
+          "security.workspace.trust.enabled": false,
+          "cSpell.enabled": false
         },
         "reloadOnReconnect": true
       }

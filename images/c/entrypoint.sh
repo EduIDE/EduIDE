@@ -22,4 +22,5 @@ else
     echo "[Build Cache] Bazel remote cache disabled"
 fi
 
-exec node /home/theia/applications/browser/lib/backend/main.js "$@"
+# --no-cluster keeps the file watcher in the server process (docs/ide-memory-tuning.md)
+exec node /home/theia/applications/browser/lib/backend/main.js --no-cluster "$@"

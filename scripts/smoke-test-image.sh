@@ -69,7 +69,7 @@ case "$lang" in
 esac
 
 check "git trusts /home/project" "git config --system --get-all safe.directory | grep -qx /home/project"
-check "workspace is empty" "[ -z \"\$(ls -A /home/project)\" ]"
+check "workspace is empty" "out=\$(ls -A /home/project) && [ -z \"\$out\" ]"
 check "user settings present" "test -f /home/theia/.theia-ide/settings.json"
 check "config folder owned and writable by theia" "[ \"\$(stat -c %U /home/theia/.theia-ide)\" = theia ] && touch /home/theia/.theia-ide/.w && rm /home/theia/.theia-ide/.w"
 

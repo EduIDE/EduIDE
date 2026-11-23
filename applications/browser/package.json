@@ -35,7 +35,9 @@
           "cSpell.language": "en,de",
           "extensions.ignoreRecommendations": true,
           "telemetry.telemetryLevel": "off",
-          "workbench.colorTheme": "edu-ide-theme-dark"
+          "workbench.colorTheme": "edu-ide-theme-dark",
+          "java.saveActions.organizeImports": true,
+          "java.inlayHints.parameterNames.enabled": "literals"
         },
         "reloadOnReconnect": true
       }

@@ -4,9 +4,11 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-11-23
+
 ### Fixes
 
-- A session needs about 100 to 300 MB less memory, depending on the language: the file watcher runs in the server process (`--no-cluster`), every image limits glibc to two malloc arenas (`MALLOC_ARENA_MAX=2`), the spell checker is off by default (turn it on with `"cSpell.enabled": true`), and the Go image turns gopls telemetry off ([docs/ide-memory-tuning.md](docs/ide-memory-tuning.md))
+- A session needs about 100 to 300 MB less memory, depending on the language: the file watcher runs in the server process (`--no-cluster`), every image limits glibc to two malloc arenas (`MALLOC_ARENA_MAX=2`), the spell checker is off by default (turn it on with `"cSpell.enabled": true`), and the Go image turns gopls telemetry off ([docs/ide-memory-tuning.md](docs/ide-memory-tuning.md), [#248](https://github.com/EduIDE/EduIDE/pull/248))
 
 ## [3.0.0] - 2026-11-23
 

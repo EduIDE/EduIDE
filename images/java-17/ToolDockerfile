@@ -95,14 +95,11 @@ COPY --chown=theia:theia images/java-17/gradle/gradle.properties /home/theia/.gr
 # Bake user-level (machine-scoped) Java LS memory settings. Must be user-level:
 # java.jdt.ls.vmargs is security-gated in workspace settings and /home/project
 # may be replaced by a mounted student volume.
-RUN mkdir -p /home/theia/.theia-ide
+RUN install -d -o theia -g theia /home/theia/.theia-ide
 COPY --chown=theia:theia images/java-17/theia/user-settings.json /home/theia/.theia-ide/settings.json
 
 # Copy additional plugins
 COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
-
-# Copy the project configuration files
-COPY --chown=theia:theia images/java-17/project /home/project
 
 # Project templates, picked by Scorpio via TEMPLATE and copied into an empty workspace
 COPY --chown=theia:theia images/java-17/templates /home/theia/templates

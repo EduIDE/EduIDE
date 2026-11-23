@@ -6,6 +6,14 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ## [3.0.1] - 2026-11-23
 
+### Changes
+
+- New workspaces start empty, so `git clone <url> .` works, and a repository's or template's own `.vscode/settings.json` now wins over the image defaults. The image settings moved out of the workspace: shared ones into the Theia preferences defaults, language specific ones into `/home/theia/.theia-ide/settings.json`. Existing workspaces keep their old `/home/project/.vscode/settings.json`, students can delete it ([#TBD](https://github.com/EduIDE/EduIDE/pull/TBD))
+
+### Dependencies
+
+- scorpio 3.3.0 -> 3.4.0: Clone Repository button in Source Control that clones into the workspace root ([release](https://github.com/EduIDE/scorpio/releases/tag/v3.4.0))
+
 ### Fixes
 
 - A session needs about 100 to 300 MB less memory, depending on the language: the file watcher runs in the server process (`--no-cluster`), every image limits glibc to two malloc arenas (`MALLOC_ARENA_MAX=2`), the spell checker is off by default (turn it on with `"cSpell.enabled": true`), and the Go image turns gopls telemetry off ([docs/ide-memory-tuning.md](docs/ide-memory-tuning.md), [#248](https://github.com/EduIDE/EduIDE/pull/248))

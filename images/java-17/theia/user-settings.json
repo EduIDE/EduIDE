@@ -11,6 +11,11 @@
     // extension reads it at activation and a workspace-level value is ignored.
     "java.jdt.ls.lombokSupport.enabled": false,
     "java.completion.maxResults": 30,
+    "editor.formatOnSave": true,
+    "java.saveActions.organizeImports": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.completion.guessMethodArguments": "auto",
+    "java.inlayHints.parameterNames.enabled": "literals",
     "java.help.collectErrorLog": false,
     "java.help.firstView": "none",
     "java.help.showReleaseNotes": false,

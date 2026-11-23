@@ -88,8 +88,9 @@ COPY --from=base-ide --chown=theia:theia --exclude=node_modules /home/theia /hom
 # Copy additional plugins (language-specific extensions)
 COPY --from=plugin-image --chown=theia:theia /home/theia/plugins /home/theia/plugins
 
-# Copy project settings (includes .vscode/settings.json with file exclusions)
-COPY --chown=theia:theia images/rust/project /home/project
+# User-level settings (applies in every workspace, so /home/project stays empty)
+RUN install -d -o theia -g theia /home/theia/.theia-ide
+COPY --chown=theia:theia images/rust/theia/user-settings.json /home/theia/.theia-ide/settings.json
 
 # Project templates, picked by Scorpio via TEMPLATE and copied into an empty workspace
 COPY --chown=theia:theia images/rust/templates /home/theia/templates

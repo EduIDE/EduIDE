@@ -137,7 +137,7 @@ silently reverts the base image to the root plugin config.
 **The images ship an empty `/home/project`.** Settings shared by all images live
 in `theia.frontend.config.preferences` in `applications/browser/package.json`.
 Language settings live in `images/<lang>/theia/user-settings.json`, copied to
-`/home/theia/.theia-ide/settings.json`. Theia reads JSONC there, but `jq` and
+/home/theia/.theia-ide/settings.json in the image. Theia reads JSONC there, but `jq` and
 `JSON.parse` do not. Never seed `.vscode` into `/home/project`, it blocks
 `git clone <url> .` and collides with the cloned repo's own `.vscode`.
 

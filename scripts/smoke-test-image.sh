@@ -71,6 +71,11 @@ esac
 check "git trusts /home/project" "git config --system --get-all safe.directory | grep -qx /home/project"
 check "project settings present" "test -f /home/project/.vscode/settings.json"
 
+# Memory settings, docs/ide-memory-tuning.md
+check "file watcher runs in the server process (--no-cluster)" "tr '\\0' ' ' < /proc/1/cmdline | grep -q -- --no-cluster"
+check "MALLOC_ARENA_MAX is 2" "[ \"\${MALLOC_ARENA_MAX:-}\" = 2 ]"
+check "spell checker off by default" "grep -q '\"cSpell.enabled\": false' /home/theia/applications/browser/src-gen/frontend/index.js"
+
 # --- 3. toolchain -----------------------------------------------------------
 check "session user is uid 101, group theia gid 101" "[ \"\$(id -u)\" = 101 ] && [ \"\$(id -g)\" = 101 ] && [ \"\$(id -gn)\" = theia ]"
 check "webview endpoint set" "[ \"\$THEIA_WEBVIEW_EXTERNAL_ENDPOINT\" = 'webview.{{hostname}}' ]"
@@ -131,6 +136,7 @@ case "$lang" in
         check "go" "go version"
         check "go toolchain is pinned" "go version | grep -q \"go$(sed -n 's/^ARG GO_VERSION=//p' "$(dirname "$0")/../images/go/ToolDockerfile") \""
         check "gopls" "gopls version"
+        check "go telemetry off" "[ \"\$(go telemetry)\" = off ]"
         check "dlv" "dlv version"
         check "staticcheck" "staticcheck -version"
         check "plugin golang.go present" "test -d /home/theia/plugins/golang.go"

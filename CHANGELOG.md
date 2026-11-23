@@ -12,7 +12,7 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ### Dependencies
 
-- scorpio 3.3.0 -> 3.4.0: Clone Repository button in Source Control that clones into the workspace root ([release](https://github.com/EduIDE/scorpio/releases/tag/v3.4.0))
+- scorpio 3.3.0 -> 3.4.1: Clone Repository button in Source Control that clones into the workspace root ([3.4.0](https://github.com/EduIDE/scorpio/releases/tag/v3.4.0), [3.4.1](https://github.com/EduIDE/scorpio/releases/tag/v3.4.1))
 
 ### Fixes
 

@@ -3,8 +3,8 @@
 # below and shipped as an unpacked folder in plugins/, not through theiaPlugins, so the language images
 # inherit it from this image's /home/theia.
 ARG EDUIDE_SESSION_REPO=https://github.com/EduIDE/EduIDE-control-plane
-# EduIDE-control-plane v0.2.3. Bump together with the control plane release.
-ARG EDUIDE_SESSION_COMMIT=a0bb7257a7e0ef87df69006e78b349fbf39b1547
+# TEST BUILD, do not merge: head of EduIDE-control-plane PR 33 (feat/git-accounts, eduide-session 0.2.0).
+ARG EDUIDE_SESSION_COMMIT=4066ed12ac449253994a5a28e1baccf2e2607323
 
 FROM node:22-trixie AS eduide-session
 ARG EDUIDE_SESSION_REPO

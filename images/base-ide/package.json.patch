@@ -2,7 +2,7 @@
   "theiaPlugins": {
     "vscjava.vscode-java-pack": null,
     "vscjava.vscode-java-dependency": null,
-    "scorpio": "https://open-vsx.org/api/aet-tum/artemis-scorpio/3.4.1/file/aet-tum.artemis-scorpio-3.4.1.vsix",
+    "scorpio": "https://github.com/EduIDE/scorpio/releases/download/v3.5.0-rc.1/artemis-scorpio-3.5.0-rc.1.vsix",
     "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.88.1/file/eclipse-theia.builtin-extension-pack-1.88.1.vsix",
     "streetsidesoftware.code-spell-checker": "https://open-vsx.org/api/streetsidesoftware/code-spell-checker/4.10.0/file/streetsidesoftware.code-spell-checker-4.10.0.vsix",
     "streetsidesoftware.code-spell-checker-german": "https://open-vsx.org/api/streetsidesoftware/code-spell-checker-german/3.0.2/file/streetsidesoftware.code-spell-checker-german-3.0.2.vsix",

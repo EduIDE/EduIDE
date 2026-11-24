@@ -69,7 +69,9 @@ case "$lang" in
 esac
 
 check "git trusts /home/project" "git config --system --get-all safe.directory | grep -qx /home/project"
-check "project settings present" "test -f /home/project/.vscode/settings.json"
+check "workspace is empty" "out=\$(ls -A /home/project) && [ -z \"\$out\" ]"
+check "user settings present" "test -f /home/theia/.theia-ide/settings.json"
+check "config folder owned and writable by theia" "[ \"\$(stat -c %U /home/theia/.theia-ide)\" = theia ] && touch /home/theia/.theia-ide/.w && rm /home/theia/.theia-ide/.w"
 
 # Memory settings, docs/ide-memory-tuning.md
 check "file watcher runs in the server process (--no-cluster)" "tr '\\0' ' ' < /proc/1/cmdline | grep -q -- --no-cluster"
@@ -113,7 +115,7 @@ case "$lang" in
         check "codelldb adapter runs" "/home/theia/plugins/vadimcn.vscode-lldb/extension/adapter/codelldb --help"
         check "no sudo" "! command -v sudo"
         # Makefile Tools' configure pops up a dialog on first open that swallows the student's first action.
-        for f in /home/project/.vscode/settings.json /home/theia/templates/make/.vscode/settings.json; do
+        for f in /home/theia/.theia-ide/settings.json /home/theia/templates/make/.vscode/settings.json; do
             for key in makefile.configureOnOpen makefile.configureOnEdit makefile.configureAfterCommand; do
                 check "Makefile Tools $key off in $f" "grep -q '^ *\"$key\": false' $f"
             done

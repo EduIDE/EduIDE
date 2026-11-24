@@ -148,7 +148,6 @@ COPY --from=build-stage /home/theia/package.json /home/theia/package.json
 COPY --from=build-stage /home/theia/scripts /home/theia/scripts
 COPY --from=build-stage /home/theia/configs /home/theia/configs
 COPY --from=build-stage /home/theia/tsconfig.json /home/theia/tsconfig.json
-COPY --from=build-stage /home/theia/project /home/theia/project
 
 # Copy production-only node_modules
 COPY --from=prod-deps /home/theia/node_modules /home/theia/node_modules

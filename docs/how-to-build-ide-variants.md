@@ -48,9 +48,8 @@ images/
       ├── ToolDockerfile
       ├── package.json.patch
       ├── templates/      # project templates, see "Project templates"
-      └── project/
-          └── .vscode/
-              └── settings.json
+      └── theia/
+          └── user-settings.json
 ```
 
 The directory name should be clear and concise (e.g., `c`, `python`, `java-17`, `javascript`).
@@ -99,7 +98,7 @@ The final runtime image that combines everything.
 - Copy the built application from `base-ide`
 - Copy additional plugins from `plugin-image`
 - Optionally install shell enhancements (Oh My Zsh, plugins)
-- Copy project settings (including `.theia/settings.json`)
+- Copy the user settings to `/home/theia/.theia-ide/settings.json`
 - Set environment variables (`SHELL`, `THEIA_DEFAULT_PLUGINS`, `USE_LOCAL_GIT`)
 - Stamp the image coordinates (`EDUIDE_IMAGE_NAME`, `EDUIDE_IMAGE_TAG`, `EDUIDE_IMAGE_REVISION`), see [Image version stamp](#image-version-stamp)
 - Copy `images/<lang>/templates` to `/home/theia/templates`
@@ -174,42 +173,29 @@ The C variant excludes Python, Java, TypeScript, and many other language extensi
 
 **Note**: The list of excluded ids is best established by building and checking an image with an empty exclude list. There, you can see the extension browser to review all images.
 
-### 5. Optionally Include .vscode/settings.json
+### 5. Optionally Include User Settings
 
-The `.vscode/settings.json` file configures IDE behavior for users. It's placed in `images/{variant}/project/.vscode/settings.json` and needs to get copied to `/home/project` in the final image. Set `cSpell.language` to `en,de` and the default formatter of your language here if its extension is in the image.
+Language specific settings go into `images/{variant}/theia/user-settings.json`. The `ToolDockerfile` copies it to `/home/theia/.theia-ide/settings.json`, which applies in every workspace. Do not seed a `.vscode` folder into `/home/project`: the workspace must stay empty so `git clone <url> .` works. Settings shared by all images (`cSpell.language`, theme, telemetry, `files.exclude`) already sit in `theia.frontend.config.preferences` in `applications/browser/package.json`. Set the default formatter of your language here if its extension is in the image.
 
 **Example from C variant:**
 
 ```json
 {
-    "extensions.ignoreRecommendations": true,
-    "files.exclude": {
-        "**/.theia": true,
-        "persisted": true,
-        "lost+found": true
+    "[c]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     },
-    "telemetry.telemetryLevel": false
+    "makefile.configureOnOpen": false
 }
 ```
-
-**Common settings:**
-
-- `files.exclude`: Hide files/directories from the file explorer
-- `extensions.ignoreRecommendations`: Disable extension recommendations
-- `telemetry.telemetryLevel`: Control telemetry collection
-- Language-specific settings (e.g., `clangd.path`, `python.defaultInterpreterPath`)
 
 **File structure:**
 
 ```
 images/
   └── c/
-      └── project/
-          └── .vscode/
-              └── settings.json
+      └── theia/
+          └── user-settings.json
 ```
-
-This gets copied to `/home/project/.vscode/settings.json` in the final image.
 
 ## Complete Example Structure
 
@@ -221,9 +207,8 @@ images/c/
 ├── package.json.patch      # C-specific extensions (clangd, MakefileTools)
 ├── entrypoint.sh           # Bazel remote cache config, then starts Theia
 ├── templates/              # make/, bazel/, each with a template.json
-└── project/
-    └── .vscode/
-        └── settings.json   # IDE configuration (file exclusions, telemetry)
+└── theia/
+    └── user-settings.json  # language settings (formatter, Makefile Tools)
 ```
 
 ## Pinning toolchains

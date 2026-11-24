@@ -26,11 +26,18 @@
           "toolbar.showToolbar": true,
           "files.enableTrash": false,
           "files.exclude": {
-            "**/.vscode": true,
+            "**/.theia": true,
+            "persisted": true,
             "lost+found": true
           },
           "security.workspace.trust.enabled": false,
-          "cSpell.enabled": false
+          "cSpell.enabled": false,
+          "cSpell.language": "en,de",
+          "extensions.ignoreRecommendations": true,
+          "telemetry.telemetryLevel": "off",
+          "workbench.colorTheme": "edu-ide-theme-dark",
+          "java.saveActions.organizeImports": true,
+          "java.inlayHints.parameterNames.enabled": "literals"
         },
         "reloadOnReconnect": true
       }

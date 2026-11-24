@@ -222,7 +222,7 @@ For overwriting default Theia configuration files, a simple directory can be cre
 
 For example, `COPY images/base-ide/ .` in the Dockerfile copies everything in `images/base-ide/` over the repository root. Creating more files in sub-directories (`images/base-ide/test/test.json`) will also overwrite existing files recursively.
 
-Similar to VSC, Theia IDE also supports to set configuration values using a `settings.json`. The `images/base-ide/project` folder will be mounted at `/home/project` inside the final image and, thus, will load the configuration values during startup.
+Similar to VSC, Theia IDE also supports to set configuration values using a `settings.json`. Settings shared by all images go into `theia.frontend.config.preferences` in `applications/browser/package.json`. Language specific settings go into `images/<lang>/theia/user-settings.json`, which the `ToolDockerfile` copies to `/home/theia/.theia-ide/settings.json`. The images ship an empty `/home/project`, so no settings are seeded into the workspace.
 
 ## Choosing the correct plugins
 

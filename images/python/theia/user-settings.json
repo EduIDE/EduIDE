@@ -1,0 +1,7 @@
+{
+    "ruff.path": ["/usr/local/bin/ruff"],
+    "ruff.importStrategy": "fromEnvironment",
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    }
+}

@@ -1,16 +1,8 @@
 {
-    "extensions.ignoreRecommendations": true,
-    "files.exclude": {
-        "**/.theia": true,
-        "persisted": true,
-        "lost+found": true
-    },
-    "workbench.colorTheme": "edu-ide-theme-dark",
-    "cSpell.language": "en,de",
     /**
      * JavaScript Essentials Config
      */
-     "[javascript]": {
+    "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[javascriptreact]": {
@@ -56,7 +48,7 @@
     "javascript.suggest.paths": false,
     "path-intellisense.showHiddenFiles": true,
     "formattingToggle.affects": [
-		"editor.formatOnPaste",
-		"editor.formatOnType"
-	]
+        "editor.formatOnPaste",
+        "editor.formatOnType"
+    ]
 }

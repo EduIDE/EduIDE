@@ -134,13 +134,12 @@ sequence copies the repo over the merged file, splats `images/base-ide/` across
 the root, then restores from `package.json.merged`. Reordering those lines
 silently reverts the base image to the root plugin config.
 
-**Several per-image `settings.json` files contain trailing commas**, such as
-`images/base-ide/project/.vscode/settings.json`. Theia
-reads JSONC and tolerates them; `jq` and `JSON.parse` do not. Do not "fix" them
-with a tool that reformats.
-
-**Settings go in a `.vscode` directory, not a `.theia` one.** Theia reads the
-former.
+**The images ship an empty `/home/project`.** Settings shared by all images live
+in `theia.frontend.config.preferences` in `applications/browser/package.json`.
+Language settings live in `images/<lang>/theia/user-settings.json`, copied to
+/home/theia/.theia-ide/settings.json in the image. Theia reads JSONC there, but `jq` and
+`JSON.parse` do not. Never seed `.vscode` into `/home/project`, it blocks
+`git clone <url> .` and collides with the cloned repo's own `.vscode`.
 
 ## Dead weight, so you do not mistake it for live code
 
@@ -202,8 +201,8 @@ CI threads the base image's **immutable sha tag** into every language build
 ## Adding an image
 
 1. `images/<lang>/ToolDockerfile` — copy `images/java-17`, not `images/c`
-2. Its `package.json.patch` and VS Code settings, modelled on
-   `images/java-17/project/.vscode/settings.json`
+2. Its `package.json.patch` and user settings, modelled on
+   `images/java-17/theia/user-settings.json`
    plus `templates/<id>/` folders, each with a `template.json`
 3. Two services in `docker-compose.images.yml` on the next free ports, one per edition
 4. Two matrix entries under the **`images`** job in `.github/workflows/build.yml`

@@ -109,14 +109,15 @@ export class FeedbackContribution implements CommandContribution, MenuContributi
     protected async openDialog(): Promise<void> {
         const installation = window.location.hostname;
         const version = await productVersion(this.env);
-        const appDefinition = (await this.env.getValue('EDUIDE_APP_DEFINITION'))?.value ?? '';
+        const browser = browserFamily(navigator.userAgent);
+        // The server fills in the app definition of the session, so the payload sends none.
+        const imageName = (await this.env.getValue('EDUIDE_IMAGE_NAME'))?.value ?? '';
         const dialog = new FeedbackDialog({
-            installation,
-            context: { version, appDefinition, browser: browserFamily(navigator.userAgent) },
+            context: { version, appDefinition: '', browser },
             onSent: () => this.messageService.info('Thank you for your feedback!'),
             send: (payload: FeedbackPayload) => this.commandService.executeCommand<FeedbackSendResult>(FEEDBACK_SEND_COMMAND, payload),
             openGithubForm: (kind: FeedbackKind, title: string, description: string) =>
-                this.windowService.openNewWindow(issueFormUrl(kind, { installation, version }, { title, description }), { external: true })
+                this.windowService.openNewWindow(issueFormUrl(kind, { installation, version, browser, appDefinition: imageName }, { title, description }), { external: true })
         });
         await dialog.open();
     }

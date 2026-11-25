@@ -46,7 +46,7 @@ const MAX_URL_LENGTH = 6000;
  */
 export function issueFormUrl(
     kind: FeedbackKind,
-    context: { installation: string; version: string },
+    context: { installation: string; version: string; browser?: string; appDefinition?: string },
     text: { title?: string; description?: string } = {}
 ): string {
     const build = (cut: string) => {
@@ -54,6 +54,8 @@ export function issueFormUrl(
         const values: Record<string, string> = {
             installation: context.installation,
             version: context.version,
+            browser: context.browser ?? '',
+            'app-definition': context.appDefinition ?? '',
             title: text.title ?? '',
             description: cut
         };

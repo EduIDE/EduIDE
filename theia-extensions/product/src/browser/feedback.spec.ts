@@ -36,10 +36,17 @@ test('the feature form uses its own template and takes title and description', (
     assert.equal(url.searchParams.get('description'), 'D');
 });
 
+test('the form is prefilled with browser and app definition when known', () => {
+    const url = new URL(issueFormUrl('bug', { installation: 'h', version: '1', browser: 'Firefox', appDefinition: 'java-25-artemis' }));
+    assert.equal(url.searchParams.get('browser'), 'Firefox');
+    assert.equal(url.searchParams.get('app-definition'), 'java-25-artemis');
+    assert.equal(new URL(issueFormUrl('bug', { installation: 'h', version: '1' })).searchParams.has('app-definition'), false);
+});
+
 test('a long description is cut so the URL stays within 6000 characters', () => {
     const url = issueFormUrl('bug', { installation: 'h', version: '1' }, { title: 'T', description: 'ä&'.repeat(5000) });
     assert.ok(url.length <= 6000, String(url.length));
-    assert.ok(new URL(url).searchParams.get('description')?.length ?? 0 > 100);
+    assert.ok((new URL(url).searchParams.get('description')?.length ?? 0) > 100);
 });
 
 test('browser family has no version and falls back to Other', () => {

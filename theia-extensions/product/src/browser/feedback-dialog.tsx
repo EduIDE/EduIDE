@@ -14,8 +14,6 @@ import {
 } from './feedback';
 
 export interface FeedbackDialogOptions {
-    /** Hostname of the installation, shown in the context box and used for the GitHub form. */
-    installation: string;
     context: FeedbackContext;
     send: (payload: FeedbackPayload) => Promise<FeedbackSendResult | undefined>;
     onSent: () => void;
@@ -79,12 +77,11 @@ export class FeedbackDialog extends ReactDialog<undefined> {
     }
 
     protected render(): React.ReactNode {
-        const { installation, context } = this.options;
+        const { context } = this.options;
         const sent = [
-            `Installation: ${installation}`,
-            `Version: ${context.version}`,
+            `Version: ${context.version || 'unknown'}`,
             `Browser: ${context.browser}`,
-            `App definition: ${context.appDefinition}`
+            'Installation and app definition: added by the server'
         ].join('\n');
         const choice = (kind: FeedbackKind, label: string) => (
             <button

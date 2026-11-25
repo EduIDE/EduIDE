@@ -85,6 +85,12 @@ image starts from one of the two and adds its toolchain and its VS Code
 extensions from [Open VSX](https://open-vsx.org/). Adding a language never
 rebuilds the IDE.
 
+## Feedback from the IDE
+
+Help -> "Report Issue" and the welcome page open the bug form of this repository with `installation` (the host name of the installation) and `version` (the image tag, `EDUIDE_IMAGE_TAG`) prefilled. The full address is never sent, it contains the session.
+
+When the control plane of the installation has feedback switched on, its `eduide-session` extension sets the context key `eduide.feedbackEnabled`. The IDE then also offers Help -> "Send Feedback", the command "EduIDE: Send Feedback" and a status bar item. The dialog sends the feedback anonymously through the command `eduide.feedback.send` of that extension, or opens the prefilled GitHub form so the student can use their own account. The code is in `theia-extensions/product/src/browser/feedback*.ts*`, the URL and validation logic in `feedback.ts` is covered by `feedback.spec.ts`.
+
 ## Contributing
 
 Contributions are welcome, including from outside TUM.

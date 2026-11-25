@@ -30,7 +30,10 @@ import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigato
 import { eduIdeDarkThemeIncludes, eduIdeTheme } from './themes/eduide-theme';
 import { eduIdeLightTheme, eduIdeLightThemeIncludes } from './themes/eduide-light-theme';
 import { WorkspaceCommands } from '@theia/workspace/lib/browser/workspace-commands';
+import { EnvVariablesServer } from '@theia/core/lib/common/env-variables';
 import { landingPageUrl } from './landing-page';
+import { productVersion } from './feedback-contribution';
+import { reportIssueUrl } from './feedback';
 
 export namespace TheiaIDEMenus {
     export const THEIA_IDE_HELP: MenuPath = [...CommonMenus.HELP, 'theia-ide'];
@@ -199,7 +202,8 @@ export class TheiaIDEContribution implements CommandContribution, MenuContributi
     @inject(MonacoThemingService)
     protected readonly themingService: MonacoThemingService;
 
-    static REPORT_ISSUE_URL = 'https://github.com/eduide/eduide/issues';
+    @inject(EnvVariablesServer)
+    protected readonly envVariablesServer: EnvVariablesServer;
 
     @postConstruct()
     protected init(): void {
@@ -225,7 +229,8 @@ export class TheiaIDEContribution implements CommandContribution, MenuContributi
 
     registerCommands(commandRegistry: CommandRegistry): void {
         commandRegistry.registerCommand(TheiaIDECommands.REPORT_ISSUE, {
-            execute: () => this.windowService.openNewWindow(TheiaIDEContribution.REPORT_ISSUE_URL, { external: true })
+            execute: async () => this.windowService.openNewWindow(
+                reportIssueUrl(window.location.hostname, await productVersion(this.envVariablesServer)), { external: true })
         });
         const startPage = landingPageUrl(window.location.hostname);
         commandRegistry.registerCommand(TheiaIDECommands.BACK_TO_START_PAGE, {

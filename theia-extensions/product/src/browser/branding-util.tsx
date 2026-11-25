@@ -51,14 +51,14 @@ export function renderDocumentation(windowService: WindowService): React.ReactNo
     </div>;
 }
 
-export function renderTickets(windowService: WindowService): React.ReactNode {
+export function renderTickets(windowService: WindowService, reportIssueUrl: string): React.ReactNode {
     return <div className='gs-section'>
         <h3 className='gs-section-header'>
             Reporting feature requests and bugs
         </h3>
         <div>
             The EduIDE is an open source project and we welcome your feedback.
-            For feature requests and bug reports, <BrowserLink text="open an issue on Github" url="https://github.com/eduide/eduide/issues/new/choose"
+            For feature requests and bug reports, <BrowserLink text="open an issue on Github" url={reportIssueUrl}
                 windowService={windowService} ></BrowserLink> to let us know.
         </div>
     </div>;

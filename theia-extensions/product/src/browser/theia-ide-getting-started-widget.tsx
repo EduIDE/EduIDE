@@ -19,6 +19,9 @@ import {
 } from "./branding-util";
 
 import { GettingStartedWidget } from "@theia/getting-started/lib/browser/getting-started-widget";
+import { EnvVariablesServer } from "@theia/core/lib/common/env-variables";
+import { productVersion } from "./feedback-contribution";
+import { reportIssueUrl } from "./feedback";
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { CommandRegistry, environment, isOSX, nls } from "@theia/core";
 import { CustomizationService } from "theia-ide-customization-ext/lib/browser/customization-service";
@@ -43,8 +46,17 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
   @inject(CustomizationService)
   protected readonly customization: CustomizationService;
 
+  @inject(EnvVariablesServer)
+  protected readonly envVariablesServer: EnvVariablesServer;
+
+  protected reportIssueUrl = reportIssueUrl(window.location.hostname, "");
+
   protected async doInit(): Promise<void> {
     super.doInit();
+    productVersion(this.envVariablesServer).then(version => {
+      this.reportIssueUrl = reportIssueUrl(window.location.hostname, version);
+      this.update();
+    });
     // The links follow the level, so a switch has to redraw the page.
     this.toDispose.push(this.customization.onDidChange(() => this.update()));
     this.update();
@@ -76,7 +88,7 @@ export class TheiaIDEGettingStartedWidget extends GettingStartedWidget {
             <div className="col col-flex">
               {renderWhatIs(this.windowService)}
               {renderDocumentation(this.windowService)}
-              {renderTickets(this.windowService)}
+              {renderTickets(this.windowService, this.reportIssueUrl)}
             </div>
           </div>
         </div>

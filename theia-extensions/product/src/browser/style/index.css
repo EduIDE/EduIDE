@@ -124,3 +124,29 @@ ul.theia-aboutExtensions {
     width: 200px;
     height: 200px;
 }
+
+.eduide-feedback {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theia-ui-padding);
+    min-width: 440px;
+}
+
+.eduide-feedback textarea.theia-input {
+    resize: vertical;
+}
+
+.eduide-feedback-row {
+    display: flex;
+    gap: var(--theia-ui-padding);
+}
+
+.eduide-feedback-consent {
+    display: flex;
+    gap: var(--theia-ui-padding);
+    align-items: flex-start;
+}
+
+.eduide-feedback-error {
+    color: var(--theia-errorForeground);
+}

@@ -1,0 +1,45 @@
+name: Bug report
+description: Something in the IDE does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues are public. Do not include names, matriculation numbers, email addresses, Artemis links (they can contain access tokens) or exercise code.
+        Security problems go to the [private security advisory form](https://github.com/EduIDE/.github/security/advisories/new) instead.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: input
+    id: installation
+    attributes:
+      label: Installation
+      description: The host name of the EduIDE installation. Filled in automatically when you come from the IDE.
+      placeholder: instance.eduide.aet.cit.tum.de
+  - type: input
+    id: version
+    attributes:
+      label: EduIDE version
+      description: Shown in the IDE under Help, About. Filled in automatically when you come from the IDE.
+  - type: input
+    id: app-definition
+    attributes:
+      label: App definition
+      description: The programming language or template you started, for example Java 25 or Python.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Name and version, for example Firefox 140.

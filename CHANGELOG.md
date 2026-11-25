@@ -4,6 +4,10 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ## [Unreleased]
 
+### Changes
+
+- Bug reports and feature requests use GitHub issue forms for students (`bug_report.yml`, `feature_request.yml`) instead of Markdown templates. The fields `installation`, `version`, `app-definition` and `browser` can be prefilled by URL, and the forms warn that issues are public. The issue chooser links to Discussions, the documentation and the private security advisory form
+
 ## [3.0.1] - 2026-11-23
 
 ### Changes

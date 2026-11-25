@@ -1,10 +1,10 @@
 # Theia IDE Images
 
-This directory provides an extensible base image for creating language-specific Theia IDE variants. The architecture enables efficient multi-variant deployments by building Theia once and extending it with specific tooling. All images in this folder target the **web (browser) distribution** of Theia; Electron-specific code is stripped during the build.
+This directory provides an extensible base image for creating language-specific Theia IDE images. The architecture enables efficient multi-image deployments by building Theia once and extending it with specific tooling. All images in this folder target the **web (browser) distribution** of Theia; Electron-specific code is stripped during the build.
 
 ## Architecture Overview
 
-The image structure uses a layered pattern optimized for creating multiple language-specific IDE variants:
+The image structure uses a layered pattern optimized for creating multiple language-specific IDE images:
 
 ### Stage 1: Base IDE Image (`base-ide/`)
 
@@ -54,14 +54,14 @@ This repository includes example implementations demonstrating the extension pat
 | Rust       | `rust/`         | rustup with a pinned toolchain (`RUST_VERSION`), rustfmt, clippy, rust-analyzer, CodeLLDB |
 | Go         | `go/`           | Go from the go.dev tarball (`GO_VERSION`, checksum verified), gopls, dlv, staticcheck, allowing `vscode.go` again |
 
-These examples serve as templates for creating additional language-specific variants of the web-based Theia IDE.
+These examples serve as starting points for creating additional language-specific images of the web-based Theia IDE.
 
 ## Benefits of This Architecture
 
-- **Efficiency**: Base image built once, language variants build on top
-- **Consistency**: All variants share the same Theia core and version
+- **Efficiency**: Base image built once, language images build on top
+- **Consistency**: All language images share the same Theia core and version
 - **Maintainability**: Theia updates only require chaning the base image
-- **Extensibility**: Community can create custom variants
+- **Extensibility**: Community can create custom language images
 
 ## Creating Custom Language-Specific Images
 
@@ -105,7 +105,7 @@ ENTRYPOINT ["node", "lib/backend/main.js"]
 CMD ["/home/project", "--hostname=127.0.0.1"]
 ```
 
-The backend has no authentication of its own, so it binds to loopback and only the authenticating proxy in the pod reaches it.
+The Theia server has no authentication of its own, so it binds to loopback and only the agent in the pod reaches it.
 Docker port forwarding cannot reach a loopback bind, so for local testing override the hostname with `--hostname=0.0.0.0` and publish the port on the host loopback only (`-p 127.0.0.1:3000:3000`), as `docker-compose.images.yml` does.
 Never carry that override into a deployment.
 
@@ -131,7 +131,7 @@ To add language-specific plugins or override Theia configuration, use a **patch-
 }
 ```
 
-Note: You don't need to patch `scripts`, `devDependencies`, or other fields that work fine from the root `package.json` - only specify what needs to change for your language variant.
+Note: You don't need to patch `scripts`, `devDependencies`, or other fields that work fine from the root `package.json` - only specify what needs to change for your language image.
 
 #### Merging the Patch in Your Dockerfile
 
@@ -184,7 +184,7 @@ See `images/base-ide/package.json.patch` for the default exclusion list.
 
 ## EduIDE Images
 
-We use Theia to provide students with programming environments tailored to their course`s needs. Instructors can choose a fitting Theia Blueprint (=Theia IDE Image) in Artemis. This repository contains the build tooling for creating those images.
+We use Theia to provide students with programming IDEs tailored to their course's needs. Instructors can choose a fitting template in Artemis. This repository contains the build tooling for creating those images.
 
 CI publishes the following images to `ghcr.io/eduide/eduide/<name>`.
 The `images` job matrix in `.github/workflows/build.yml` is the source of truth, so check it before relying on this table.
@@ -207,8 +207,8 @@ Project templates ship inside each language image (`images/<lang>/templates/`).
 Our used Theia IDE Images are built in 3 steps
 
 1. The `ide-image` builds the Theia Application, downloads all essential plugins and performs cleanup.
-2. The `plugin-image` downloads required plugins for each specific programming environment (e.g., linter plugins for Java)
-3. The `tool-image` downloads and installs necessary compilers and tools for each programming environment and contains Node.js to launch Theia
+2. The `plugin-image` downloads required plugins for each specific programming language (e.g., linter plugins for Java)
+3. The `tool-image` downloads and installs necessary compilers and tools for each programming language and contains Node.js to launch Theia
 
 ## Building Dockerfiles for Images
 

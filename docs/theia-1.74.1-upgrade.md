@@ -14,7 +14,7 @@ Date: 2026-08-27. Branch: `feat/esbuild-bundling` (PR #155, on top of the esbuil
 - `@theia/cli@1.70.0` literal bumped to `@theia/cli@1.74.1` in all 14 ToolDockerfiles (see the AGENTS.md trap: language images pin the CLI literally and do not read the root package.json).
 - `lerna.json`: removed the `useWorkspaces` option (deleted in lerna 9; workspaces are resolved from package.json automatically).
 - TypeScript in the three theia-extensions: ^4.5.5 -> ~5.9.3 (matching upstream; the zod v4 typings pulled in via @theia/ai-mcp need modern TypeScript syntax).
-- `react`/`react-dom` ^18.3.1 (+ types) added to both applications, matching upstream: Theia 1.74 frontend modules import react directly, and esbuild fails to resolve it without a direct dependency.
+- `react`/`react-dom` ^18.3.1 (+ types) added to both applications, matching upstream: Theia 1.74 browser modules import react directly, and esbuild fails to resolve it without a direct dependency.
 
 ### AI features stay disabled
 

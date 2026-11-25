@@ -53,7 +53,7 @@ export namespace CustomizationPreferences {
     export const OVERRIDES = 'eduide.overrides';
 }
 
-/** Environment variable EduIDE-Cloud passes through `LaunchRequest.env.fromMap`. */
+/** Environment variable of the session, delivered as launch data by the control plane. */
 export const EDUIDE_LEVEL_ENV = 'EDUIDE_LEVEL';
 
 /**
@@ -70,7 +70,7 @@ export const DELIVERED_CONFIG_SEGMENTS: readonly string[] = ['.vscode', 'eduide.
  * It *seeds*, it does not enforce: the values are used only when the student
  * has not chosen for themselves, and switching level afterwards is theirs to
  * do. A file that could pin a student to a level would be a different feature
- * — one that has to say so in the UI, because a disabled control with no
+ * - one that has to say so in the UI, because a disabled control with no
  * explanation is worse than no control.
  *
  * Note it lives in the exercise repository, which the student can edit and
@@ -103,7 +103,7 @@ export const MENU_REFRESH_PATH: readonly string[] = ['menubar', '9_help', 'eduid
  * The group inside View that lists every view you can open.
  *
  * Trimming the menu bar removes whole menus; it does not touch what is inside
- * one, so View stayed a list of everything a level had just taken away — a
+ * one, so View stayed a list of everything a level had just taken away - a
  * back door, and a confusing one, since most of the entries open something a
  * beginner has no use for. Entries here are removed alongside their view.
  *
@@ -176,7 +176,7 @@ export interface CustomizableElement {
     readonly views?: readonly ManagedView[];
     /**
      * Hides and blocks terminals a student opened themselves, leaving the
-     * terminals tasks create alone — a beginner still has to see what `Run`
+     * terminals tasks create alone - a beginner still has to see what `Run`
      * printed.
      */
     readonly userTerminals?: boolean;
@@ -235,7 +235,7 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'view.testing', label: 'Testing', group: 'views', defaults: ADVANCED_UP, views: [{ id: 'test-view-container', area: 'left' }] },
     {
         // A plugin view container, so its View entry is registered only once the
-        // Gradle extension resolves — long after the first sweep. The id is the
+        // Gradle extension resolves - long after the first sweep. The id is the
         // one plugin-view-registry builds: `workbench.view.extension.` plus the
         // container the extension declares.
         id: 'view.gradle', label: 'Gradle tasks', group: 'views', defaults: ADVANCED_UP,
@@ -260,7 +260,7 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     { id: 'view.outline', label: 'Outline', group: 'views', defaults: EXPERT_ONLY, views: [{ id: 'outline-view', area: 'right' }], menus: [viewMenuEntry('outlineView:toggle')] },
     {
         // It reads memory from the debug adapter, so with no session it can only
-        // draw column headers over an empty table — and upstream renders no
+        // draw column headers over an empty table - and upstream renders no
         // empty state, so what a student meets is a blank panel.
         id: 'view.memoryInspector', label: 'Memory Inspector', group: 'views', defaults: EXPERT_ONLY,
         requiresDebugSession: true,
@@ -286,7 +286,7 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     // ── Run configurations ───────────────────────────────────────────
     // The task set is workspace data, so it cannot be catalogued element by
     // element. The level filters it instead, and this switch turns the filter
-    // off — without it, tasks would be the one thing a student could not get
+    // off - without it, tasks would be the one thing a student could not get
     // back without changing level.
     { id: 'task.showAll', label: 'Offer every task, ignoring level marks', group: 'tasks', defaults: EXPERT_ONLY },
 
@@ -446,7 +446,7 @@ export const ELEMENT_CATALOGUE: readonly CustomizableElement[] = [
     {
         // Whether files survive the session. Set by WorkspaceModeContribution
         // from a server-side mount check, so the switch only hides the entry.
-        id: 'status.workspaceMode', label: 'Saved or temporary workspace', group: 'statusBar', defaults: ON,
+        id: 'status.workspaceMode', label: 'Saved workspace or temporary session', group: 'statusBar', defaults: ON,
         statusBarItems: [WORKSPACE_MODE_STATUS_ID]
     },
     {

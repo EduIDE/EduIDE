@@ -64,7 +64,7 @@ export abstract class AbstractSplitButtonContribution<TConfig> implements TabBar
      *
      * Separate from the level rule below it: the level decides whether a
      * chooser is appropriate for the student, this decides whether the button
-     * has anything worth choosing between. Debug says no — one launch
+     * has anything worth choosing between. Debug says no - one launch
      * configuration is the normal case for an exercise, and a chevron that
      * opens a one-line menu is a second click to reach the thing the button
      * already does.

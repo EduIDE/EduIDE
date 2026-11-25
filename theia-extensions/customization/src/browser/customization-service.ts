@@ -47,7 +47,7 @@ import { planPreferenceWrites } from '../common/preference-writes';
 import { hideParts, restoreParts } from '../common/part-visibility';
 
 /**
- * Owns the active experience level and applies it to the running frontend.
+ * Owns the active experience level and applies it to the running IDE.
  *
  * A level is a preset over the element catalogue, never a cage: `isEnabled`
  * resolves the student's override first and only then the level default, so
@@ -113,7 +113,7 @@ export class CustomizationService implements FrontendApplicationContribution {
 
         // A plugin registers its View entry only once it has resolved, which is
         // well after the first sweep, so an entry a level hides can appear
-        // afterwards and stay. Re-trim when the menu model changes — debounced,
+        // afterwards and stay. Re-trim when the menu model changes - debounced,
         // because each removal fires this too, and skipped while we are the ones
         // changing it, or the refresh would feed itself.
         this.menus.onDidChange(() => {
@@ -193,8 +193,8 @@ export class CustomizationService implements FrontendApplicationContribution {
     /**
      * Whether a task may be offered by the Run button at the current level.
      *
-     * The task set comes from the workspace — in the Artemis flow, from the
-     * exercise repository Scorpio clones — so it cannot be catalogued task by
+     * The task set comes from the workspace - in the Artemis flow, from the
+     * exercise repository Scorpio clones - so it cannot be catalogued task by
      * task. Three rules, in order:
      *
      * 1. `task.showAll` on: everything is offered.
@@ -202,7 +202,7 @@ export class CustomizationService implements FrontendApplicationContribution {
      *    whoever wrote the task knows what it is for.
      * 3. Otherwise fall back to the task's group, which every `tasks.json`
      *    already has: below expert the only task offered is the **default
-     *    build task** — the one the Run button runs, which compiles and then
+     *    build task** - the one the Run button runs, which compiles and then
      *    runs in every template we ship. Everything else, tests included, is
      *    expert work. A student who has not met the debugger has usually not
      *    met a test runner either, and `Build` is redundant when `Run` builds.
@@ -325,7 +325,7 @@ export class CustomizationService implements FrontendApplicationContribution {
     /**
      * Seeds again whenever the exercise's file appears or changes.
      *
-     * In the Artemis flow Scorpio clones the repository after the frontend has
+     * In the Artemis flow Scorpio clones the repository after the IDE has
      * started, so on the first open the file is usually not there yet when
      * `onDidInitializeLayout` reads it. Without this, the exercise's level
      * would only take effect after a reload. Seeding again is safe: it never
@@ -358,7 +358,7 @@ export class CustomizationService implements FrontendApplicationContribution {
      * `inspectInScope(..., User)` is the test for "has chosen": it sees the
      * student's own value and nothing else, so a level that came from a
      * previous seed and a level the student picked are indistinguishable here
-     * — which is the point. Once a value is theirs, the exercise stops having
+     * - which is the point. Once a value is theirs, the exercise stops having
      * an opinion, and the seed writes into the same scope so the status bar,
      * the quick pick and the Customize panel all agree about where the level
      * came from.
@@ -500,8 +500,8 @@ export class CustomizationService implements FrontendApplicationContribution {
         }
         if (element.requiresDebugSession) {
             // Becoming available is the whole job here. Creating it ourselves
-            // produces a widget its own view contribution never set up — it
-            // attaches without a side-bar tab — so we stop at lifting the
+            // produces a widget its own view contribution never set up - it
+            // attaches without a side-bar tab - so we stop at lifting the
             // block and let the student open it the ordinary way, which hands
             // the work to the contribution that knows how.
             return;
@@ -605,7 +605,7 @@ export class CustomizationService implements FrontendApplicationContribution {
      * The path is the node's own: everything but the last segment addresses the
      * parent, the last segment is the node. That covers a whole menu hanging off
      * the menu bar and a single entry inside one with the same code, which is
-     * what View needs — trimming the bar never reached inside a menu, so View
+     * what View needs - trimming the bar never reached inside a menu, so View
      * went on listing every view the level had just taken away.
      *
      * Nodes are kept rather than discarded, because putting one back is how a

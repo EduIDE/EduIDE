@@ -20,8 +20,8 @@ export interface MountCheckFs {
  * Whether `dir` lives on a volume of its own: its device differs from the one
  * under `/`.
  *
- * A persistent session mounts its volume on the workspace root (or above it),
- * an ephemeral one has none and stays on the container's root file system.
+ * A session with a saved workspace mounts its volume on the workspace root (or above it),
+ * a temporary session has none and stays on the container's root file system.
  * Comparing with `/` rather than with the parent keeps subfolders of a mounted
  * volume working. Answers `undefined` when a stat fails, because "cannot tell"
  * is not the same as "no mount". The path is resolved first, so a symlink is

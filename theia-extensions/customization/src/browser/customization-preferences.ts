@@ -20,7 +20,7 @@ export const customizationPreferenceSchema: PreferenceSchema = {
             enumDescriptions: [
                 'Explorer and Search, plus Artemis in Artemis sessions. Run only - no debugger, no terminal.',
                 'Version control, tests, the build tool and refactorings. Still no debugger.',
-                'Stock EduIDE — the only level with a debugger, Outline and Memory Inspector.'
+                'Stock EduIDE - the only level with a debugger, Outline and Memory Inspector.'
             ],
             default: DEFAULT_LEVEL,
             description: 'How much of EduIDE is exposed. The level is a starting point: every element can be overridden individually.'

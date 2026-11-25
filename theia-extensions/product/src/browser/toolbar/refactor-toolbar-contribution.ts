@@ -19,7 +19,7 @@ import { TOOLBAR_BUTTONS } from 'theia-ide-customization-ext/lib/common/customiz
 /**
  * The refactoring buttons the advanced level puts in the editor toolbar.
  *
- * The point is not that these actions are otherwise unreachable — they are, in
+ * The point is not that these actions are otherwise unreachable - they are, in
  * the context menu and behind shortcuts. The point is that a student who has
  * never opened that menu never learns they exist. Each tooltip carries the
  * shortcut, so the button teaches its own replacement.

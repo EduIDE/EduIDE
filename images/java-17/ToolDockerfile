@@ -79,7 +79,7 @@ ENV HOME=/home/theia
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
 WORKDIR /home/theia
 
-# Copy the application from the base without its node_modules: the backend is bundled into
+# Copy the application from the base without its node_modules: the Theia server is bundled into
 # applications/browser/lib, so the runtime needs none of them (the plugin stage above still does).
 COPY --from=base-ide --chown=theia:theia --exclude=node_modules /home/theia /home/theia
 
@@ -140,7 +140,7 @@ ENV GRADLE_PREWARM_AUTO_CONFIRM=${GRADLE_PREWARM_AUTO_CONFIRM}
 # Use installed git instead of dugite
 ENV USE_LOCAL_GIT=true
 
-# Cap JVM/node heaps and glibc arena count for constrained student environments
+# Cap JVM/node heaps and glibc arena count for constrained student sessions
 ENV MAVEN_OPTS="-XX:+UseSerialGC -Xmx256m -XX:MaxMetaspaceSize=192m" \
     NODE_OPTIONS="--max-old-space-size=512" \
     MALLOC_ARENA_MAX=2
@@ -163,7 +163,7 @@ ENV EDUIDE_IMAGE_NAME=${IMAGE_NAME} \
 RUN --mount=type=bind,source=scripts/check-required-plugins.sh,target=/tmp/check-required-plugins.sh \
     sh /tmp/check-required-plugins.sh /home/theia/plugins
 
-# Launch the backend application via node
+# Launch the Theia server application via node
 # The Artemis extension asks the session bridge for its login only when this is set; build.yml
 # turns it on for the artemis edition.
 ARG DATA_BRIDGE_ENABLED=false

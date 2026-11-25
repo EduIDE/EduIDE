@@ -16,8 +16,8 @@ import { CustomizationService } from './customization-service';
  *
  * Removing them after the fact loses a race: the editor entries are re-set on
  * every editor change, so a listener that removes them runs before they come
- * back. This wraps the one `StatusBarImpl` the shell renders — the same object,
- * through a proxy — so the shell keeps working and only `setElement` is gated.
+ * back. This wraps the one `StatusBarImpl` the shell renders - the same object,
+ * through a proxy - so the shell keeps working and only `setElement` is gated.
  */
 export function bindLevelAwareStatusBar(rebind: interfaces.Rebind): void {
     rebind(StatusBar).toDynamicValue(context => {

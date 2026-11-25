@@ -62,7 +62,7 @@ export class CustomizeWidget extends ReactWidget {
             <p className='eduide-customize-sub'>
                 {nls.localize(
                     'eduide/customize/subtitle',
-                    'Your level sets the starting point. Every element can be switched on or off individually — including at Expert.'
+                    'Your level sets the starting point. Every element can be switched on or off individually - including at Expert.'
                 )}
             </p>
 

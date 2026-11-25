@@ -15,7 +15,7 @@ BaseDockerfile
 Dockerfile
 ToolDockerfile
 
-# Documentation and metadata — not needed for builds, avoids COPY . . invalidation
+# Documentation and metadata - not needed for builds, avoids COPY . . invalidation
 .github/
 .vscode/
 .eslintrc.js

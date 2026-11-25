@@ -4,7 +4,7 @@ Experience levels and per-element customization.
 
 A level is a **preset over the element catalogue, not a cage**: every element can
 be switched on or off individually at every level, expert included. `expert` is
-not a configuration — it is EduIDE with nothing applied, so it doubles as the
+not a configuration - it is EduIDE with nothing applied, so it doubles as the
 control condition for the evaluation.
 
 The concept this implements lives in Outline, *IDE Customization* (v2).
@@ -24,7 +24,7 @@ The picker, and the panel its last row opens:
 
 ![The Customize panel](../../docs/images/customization/customize-panel.png)
 
-Screenshots are produced from a running container, not drawn — see the capture
+Screenshots are produced from a running container, not drawn - see the capture
 script referenced in the pull request if they need refreshing.
 
 ## Layout
@@ -32,12 +32,12 @@ script referenced in the pull request if they need refreshing.
 | File | What it is |
 |---|---|
 | `src/common/customization.ts` | The element catalogue. This table is the specification; the levels are presets over it |
-| `src/browser/customization-service.ts` | Resolves the level and overrides, and applies them to the running frontend |
+| `src/browser/customization-service.ts` | Resolves the level and overrides, and applies them to the running IDE |
 | `src/browser/customization-contribution.ts` | The menu: status-bar indicator, level quick pick, commands, Help entry |
 | `src/browser/customize-widget.tsx` | The Customize panel, rendered straight from the catalogue |
 | `src/browser/startup-file-contribution.ts` | Opens the exercise file on start while `startup.openFile` is on |
 | `src/browser/customization-preferences.ts` | `eduide.level` and `eduide.overrides` |
-| `src/browser/workspace-mode-contribution.ts` | The "Saved workspace" / "Temporary workspace" status bar entry |
+| `src/browser/workspace-mode-contribution.ts` | The "Saved workspace" / "Temporary session" status bar entry |
 | `src/node/workspace-mode-service.ts`, `src/node/mount-check.ts` | The server-side mount check behind it, served over JSON-RPC at `/services/eduide/workspace-mode` |
 
 ## Opening the menu
@@ -74,7 +74,7 @@ runtime APIs instead:
 `MenuModelRegistry` fires its change event when a registration is **disposed**,
 not when one is added, and the browser menu bar rebuilds on that event. Moving
 nodes around therefore fires nothing, so the bar is redrawn by registering a
-throwaway action and disposing it — see `refreshMenuBar`. The throwaway group
+throwaway action and disposing it - see `refreshMenuBar`. The throwaway group
 sits inside Help so nothing is left behind at the top level.
 
 Theia labels `menubar/6_debug` "Run" and it holds nothing but debug entries, so
@@ -86,7 +86,7 @@ shows a Run menu there, and the mockup is the thing that is wrong.
 blocking and closing their widgets rather than by removing tabs.
 
 **Installed VS Code extensions are never toggled per level.** They cannot be
-without restarting the frontend, so every extension ships at every level and the
+without restarting the IDE, so every extension ships at every level and the
 levels differ only in how those extensions are configured.
 
 ## What is not enforced yet
@@ -96,13 +96,13 @@ does not enforce yet carry a `pending` reason and render disabled in the
 Customize panel, so the panel stays a truthful picture rather than promising
 switches that do nothing:
 
-- the Iris "Explain this error" action (`assist.*`) — needs the Artemis
+- the Iris "Explain this error" action (`assist.*`) - needs the Artemis
   extension's own API, which is not available to build against here
-- `diag.checkstyleLive` — needs a Checkstyle ruleset in the image, which is an
+- `diag.checkstyleLive` - needs a Checkstyle ruleset in the image, which is an
   image change rather than IDE code
-- `diag.sonar` — held until the per-session memory budget is measured
+- `diag.sonar` - held until the per-session memory budget is measured
 - `diag.typeCheck` - no image ships Pyright or Pylance, which provide the setting
-- `startup.walkthrough` — `contributes.walkthroughs` needs Theia 1.75
+- `startup.walkthrough` - `contributes.walkthroughs` needs Theia 1.75
 
 ## What an exercise can ask for
 
@@ -121,7 +121,7 @@ no level of their own; the moment they pick one, the file stops having an
 opinion and stays quiet on every later start. The file is read on start and
 again whenever it appears or changes, because in the Artemis flow the repository
 is cloned only after the IDE is up. Nothing here disables the quick
-pick, and nothing here is a boundary — the file lives in the student's own
+pick, and nothing here is a boundary - the file lives in the student's own
 clone, where they can edit it, and it travels back to Artemis on submit.
 
 Comments and trailing commas are fine, since instructors write this by hand. A
@@ -133,18 +133,18 @@ the shape.
 Two limits worth knowing before relying on it:
 
 - **It seeds per session, not per student.** A student's preferences live in
-  the container, so unless a persistent home is mounted, every new session
+  the container, so unless a workspace is mounted, every new session
   starts with no level of their own and the file applies again. Whether that
   is right depends on whether a level is meant to follow the student or the
-  exercise — the question is open.
+  exercise - the question is open.
 - **It is one of three authorities**, with the student's own choice and the
-  launch environment. Only this one is built; the precedence between them is
+  launch data. Only this one is built; the precedence between them is
   still to be designed.
 
 ## Terminals and status bar entries
 
 `view.terminal` hides terminals a student opened themselves and blocks new
-ones, **leaving the terminals tasks create alone** — a beginner still has to
+ones, **leaving the terminals tasks create alone** - a beginner still has to
 read what `Run` printed. Terminal widgets carry a `kind`, and only `'user'`
 ones are touched. A blocked attempt fails with a sentence naming the way back
 rather than a bare error, because the student is about to wonder why nothing
@@ -153,21 +153,21 @@ happened.
 `status.editorInfo` takes the editor entries off the status bar. They are re-set
 whenever the editor changes, so they are removed again on every
 `onCurrentEditorChanged`. That costs a frame of flicker, and it is the price of
-not rebinding Theia's `StatusBar` — `bindStatusBar` binds `StatusBar` with
+not rebinding Theia's `StatusBar` - `bindStatusBar` binds `StatusBar` with
 `.to(StatusBarImpl)` rather than `toService`, so intercepting it cleanly is not
 as simple as it looks.
 
-## Saved or temporary workspace
+## Saved workspace or temporary session
 
 `status.workspaceMode` is on at every level. The entry reads **Saved workspace**
-or **Temporary workspace** (warning colour), so a student knows before closing
+or **Temporary session** (warning colour), so a student knows before closing
 the tab whether their files survive.
 
 The answer is a mount check, run on the server side of the extension because
 the browser cannot stat the container's disk: the workspace root (the most
 recently used workspace, `/home/project` in the images) is a mount point when
-its `st_dev` differs from its parent's. A persistent session mounts its volume
-there, an ephemeral or prewarmed one has none, so no launch parameter or
+its `st_dev` differs from its parent's. A session with a saved workspace mounts its volume
+there, a temporary session or an idle instance has none, so no launch data or
 environment variable is involved, and a local `docker run` is answered
 correctly too. A failed stat means "cannot tell": no entry is shown rather than
 a guess. The check resolves symlinks first, so a symlinked root is compared with
@@ -175,10 +175,10 @@ the parent of its target.
 
 The root is the one the IDE has open, sent to the server by the browser. It is
 compared with `/` rather than with its parent, so a subfolder of a mounted volume
-(the operator's `/home/project/persisted` default, say) counts as saved too. If
+(the control plane's `/home/project/persisted` default, say) counts as saved too. If
 the server cannot be reached the request is retried with backoff.
 
-A local `yarn start` shows "Temporary workspace" wherever the checkout is on the
+A local `yarn start` shows "Temporary session" wherever the checkout is on the
 same device as `/` (it does on the macOS machine this was checked on); a
 checkout on its own volume shows "Saved workspace".
 
@@ -220,11 +220,11 @@ menu entry.
 
 The Run button's configurations are **not ours**. `TaskToolbarContribution` reads
 `tasks.json` from the workspace, and in the Artemis flow that workspace is the
-exercise repository Scorpio clones — so the task set is whatever the instructor
+exercise repository Scorpio clones - so the task set is whatever the instructor
 wrote, in whatever language the course uses. It cannot be catalogued task by
 task. Three rules decide, in order:
 
-1. `task.showAll` on — everything is offered. Without this switch, tasks would
+1. `task.showAll` on - everything is offered. Without this switch, tasks would
    be the one thing a student could not get back without changing level.
 2. The task declares its own level. `TaskCustomization` has an index signature,
    so a custom property written in `tasks.json` survives to the toolbar:

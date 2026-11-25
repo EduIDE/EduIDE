@@ -4,6 +4,10 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ## [Unreleased]
 
+### Changes
+
+- File > "Back to Start Page" is now "Back to Landing Page", the status bar shows "Temporary session" instead of "Temporary workspace", and docs, comments and `AGENTS.md` follow the [EduIDE glossary](https://eduide.github.io/Docs/glossary)
+
 ## [3.0.1] - 2026-11-23
 
 ### Changes

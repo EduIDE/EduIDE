@@ -12,7 +12,7 @@ to install, nothing to configure, and every student gets the identical
 environment, so "it works on my machine" stops being a thing anyone has to
 debug.
 
-Instructors pick the matching image when creating a programming exercise in
+Instructors pick the matching template when creating a programming exercise in
 [Artemis](https://github.com/ls1intum/Artemis). EduIDE does the rest.
 
 It is built on [Eclipse Theia](https://theia-ide.org/), and it is a real IDE
@@ -41,7 +41,7 @@ Every language comes in two **editions**, published to `ghcr.io/eduide/eduide/<l
 - `-artemis`: with the Artemis extension (Iris), for exercises launched from Artemis.
 - `-standalone`: without it, and with an expiring git credential cache (three hours).
 
-Both carry Scorpio and the data bridge, the same toolchain and the same templates.
+Both carry Scorpio and `eduide-session`, the same toolchain and the same templates.
 
 | Language | Artemis | Standalone |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ Both carry Scorpio and the data bridge, the same toolchain and the same template
 
 There are no per-university images any more. A university with its own needs
 builds its own image `FROM` an edition image, see
-[Building an IDE variant](docs/how-to-build-ide-variants.md); the
+[Building a language image](docs/how-to-build-ide-variants.md); the
 Mannheim image ([`EduIDE/EduIDE-image-mannheim`](https://github.com/EduIDE/EduIDE-image-mannheim)) is the example.
 
 ## Documentation
@@ -65,7 +65,7 @@ Mannheim image ([`EduIDE/EduIDE-image-mannheim`](https://github.com/EduIDE/EduID
 | [Documentation site](https://eduide.github.io/Docs/) | Everything, start here |
 | [Running EduIDE for your university](https://eduide.github.io/Docs/admins/intro) | Installing it on a Kubernetes cluster |
 | [Developer guide](https://eduide.github.io/Docs/developer/intro) | Architecture and how the pieces fit |
-| [Building an IDE variant](docs/how-to-build-ide-variants.md) | Adding a language, in detail |
+| [Building a language image](docs/how-to-build-ide-variants.md) | Adding a language, in detail |
 
 ## How it fits together
 
@@ -75,8 +75,7 @@ university takes three more:
 | Repository | |
 | --- | --- |
 | **EduIDE** (here) | The Theia-based IDE and every language image |
-| [EduIDE-Cloud](https://github.com/EduIDE/EduIDE-Cloud) | The operator and REST service that start and stop sessions |
-| [EduIDE-Landing-Page](https://github.com/EduIDE/EduIDE-Landing-Page) | Where students pick an environment |
+| [EduIDE-control-plane](https://github.com/EduIDE/EduIDE-control-plane) | The control plane: operator, service, agent and the landing page where students start sessions |
 | [EduIDE-Helm](https://github.com/EduIDE/EduIDE-Helm) | The Helm charts that install all of it |
 
 Every image is a **layered build**: `base` compiles Theia from source once,
@@ -107,9 +106,10 @@ matrix entries in `.github/workflows/build.yml`. Test an image with
 [the full walkthrough is here](docs/how-to-build-ide-variants.md).
 
 Building an image does not offer it to anyone. It also needs an entry in
-`appDefinitions.apps` in the `eduide` chart in
-[EduIDE-Helm](https://github.com/EduIDE/EduIDE-Helm), which is what puts it on
-the landing page and preloads it onto the cluster's nodes.
+`catalog` in the `eduide` chart in
+[EduIDE-Helm](https://github.com/EduIDE/EduIDE-Helm); an installation turns it
+into a template under `templates`, which is what puts it on the landing page and
+lets it keep a pool of idle instances.
 
 **Updating Theia** touches every `@theia/*` package at once:
 

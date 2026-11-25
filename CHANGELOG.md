@@ -4,6 +4,10 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ## [Unreleased]
 
+### Fixes
+
+- The Java language server in the Java images needs about 250 to 450 MB less memory once idle and less CPU for import and build: it compiles with C1 only, runs full periodic collections, and uses compact object headers and native heap trimming ([docs/java-image-memory-tuning.md](docs/java-image-memory-tuning.md))
+
 ## [3.0.1] - 2026-11-23
 
 ### Changes

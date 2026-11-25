@@ -45,7 +45,7 @@ Three more flags cut native memory, all measured on commons-lang (249 classes, J
 | + C1 only (current) | 25 | 150-220 | 286-293 |
 | Shenandoah (compact), compact headers, trim | 46 | 155-260 | 310 |
 
-These flags need the JDK 25 runtime that redhat.java bundles (`plugins/redhat.java/extension/jre`). If an image points `java.jdt.ls.java.home` at an older JDK, drop them; `scripts/smoke-test-image.sh` starts the bundled JRE with the configured vmargs to catch a mismatch. SerialGC was deliberately not used here: it only collects when the old generation fills, so a long-lived idle language server would stay pinned at its peak RSS forever. The short-lived Gradle daemon does use SerialGC (smallest footprint); its idle timeout reclaims the memory instead.
+These flags need a JDK 25 runtime. `java-17` runs the language server on the JRE that redhat.java bundles (`plugins/redhat.java/extension/jre`), `java-25` has no bundled JRE and runs it on the image's JDK 25 (`JAVA_HOME`). If an image moves the language server to an older JDK, drop them; `scripts/smoke-test-image.sh` starts that JVM with the configured vmargs to catch a mismatch. SerialGC was deliberately not used here: it only collects when the old generation fills, so a long-lived idle language server would stay pinned at its peak RSS forever. The short-lived Gradle daemon does use SerialGC (smallest footprint); its idle timeout reclaims the memory instead.
 
 ## Raising limits for bigger course projects
 

@@ -4,6 +4,10 @@ Release notes of the EduIDE images. `release.yml` copies the section of a versio
 
 ## [Unreleased]
 
+### Features
+
+- "Report Issue" and the welcome page link open the bug form with the installation host name and the version prefilled instead of the issue list. When the control plane switches feedback on (context key `eduide.feedbackEnabled`), Help -> "Send Feedback", the command palette and a status bar item open a native dialog that sends bug reports and feature requests anonymously, or opens the prefilled GitHub form for students who prefer their own account
+
 ## [3.0.1] - 2026-11-23
 
 ### Changes

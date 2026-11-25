@@ -65,7 +65,10 @@ fi
 
 case "$lang" in
     java-*) want=false; [ "$edition" = artemis ] && want=true
-        check "gradle prewarm auto-confirm is $want" "[ \"\${GRADLE_PREWARM_AUTO_CONFIRM:-false}\" = $want ]" ;;
+        check "gradle prewarm auto-confirm is $want" "[ \"\${GRADLE_PREWARM_AUTO_CONFIRM:-false}\" = $want ]"
+        # The vmargs use JDK 25 flags; an older runtime would refuse to start the language server.
+        # redhat.java runs on its bundled JRE when the platform build ships one (java-17), else on JAVA_HOME (java-25).
+        check "JDT LS vmargs start the language server's JVM" "\$(ls /home/theia/plugins/redhat.java/extension/jre/*/bin/java 2>/dev/null || echo \"\$JAVA_HOME/bin/java\") \$(sed -n 's/.*\"java.jdt.ls.vmargs\": \"\\(.*\\)\",/\\1/p' /home/theia/.theia-ide/settings.json) -version" ;;
 esac
 
 check "git trusts /home/project" "git config --system --get-all safe.directory | grep -qx /home/project"

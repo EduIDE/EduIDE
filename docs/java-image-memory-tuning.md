@@ -30,7 +30,22 @@ Edge case: if `./gradlew` runs while the import daemon is busy, Gradle briefly s
 
 ## Why G1 with periodic GC for the language server
 
-The JDT LS vmargs use `-XX:+UseG1GC -XX:G1PeriodicGCInterval=30000 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=25`. The periodic GC (JEP 346) runs a concurrent cycle after 30s idle and returns unused heap pages to the OS, so the process shrinks back after the import spike. SerialGC was deliberately not used here: it only collects when the old generation fills, so a long-lived idle language server would stay pinned at its peak RSS forever. The short-lived Gradle daemon does use SerialGC (smallest footprint); its idle timeout reclaims the memory instead.
+The JDT LS vmargs use `-XX:+UseG1GC -XX:G1PeriodicGCInterval=30000 -XX:-G1PeriodicGCInvokesConcurrent -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=25`. The periodic GC (JEP 346) collects after 30s idle and returns unused heap pages to the OS, so the process shrinks back after the import spike. It has to be a full collection (`-G1PeriodicGCInvokesConcurrent`): the default concurrent cycle left the heap of an idle language server at its peak in our measurements.
+
+Three more flags cut native memory, all measured on commons-lang (249 classes, Java LS RssAnon three minutes after import and build):
+
+- `-XX:TieredStopAtLevel=1` compiles with C1 only. C2's compiler threads and code cache are the largest native cost of an idle language server. JDT LS spends its life in short bursts that C2 never pays back: import and build took 25 instead of 34 CPU seconds, and completion answered in 150-220 ms as before.
+- `-XX:+UseCompactObjectHeaders` shrinks every object header (JDK 25, JEP 519).
+- `-XX:TrimNativeHeapInterval=30000` returns freed malloc memory to the OS every 30s.
+
+| vmargs | Import + build (CPU s) | Completion (ms) | Java LS after 3 min idle (MiB) |
+|---|---|---|---|
+| G1, concurrent periodic GC (until 3.0.1) | 34 | 150-270 | 752-757 |
+| + full periodic GC, compact headers, trim | 35 | 150-245 | 659 |
+| + C1 only (current) | 25 | 150-220 | 286-293 |
+| Shenandoah (compact), compact headers, trim | 46 | 155-260 | 310 |
+
+These flags need a JDK 25 runtime. `java-17` runs the language server on the JRE that redhat.java bundles (`plugins/redhat.java/extension/jre`), `java-25` has no bundled JRE and runs it on the image's JDK 25 (`JAVA_HOME`). If an image moves the language server to an older JDK, drop them; `scripts/smoke-test-image.sh` starts that JVM with the configured vmargs to catch a mismatch. SerialGC was deliberately not used here: it only collects when the old generation fills, so a long-lived idle language server would stay pinned at its peak RSS forever. The short-lived Gradle daemon does use SerialGC (smallest footprint); its idle timeout reclaims the memory instead.
 
 ## Raising limits for bigger course projects
 

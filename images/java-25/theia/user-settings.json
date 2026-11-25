@@ -1,6 +1,6 @@
 {
     "java.server.launchMode": "Standard",
-    "java.jdt.ls.vmargs": "-XX:+UseG1GC -XX:+UseStringDeduplication -XX:G1PeriodicGCInterval=30000 -Xmx768m -Xms64m -Xss512k -XX:MaxMetaspaceSize=256m -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=25",
+    "java.jdt.ls.vmargs": "-XX:+UseG1GC -XX:+UseStringDeduplication -XX:G1PeriodicGCInterval=30000 -XX:-G1PeriodicGCInvokesConcurrent -XX:TieredStopAtLevel=1 -XX:+UseCompactObjectHeaders -XX:TrimNativeHeapInterval=30000 -Xmx768m -Xms64m -Xss512k -XX:MaxMetaspaceSize=256m -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=25",
     // Lombok ships inside redhat.java and is attached as a Java agent that
     // patches JDT's compiler AST classes. Its bundled build no longer matches
     // JDT, so every resolved-AST request dies with NoSuchFieldError on

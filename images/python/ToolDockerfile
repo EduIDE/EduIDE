@@ -44,7 +44,7 @@ ARG MATPLOTLIB_VERSION=3.11.2
 # renovate: datasource=pypi depName=ruff
 ARG RUFF_VERSION=0.17.5
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.13.8
+ARG UV_VERSION=0.13.9
 # renovate: datasource=pypi depName=debugpy
 ARG DEBUGPY_VERSION=1.8.22
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \

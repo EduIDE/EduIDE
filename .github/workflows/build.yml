@@ -217,8 +217,8 @@ jobs:
         language: [java-17, java-25, python, javascript, c, rust, go]
         edition: [standalone, artemis]
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -251,7 +251,7 @@ jobs:
             -t "$REPO:$BASE_TAG" -t "$REPO:$SHA_TAG" "$REPO:$SHA_TAG"
           docker buildx imagetools inspect --raw "$REPO:$BASE_TAG" | python3 -c 'import sys,json; a=json.load(sys.stdin)["annotations"]["io.eduide.template"]; json.loads(a); print("annotation ok,", len(a), "bytes")'
       # The release train checks the chart's buildSystems against these lists.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ always() }}
         with:
           name: templates-${{ matrix.language }}-${{ matrix.edition }}

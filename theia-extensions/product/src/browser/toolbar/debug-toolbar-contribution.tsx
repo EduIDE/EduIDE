@@ -67,7 +67,7 @@ export class DebugToolbarContribution extends AbstractSplitButtonContribution<De
      * Drops debug terminals that are no longer attached to a process.
      *
      * When an adapter asks to run the debuggee in a terminal, Theia reuses any
-     * terminal whose title matches and which has no child processes — without
+     * terminal whose title matches and which has no child processes - without
      * checking that it is still attached to one. A terminal restored from a
      * previous page load, or left behind by a session that has ended, passes
      * both tests; reading its `processId` then rejects with "terminal is not

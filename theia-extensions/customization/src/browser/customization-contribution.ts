@@ -50,7 +50,7 @@ export namespace CustomizationMenus {
      * step too many: a student hunting for the control that changes their IDE
      * does not think of it as a view, and does not know that "EduIDE" is where
      * levels live. The menu bar entry now says `Experience Levels`, and opening
-     * it *is* the chooser — the three levels, ticked at the current one.
+     * it *is* the chooser - the three levels, ticked at the current one.
      *
      * A top-level entry cannot run a command on click: Theia builds the bar
      * from Lumino, whose top-level items are always submenus. Listing the
@@ -75,7 +75,7 @@ const LEVEL_LABELS: Record<EduIdeLevel, string> = {
 const LEVEL_DESCRIPTIONS: Record<EduIdeLevel, string> = {
     beginner: 'Explorer and Search, plus Artemis in Artemis sessions. Run only - no debugger, no terminal.',
     advanced: 'Version control, tests, the build tool and refactorings. Still no debugger.',
-    expert: 'Stock EduIDE — the only level with a debugger, Outline and Memory Inspector.'
+    expert: 'Stock EduIDE - the only level with a debugger, Outline and Memory Inspector.'
 };
 
 interface LevelPickItem extends QuickPickItem {

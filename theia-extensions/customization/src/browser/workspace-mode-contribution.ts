@@ -24,7 +24,7 @@ const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000];
  * Tells the student whether their files outlive the session.
  *
  * The answer comes from the server (a mount check on the workspace root), so
- * it needs no launch parameter and is right for warm sessions and local runs too.
+ * it needs no launch data and is right for idle instances and local runs too.
  */
 @injectable()
 export class WorkspaceModeContribution implements FrontendApplicationContribution {
@@ -81,7 +81,7 @@ export class WorkspaceModeContribution implements FrontendApplicationContributio
         this.statusBar.setElement(WORKSPACE_MODE_STATUS_ID, {
             text: saved
                 ? `$(save) ${nls.localize('eduide/customization/workspaceSaved', 'Saved workspace')}`
-                : `$(warning) ${nls.localize('eduide/customization/workspaceTemporary', 'Temporary workspace')}`,
+                : `$(warning) ${nls.localize('eduide/customization/workspaceTemporary', 'Temporary session')}`,
             alignment: StatusBarAlignment.RIGHT,
             priority: 99,
             tooltip: saved

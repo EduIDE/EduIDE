@@ -1,6 +1,6 @@
-# AGENTS.md — EduIDE
+# AGENTS.md - EduIDE
 
-The IDE itself, and the image factory that produces every variant students use.
+The IDE itself, and the image factory that produces every language image students use.
 A fork of Eclipse Theia's `theia-ide` blueprint, heavily reworked.
 
 `CLAUDE.md` is a symlink to this file, so every agent reads the same thing.
@@ -8,7 +8,7 @@ A fork of Eclipse Theia's `theia-ide` blueprint, heavily reworked.
 ## Layout
 
 ```
-images/base-ide/BaseDockerfile      the base image: Theia, Scorpio, data bridge, no Artemis extension
+images/base-ide/BaseDockerfile      the base image: Theia, Scorpio, `eduide-session`, no Artemis extension
 images/base-standalone/Dockerfile   thin layer FROM base: git credential cache
 images/base-artemis/Dockerfile      thin layer FROM base: Artemis extension
 images/<lang>/ToolDockerfile        one per language, built once per edition
@@ -70,14 +70,14 @@ certificate for (no wildcard; control plane decision G3). ENV does not travel fr
 every `ToolDockerfile`. Live Preview is not in the images: it serves on
 `127.0.0.1` of the container. `docs/how-to-build-ide-variants.md`.
 
-**The Theia backend has no auth of its own; it must never be reachable except
+**The Theia server has no auth of its own; it must never be reachable except
 through the authenticating proxy/gateway.** A direct TCP connection to the
-backend port (3000) is an unauthenticated session - file access, a terminal,
+server port (3000) is an unauthenticated session - file access, a terminal,
 task execution, the lot. In production the only thing allowed to reach it is
-the in-pod agent sidecar of the Go control plane, which accepts only requests
+the in-pod agent sidecar of the control plane, which accepts only requests
 carrying the instance token the gateway adds after its own login check, and
 forwards to `http://127.0.0.1:<port>` over the pod's shared loopback.
-Because the agent reaches the IDE over loopback, the published images bind the backend to `127.0.0.1`
+Because the agent reaches the IDE over loopback, the published images bind the Theia server to `127.0.0.1`
 (`--hostname=127.0.0.1` in each `ToolDockerfile` `CMD`), **not** `0.0.0.0`. Do
 not widen that bind, and do not disable `warnOnPotentiallyInsecureHostPattern`
 in `applications/browser/package.json` - that warning is the signal that would
@@ -118,7 +118,7 @@ honours `theiaPluginsExcludeIdsRemove`. An inline `node -e "…deepMerge…"` in
 several ToolDockerfiles **replaces arrays wholesale**, so a patch that sets
 `theiaPluginsExcludeIds` silently drops the base image's ~75 exclusions. The
 plain images are split between the two. If you copy an existing ToolDockerfile
-as a starting point, copy one that uses the script — `images/java-17` — not
+as a starting point, copy one that uses the script - `images/java-17` - not
 `images/c`.
 
 **`@theia/cli` is pinned in every ToolDockerfile.** Language images do not
@@ -200,7 +200,7 @@ CI threads the base image's **immutable sha tag** into every language build
 
 ## Adding an image
 
-1. `images/<lang>/ToolDockerfile` — copy `images/java-17`, not `images/c`
+1. `images/<lang>/ToolDockerfile` - copy `images/java-17`, not `images/c`
 2. Its `package.json.patch` and user settings, modelled on
    `images/java-17/theia/user-settings.json`
    plus `templates/<id>/` folders, each with a `template.json`
@@ -220,7 +220,7 @@ to students. Building an image deploys nothing on its own.
 
 - The `theia` user is uid 101 in every image.
 - Browser only: there is no Electron application, launcher or updater; do not add one.
-- The language images copy `/home/theia` from the base without `node_modules` (`COPY --exclude=node_modules`): the backend is bundled into `applications/browser/lib`. Keep it that way, or the images grow by about 300 MB.
+- The language images copy `/home/theia` from the base without `node_modules` (`COPY --exclude=node_modules`): the Theia server is bundled into `applications/browser/lib`. Keep it that way, or the images grow by about 300 MB.
 - Release tags are `vX.Y.Z`; the image tag is the same string without the `v`.
 - Releases are manual: merge a release PR (CHANGELOG.md section), then run
   `gh workflow run release.yml -f version=X.Y.Z`. It drafts the GitHub
@@ -235,3 +235,10 @@ to students. Building an image deploys nothing on its own.
   That is how a session says which image it is running.
   `docs/how-to-build-ide-variants.md`.
 - Workflows must pass `actionlint`.
+
+## Terminology
+
+Use the terms of the [EduIDE glossary](https://eduide.github.io/Docs/glossary) in code, UI texts, docs, values and comments, in exactly the meaning it gives.
+Do not introduce synonyms (environment, instance, workspace, launch, lecturer, start page) for a term the glossary defines, and never write "frontend" or "backend".
+When a new term is needed or a term changes, update the glossary in `EduIDE/Docs` first.
+Most relevant here: template (an `IDETemplate`, not a starter project or a language image), session, saved workspace, temporary session, launch data, landing page.

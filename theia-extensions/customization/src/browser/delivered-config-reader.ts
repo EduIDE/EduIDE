@@ -35,7 +35,7 @@ import {
  *
  * The file can arrive after the IDE has started. In the Artemis flow the
  * repository is cloned by Scorpio, a VS Code extension, so the workspace is
- * still empty when the frontend first lays itself out. {@link watch} reports
+ * still empty when the IDE first lays itself out. {@link watch} reports
  * the file appearing, so the exercise's level is not lost to that race.
  */
 @injectable()
@@ -110,7 +110,7 @@ export class DeliveredConfigReader {
                 // A file that is entirely comments, which is the shape the
                 // templates ship. It parses to nothing and the parser calls
                 // that an error, but saying nothing is not the same as saying
-                // something wrong — warning here would tell every student on a
+                // something wrong - warning here would tell every student on a
                 // stock template that their exercise is misconfigured.
                 return undefined;
             }

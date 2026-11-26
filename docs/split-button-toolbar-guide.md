@@ -5,15 +5,15 @@ This guide explains the split button toolbar architecture used for the **Run** a
 ## Overview
 
 The toolbar provides split buttons that appear in the editor tab bar. Each button has:
-- A **main action** (left side) — executes the last-used or first available configuration
-- A **dropdown menu** (chevron on right) — lists all available configurations for selection
+- A **main action** (left side) - executes the last-used or first available configuration
+- A **dropdown menu** (chevron on right) - lists all available configurations for selection
 
 The architecture follows a **Template Method** pattern via `AbstractSplitButtonContribution<TConfig>`, which handles all shared logic. Concrete subclasses only define how to fetch, execute, and label their specific configuration type.
 
 ## Architecture
 
 ```
-AbstractSplitButtonContribution<TConfig>      (base class — shared logic)
+AbstractSplitButtonContribution<TConfig>      (base class - shared logic)
 ├── TaskToolbarContribution                   (reads tasks.json, runs tasks)
 ├── DebugToolbarContribution                  (reads launch.json, starts debug sessions)
 └── YourCustomContribution                    (your new button)
@@ -24,23 +24,23 @@ AbstractSplitButtonContribution<TConfig>      (base class — shared logic)
 | File | Purpose |
 |------|---------|
 | `src/browser/toolbar/abstract-split-button-contribution.tsx` | Abstract base class with all shared logic |
-| `src/browser/toolbar/task-toolbar-contribution.tsx` | Run button — executes tasks from `tasks.json` |
-| `src/browser/toolbar/debug-toolbar-contribution.tsx` | Debug button — starts debug sessions from `launch.json` |
+| `src/browser/toolbar/task-toolbar-contribution.tsx` | Run button - executes tasks from `tasks.json` |
+| `src/browser/toolbar/debug-toolbar-contribution.tsx` | Debug button - starts debug sessions from `launch.json` |
 | `src/browser/toolbar/split-button.tsx` | Reusable React `SplitButton` UI component |
 | `src/browser/toolbar/split-button.css` | Button styling |
-| `src/browser/theia-ide-frontend-module.ts` | DI module — registers all contributions |
+| `src/browser/theia-ide-frontend-module.ts` | DI module - registers all contributions |
 
 ### What the Base Class Provides
 
 The `AbstractSplitButtonContribution<TConfig>` handles:
 
-- **Toolbar registration** — creates and registers the toolbar item
-- **Configuration caching** — stores fetched configurations with debounced refresh
-- **Last-run memory** — re-executes the most recently used configuration on main button click
-- **Split button rendering** — renders the `SplitButton` React component with correct props
-- **Dropdown menu** — builds and displays a context menu listing all configurations
-- **Visibility** — only shows the button when an `EditorWidget` is active
-- **Workspace awareness** — refreshes configurations when the workspace changes
+- **Toolbar registration** - creates and registers the toolbar item
+- **Configuration caching** - stores fetched configurations with debounced refresh
+- **Last-run memory** - re-executes the most recently used configuration on main button click
+- **Split button rendering** - renders the `SplitButton` React component with correct props
+- **Dropdown menu** - builds and displays a context menu listing all configurations
+- **Visibility** - only shows the button when an `EditorWidget` is active
+- **Workspace awareness** - refreshes configurations when the workspace changes
 
 ## Adding a New Split Button
 
@@ -53,7 +53,7 @@ import { inject, injectable, postConstruct } from '@theia/core/shared/inversify'
 import { nls, MenuPath } from '@theia/core';
 import { AbstractSplitButtonContribution } from './abstract-split-button-contribution';
 
-// Your configuration type — whatever your provider returns
+// Your configuration type - whatever your provider returns
 interface TestConfiguration {
     name: string;
     command: string;
@@ -185,13 +185,13 @@ yarn build
 
 Common icons for toolbar buttons (see [Codicon reference](https://microsoft.github.io/vscode-codicons/dist/codicon.html)):
 
-- `play` — Run / Execute
-- `debug-alt` — Debug
-- `beaker` — Test
-- `rocket` — Deploy
-- `terminal` — Terminal / Shell
-- `gear` — Settings / Configure
-- `tools` — Build tools
+- `play` - Run / Execute
+- `debug-alt` - Debug
+- `beaker` - Test
+- `rocket` - Deploy
+- `terminal` - Terminal / Shell
+- `gear` - Settings / Configure
+- `tools` - Build tools
 
 ## Existing Implementations
 
@@ -216,7 +216,7 @@ Common icons for toolbar buttons (see [Codicon reference](https://microsoft.gith
 ## Tips
 
 - **Keep priority values sequential** to maintain predictable button ordering
-- **Use descriptive `toolbarId` values** — they appear in DOM and debug output
+- **Use descriptive `toolbarId` values** - they appear in DOM and debug output
 - **Always call `this.initialize()`** at the end of your `@postConstruct` method
 - **Wire up change listeners before `initialize()`** so the first refresh captures initial state
 - **The button auto-hides** when `fetchConfigurations()` returns an empty array

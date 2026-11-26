@@ -1,10 +1,10 @@
-# How to build IDE variants
+# How to build language images
 
-This guide explains how to create new IDE image variants for specific programming languages. We'll use the C language variant as a concrete example throughout.
+This guide explains how to create new language images for specific programming languages. We'll use the C language image as a concrete example throughout.
 
 ## Overview
 
-All language-specific IDE variants build upon the reusable base IDE image (`base-ide`), which provides the core Eclipse Theia platform. There is **one `ToolDockerfile` per language**, and it is edition-agnostic: CI builds it twice, once on `base-standalone` and once on `base-artemis` (see [Editions](#editions)). Language variants extend the base with:
+All language images build upon the reusable base IDE image (`base-ide`), which provides the core Eclipse Theia platform. There is **one `ToolDockerfile` per language**, and it is edition-agnostic: CI builds it twice, once on `base-standalone` and once on `base-artemis` (see [Editions](#editions)). Language images extend the base with:
 
 - Language-specific tools and compilers
 - Theia/VSCode extensions for the language
@@ -14,13 +14,13 @@ All language-specific IDE variants build upon the reusable base IDE image (`base
 
 ### 1. Start with the Base Image
 
-All language-specific variants start from an edition of the base image. `base` is defined in `images/base-ide/BaseDockerfile`. It:
+All language images start from an edition of the base image. `base` is defined in `images/base-ide/BaseDockerfile`. It:
 
 - Provides the core Eclipse Theia IDE platform
 - Includes the extensions EduIDE itself needs (`scorpio`, `eduide-session`) and common editing aids (Code Spell Checker with the German dictionary, Error Lens, EditorConfig)
 - Sets up the basic runtime environment
 
-In your variant's `ToolDockerfile`, you'll reference the base image. CI passes `BASE_IMAGE` pointing at `base-standalone` or `base-artemis`; the default only serves local builds:
+In your language image's `ToolDockerfile`, you'll reference the base image. CI passes `BASE_IMAGE` pointing at `base-standalone` or `base-artemis`; the default only serves local builds:
 
 ```dockerfile
 ARG BASE_IDE_TAG=latest
@@ -38,13 +38,13 @@ FROM ${BASE_IMAGE} AS base-ide
 
 Never put edition specifics into a `ToolDockerfile`. The published names are `<lang>-standalone` and `<lang>-artemis`.
 
-### 2. Create Subdirectory for Your Variant
+### 2. Create Subdirectory for Your Language Image
 
-Create a new subdirectory under `images/` with a descriptive name for your language variant. For example:
+Create a new subdirectory under `images/` with a descriptive name for your language image. For example:
 
 ```
 images/
-  └── c/              # Your new variant directory
+  └── c/              # Your new language image directory
       ├── ToolDockerfile
       ├── package.json.patch
       ├── templates/      # project templates, see "Project templates"
@@ -56,7 +56,7 @@ The directory name should be clear and concise (e.g., `c`, `python`, `java-17`, 
 
 ### 3. Create ToolDockerfile
 
-The `ToolDockerfile` defines how your language-specific variant is built. Using the C variant as an example, here are the key phases:
+The `ToolDockerfile` defines how your language image is built. Using the C image as an example, here are the key phases:
 
 #### Phase 1: Base Image Reference
 
@@ -64,7 +64,7 @@ The `ToolDockerfile` defines how your language-specific variant is built. Using 
 FROM ${BASE_IMAGE} AS base-ide
 ```
 
-This stage loads the base IDE image that all variants share.
+This stage loads the base IDE image that all language images share.
 
 #### Phase 2: Plugin Image Stage
 
@@ -77,7 +77,7 @@ A temporary stage to download and prepare language-specific plugins/extensions.
 **Key steps in this phase:**
 
 - Install `jq` for JSON merging
-- Copy the base `package.json` and your variant's `package.json.patch`
+- Copy the base `package.json` and your language image's `package.json.patch`
 - Merge them using `jq` to create the final `package.json` with language-specific plugins
 - Copy necessary scripts and configs from the base image
 - Run `yarn download:plugins:smart` to fetch the language-specific extensions
@@ -106,7 +106,7 @@ The final runtime image that combines everything.
 - Set `MALLOC_ARENA_MAX=2`, see [ide-memory-tuning.md](ide-memory-tuning.md)
 - Start `node .../main.js --no-cluster` directly as the entrypoint (the C image keeps a small `entrypoint.sh` that only writes the Bazel remote cache config)
 
-**Example from C variant (lines 66-69):**
+**Example from C image (lines 66-69):**
 
 ```dockerfile
 RUN apt-get update && \
@@ -126,7 +126,7 @@ The `package.json.patch` file extends the base `package.json` with language-spec
 
 This field specifies additional Theia and VSCode extensions to include. Each entry maps an extension ID to its VSIX download URL (typically from Open VSX or GitHub releases).
 
-**Example from C variant:**
+**Example from C image:**
 
 ```json
 {
@@ -155,7 +155,7 @@ This array lists extension IDs to exclude from the base image. This is useful wh
 - You want to reduce image size by removing unused language/ feature support
 - You're replacing a base extension with a language-specific version
 
-**Example from C variant:**
+**Example from C image:**
 
 ```json
 {
@@ -169,15 +169,15 @@ This array lists extension IDs to exclude from the base image. This is useful wh
 }
 ```
 
-The C variant excludes Python, Java, TypeScript, and many other language extensions since they're not needed for C development.
+The C image excludes Python, Java, TypeScript, and many other language extensions since they're not needed for C development.
 
 **Note**: The list of excluded ids is best established by building and checking an image with an empty exclude list. There, you can see the extension browser to review all images.
 
 ### 5. Optionally Include User Settings
 
-Language specific settings go into `images/{variant}/theia/user-settings.json`. The `ToolDockerfile` copies it to `/home/theia/.theia-ide/settings.json`, which applies in every workspace. Do not seed a `.vscode` folder into `/home/project`: the workspace must stay empty so `git clone <url> .` works. Settings shared by all images (`cSpell.language`, theme, telemetry, `files.exclude`) already sit in `theia.frontend.config.preferences` in `applications/browser/package.json`. Set the default formatter of your language here if its extension is in the image.
+Language specific settings go into `images/{language}/theia/user-settings.json`. The `ToolDockerfile` copies it to `/home/theia/.theia-ide/settings.json`, which applies in every workspace. Do not seed a `.vscode` folder into `/home/project`: the workspace must stay empty so `git clone <url> .` works. Settings shared by all images (`cSpell.language`, theme, telemetry, `files.exclude`) already sit in `theia.frontend.config.preferences` in `applications/browser/package.json`. Set the default formatter of your language here if its extension is in the image.
 
-**Example from C variant:**
+**Example from C image:**
 
 ```json
 {
@@ -199,7 +199,7 @@ images/
 
 ## Complete Example Structure
 
-Here's the complete file structure for the C variant:
+Here's the complete file structure for the C image:
 
 ```
 images/c/
@@ -245,7 +245,7 @@ Which tasks a student sees at which level follows the task rules in `theia-exten
 3. Offer it by adding `{ id, label }` to the app's `buildSystems` in the EduIDE-Helm catalog. CI publishes each image's template list as the build artifact `templates-<image>.json`, which the release train checks against the catalog.
 4. Update the template table in the docs.
 
-## Building Your Variant
+## Building Your Language Image
 
 Once you've created all the necessary files:
 
@@ -262,7 +262,7 @@ Once you've created all the necessary files:
    docker build -f images/base-artemis/Dockerfile -t ghcr.io/eduide/eduide/base-artemis:latest .
    ```
 
-3. **Build your language variant** once per edition:
+3. **Build your language image** once per edition:
 
    ```bash
    docker build -f images/c/ToolDockerfile --build-arg BASE_IMAGE=ghcr.io/eduide/eduide/base-standalone:latest -t eduide-c-standalone:local .
@@ -279,7 +279,7 @@ Once you've created all the necessary files:
 
 ## Integrating into the Build Process
 
-To have your new variant automatically built and pushed by GitHub Actions, add it to the build matrix in `.github/workflows/build.yml`.
+To have your new language image automatically built and pushed by GitHub Actions, add it to the build matrix in `.github/workflows/build.yml`.
 
 ### Add to Build Matrix
 
@@ -306,11 +306,11 @@ The workflow automatically:
 
 1. Determines the appropriate tag (`pr-{number}`, release version, or `latest`)
 2. Builds and pushes the base image first, then `base-standalone` and `base-artemis`
-3. Builds all variants in parallel using the matrix strategy
-4. Passes the immutable sha tag of the base in `BASE_IMAGE`, so variants use the correct base image version
+3. Builds all language images in parallel using the matrix strategy
+4. Passes the immutable sha tag of the base in `BASE_IMAGE`, so language images use the correct base image version
 5. Pulls every built image and runs `scripts/smoke-test-image.sh` on it; a failing smoke test fails the PR
 
-Once added, your variant will be built automatically on:
+Once added, your language image will be built automatically on:
 
 - Pull requests to `main`
 - Pushes to `main`
@@ -359,7 +359,7 @@ cache for everything below it.
 
 A hand-built image (`docker build` without `--build-arg APP_VERSION=...`, which
 includes every `docker-compose.images.yml` build) leaves the variables empty; the
-About dialog then shows `unknown` and omits the revision line. The frontend just
+About dialog then shows `unknown` and omits the revision line. The browser side just
 reads the environment at runtime, so a deployment can override the variables
 without rebuilding.
 
@@ -367,7 +367,7 @@ without rebuilding.
 
 Live Preview (`ms-vscode.live-server`) does not work in the cloud: it serves on `127.0.0.1:<port>` inside the container and its preview points at the student's own `127.0.0.1`. The images use Theia's built-in mini-browser instead, which serves files through the IDE server. Every `ToolDockerfile` sets `THEIA_WEBVIEW_EXTERNAL_ENDPOINT` and `THEIA_MINI_BROWSER_HOST_PATTERN` to the fixed host `webview.{{hostname}}` (ENV is not inherited from the base image), so webviews and previews share one origin that the gateway routes and certifies (no wildcard host); the default `{{uuid}}.mini-browser.{{hostname}}` has no route. The product extension silences Theia's "host pattern changed" warning for these two checks. Students open a preview with the "Open Preview to the Side" button of the editor toolbar, or right-click `index.html` and choose Open With, Preview. Relative CSS and scripts load; there is no auto-reload and no server-side code. Locally the browser must resolve `webview.<host>`, so use `http://localhost:3000` (Chrome resolves `*.localhost`), not `127.0.0.1`.
 
-## Go control plane integration
+## Control plane integration
 
 The base image builds the `eduide-session` extension from `extensions/eduide-session` of EduIDE-control-plane at the commit in the build arg `EDUIDE_SESSION_COMMIT` (repository in `EDUIDE_SESSION_REPO`) and unpacks it into `/home/theia/plugins/eduide-session`.
 Scorpio (3.3.0 or later from Open VSX, `theiaPlugins.scorpio`) looks up `eduide.eduide-session` first.
@@ -397,7 +397,7 @@ Tag the result with the EduIDE version (`2.0.0`), with a patch bump for changes 
 
 Every image runs the file watcher in the server process (`--no-cluster`), limits glibc to two malloc arenas and has the spell checker off by default. See [ide-memory-tuning.md](ide-memory-tuning.md) for the numbers and keep these settings in a new image.
 
-The Java variants cap all resident JVM and node processes so many environments fit on one host. See [java-image-memory-tuning.md](java-image-memory-tuning.md) before changing Gradle or language server settings in those images.
+The Java images cap all resident JVM and node processes so many sessions fit on one host. See [java-image-memory-tuning.md](java-image-memory-tuning.md) before changing Gradle or language server settings in those images.
 
 ## Tips
 
@@ -405,4 +405,4 @@ The Java variants cap all resident JVM and node processes so many environments f
 - **Use specific versions**: Pin extension versions in `package.json.patch` for reproducibility
 - **Test thoroughly**: Verify that language features (IntelliSense, debugging, etc.) work correctly
 - **Check base excludes**: Review `images/base-ide/package.json.patch` to see what's already excluded
-- **Follow existing patterns**: Look at other variants (Python, Java, JavaScript) for reference
+- **Follow existing patterns**: Look at other language images (Python, Java, JavaScript) for reference

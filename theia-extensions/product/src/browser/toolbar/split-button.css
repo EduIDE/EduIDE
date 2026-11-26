@@ -67,7 +67,7 @@
 
 /* The label a beginner gets beside the icon.
    The button carries a codicon class, whose shorthand sets `font: 16px/1
-   codicon` on the element — so text inside it inherits the icon face, falls
+   codicon` on the element - so text inside it inherits the icon face, falls
    back to whatever the browser picks for Latin glyphs, and sits on the
    codicon's 1.0 line box rather than the text's. Both have to be set back
    explicitly; the font is the menu bar's, so a labelled button reads as part

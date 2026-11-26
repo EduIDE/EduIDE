@@ -113,7 +113,7 @@ COPY --from=plugin-image /usr/local/bin/node /usr/local/bin/
 ENV HOME=/home/theia
 WORKDIR /home/theia
 
-# Copy the application from the base without its node_modules: the backend is bundled into
+# Copy the application from the base without its node_modules: the Theia server is bundled into
 # applications/browser/lib, so the runtime needs none of them (the plugin stage above still does).
 COPY --from=base-ide --chown=theia:theia --exclude=node_modules /home/theia /home/theia
 

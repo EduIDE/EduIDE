@@ -1,6 +1,6 @@
 # Experience levels: the exercise configuration file
 
-EduIDE has three experience levels — `beginner`, `advanced`, `expert` — that
+EduIDE has three experience levels - `beginner`, `advanced`, `expert` - that
 decide how much of the IDE a student meets. This document covers the one file
 an exercise can ship to influence that, how it reaches a student's session from
 an Artemis exercise, and where the default lives if you want to move it.
@@ -40,15 +40,15 @@ Both keys are optional. A file with neither does nothing.
 This is the part worth understanding before relying on it.
 
 The values apply **only to a student who has not chosen a level for
-themselves**. The moment a student picks one — from the status-bar indicator,
-the `Experience Levels` menu or the command palette — the file stops having any
+themselves**. The moment a student picks one - from the status-bar indicator,
+the `Experience Levels` menu or the command palette - the file stops having any
 effect, on that session and every later one.
 
 The test is literal: `seedFromExercise()` writes the delivered value only when
 `inspectInScope(key, PreferenceScope.User)` is `undefined`, i.e. the student's
 own setting is empty. `level` and `overrides` are seeded independently.
 
-It runs when the frontend has laid itself out, and again whenever the file is
+It runs when the IDE has laid itself out, and again whenever the file is
 created or changed afterwards. The second trigger is not optional: in the
 Artemis flow Scorpio clones the repository after the IDE has started, so on the
 first open the file usually is not there yet when the first read happens.
@@ -59,7 +59,7 @@ of their own, nothing is written.
 So this file **cannot pin a student to a level**. There is deliberately no
 mechanism that can, and this one is the wrong place to add it: the file lives in
 the student's own clone, where they can edit or delete it, and it travels back
-to Artemis when they submit. Enforcement — exam mode, a course minimum — would
+to Artemis when they submit. Enforcement - exam mode, a course minimum - would
 have to come from a channel the student cannot write to, and would have to
 explain itself in the UI rather than silently disabling the picker.
 
@@ -67,12 +67,12 @@ explain itself in the UI rather than silently disabling the picker.
 
 Instructors edit this file directly, so the reader is deliberately forgiving:
 
-- **JSONC** — comments and trailing commas are fine.
+- **JSONC** - comments and trailing commas are fine.
 - **An empty or all-comments file is silently ignored.** It says nothing, which
   is not the same as saying something wrong. The commented example the templates
   ship is exactly this shape.
 - **Anything malformed is reported and skipped, never fatal.** Bad JSON, an
-  unknown level, an unknown element id, a non-boolean override — each produces
+  unknown level, an unknown element id, a non-boolean override - each produces
   its own warning in the IDE log and the rest of the file still applies. A
   course cannot break a student's session with a typo.
 
@@ -95,7 +95,7 @@ The reader is
 | startup | `startup.welcomePage` `startup.openFile` `startup.walkthrough`¹ |
 | assistance | `assist.irisExplain`¹ `assist.irisHint`¹ |
 
-¹ declared but not enforced yet — they render disabled in the Customize panel
+¹ declared but not enforced yet - they render disabled in the Customize panel
 with the reason. Setting them has no effect.
 
 `view.memoryInspector` has an extra condition: it is also hidden whenever no
@@ -136,12 +136,12 @@ do not have to ship in lockstep.
 
 ### What this can and cannot express
 
-It is a property of the **exercise template** — identical for every exercise
+It is a property of the **exercise template** - identical for every exercise
 generated from that language and project type. It is not per-course, not
 per-exercise unless someone edits the generated repository, and it does not
 follow the student.
 
-A per-student or per-course level needs the launch environment instead:
+A per-student or per-course level needs the launch data instead:
 `EDUIDE_LEVEL` is reserved for that in `src/common/customization.ts` but **is
 not read by anything yet**. Artemis knows the student and the course; the
 repository only knows the exercise.
@@ -149,11 +149,11 @@ repository only knows the exercise.
 ### Persistence caveat
 
 "Seeded once" assumes the student's setting outlives the session. User
-preferences live in the container, so unless a persistent home is mounted, every
-new session starts with no setting and the file seeds again. That is defensible
-— the exercise decides, every time — but it is a different product from
+preferences live in the container, so unless a workspace is mounted, every
+new session starts with no setting and the file seeds again. That is defensible -
+the exercise decides, every time - but it is a different product from
 "seeded once, then theirs", and which one you get should be a decision rather
-than an accident of how the environment is deployed.
+than an accident of how the installation is deployed.
 
 ## Changing the default level
 
@@ -174,17 +174,17 @@ Everything else derives from it, so this is the only edit needed:
 Changing it affects **every installation and every user who has not chosen a
 level**, since nothing presets one today. On an installation with existing
 users, that is a visible change to everybody's IDE on their next session, not a
-new-user default — worth announcing rather than shipping quietly.
+new-user default - worth announcing rather than shipping quietly.
 
 ### Per-installation instead of per-build
 
 There is no way to set the default per deployment today. The alternatives, in
 increasing order of work:
 
-1. **Ship `.vscode/eduide.json` in the exercise templates** — per exercise type,
+1. **Ship `.vscode/eduide.json` in the exercise templates** - per exercise type,
    no EduIDE change, available now.
-2. **Change `DEFAULT_LEVEL`** — global to the image, needs a release.
-3. **Read `EDUIDE_LEVEL` from the launch environment** — per student or per
+2. **Change `DEFAULT_LEVEL`** - global to the image, needs a release.
+3. **Read `EDUIDE_LEVEL` from the launch data** - per student or per
    course, the constant exists but nothing consumes it yet.
 
 ## Where things live

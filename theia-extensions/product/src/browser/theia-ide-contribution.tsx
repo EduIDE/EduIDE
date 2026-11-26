@@ -45,7 +45,7 @@ export namespace TheiaIDECommands {
     export const BACK_TO_START_PAGE: Command = {
         id: 'theia-ide:back-to-start-page',
         category: CATEGORY,
-        label: 'Back to Start Page'
+        label: 'Back to Landing Page'
     };
 }
 
